@@ -10,9 +10,9 @@ files anywhere you like — **without the vendor cloud, without an account, with
 
 [Читать по-русски](README.ru.md)
 
-| Rides | Bulk selection | Settings | Russian locale |
-| --- | --- | --- | --- |
-| ![Ride list](docs/screenshot-en.png) | ![Selecting rides to export](docs/screenshot-select.png) | ![Settings menu](docs/screenshot-menu.png) | ![Russian UI](docs/screenshot-ru.png) |
+| Rides | Bulk selection | Settings |
+| --- | --- | --- |
+| ![Ride list](docs/screenshot-en.png) | ![Selecting rides to export](docs/screenshot-select.png) | ![Settings menu](docs/screenshot-menu.png) |
 
 ## Why this exists
 

@@ -26,4 +26,4 @@ android/.idea/
 
 # macOS
 .DS_Store
-screenshot*.png
+/screenshot*.png
