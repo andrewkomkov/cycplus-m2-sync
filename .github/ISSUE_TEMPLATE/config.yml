@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Protocol documentation
+    url: https://github.com/andrewkomkov/cycplus-m2-sync/blob/main/docs/PROTOCOL.md
+    about: Commands, YMODEM flow and per-model differences before filing a question

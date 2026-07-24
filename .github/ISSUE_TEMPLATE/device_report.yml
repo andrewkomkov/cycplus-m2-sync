@@ -1,0 +1,56 @@
+name: Device report
+description: Tell us whether the app works with your bike computer
+title: "[device] "
+labels: [device-report]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Only a Cycplus M2 has been verified so far. Reports about other XOSS-family
+        devices (XOSS G / G+ / G2+ / NAV / Sprint, Cycplus M1 / M3, CooSpo) are the
+        fastest way to widen support.
+
+  - type: input
+    id: model
+    attributes:
+      label: Model
+      placeholder: Cycplus M3 / XOSS NAV / CooSpo BC107
+    validations:
+      required: true
+
+  - type: input
+    id: firmware
+    attributes:
+      label: Firmware and BLE name
+      description: Both are printed by `python tools/m2_cli.py info`
+      placeholder: V1.4.0, advertises as M3_1A2B
+    validations:
+      required: true
+
+  - type: dropdown
+    id: result
+    attributes:
+      label: What happened
+      options:
+        - Everything worked
+        - Found the device but could not download
+        - Downloaded files but the import failed
+        - Device was not found at all
+    validations:
+      required: true
+
+  - type: textarea
+    id: log
+    attributes:
+      label: Log
+      description: |
+        `adb logcat -s M2SYNC` for the app, or the console output of the python CLI.
+        Please skim it for anything you would rather not publish.
+      render: shell
+
+  - type: textarea
+    id: services
+    attributes:
+      label: GATT map (optional but very useful)
+      description: Output of `python tools/m2_cli.py services`
+      render: shell

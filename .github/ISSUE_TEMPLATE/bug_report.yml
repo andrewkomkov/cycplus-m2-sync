@@ -1,0 +1,34 @@
+name: Bug report
+description: Something behaves incorrectly
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, what you got instead.
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      placeholder: v0.2.0 (see the ⋮ menu or the release you installed)
+    validations:
+      required: true
+
+  - type: input
+    id: android
+    attributes:
+      label: Phone and Android version
+      placeholder: Pixel 8, Android 17
+    validations:
+      required: true
+
+  - type: textarea
+    id: log
+    attributes:
+      label: Log
+      description: "`adb logcat -s M2SYNC`, trimmed to the relevant part."
+      render: shell
