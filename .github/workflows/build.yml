@@ -33,7 +33,7 @@ jobs:
         working-directory: android
         run: ./gradlew :app:lintDebug --no-daemon
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: m2sync-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
