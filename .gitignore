@@ -1,0 +1,29 @@
+# Личные данные заездов — GPS-треки, никогда не коммитим
+fit/
+device/
+*.fit
+*.log
+
+# Клоны чужих репозиториев, на которые мы ссылаемся
+xoss_sync/
+cycsync/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Android / Gradle
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/
+*.apk
+*.aab
+*.keystore
+*.jks
+
+# macOS
+.DS_Store
+screenshot*.png

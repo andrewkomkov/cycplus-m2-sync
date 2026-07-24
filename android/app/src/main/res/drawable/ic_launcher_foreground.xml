@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Корпус велокомпьютера, на экране — линия трека. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- корпус -->
+    <path
+        android:fillColor="#F1F8F3"
+        android:pathData="M38,22 L70,22 A10,10 0 0,1 80,32 L80,80 A10,10 0 0,1 70,90 L38,90 A10,10 0 0,1 28,80 L28,32 A10,10 0 0,1 38,22 Z" />
+
+    <!-- экран -->
+    <path
+        android:fillColor="#12331F"
+        android:pathData="M35,29 L73,29 A4,4 0 0,1 77,33 L77,68 A4,4 0 0,1 73,72 L35,72 A4,4 0 0,1 31,68 L31,33 A4,4 0 0,1 35,29 Z" />
+
+    <!-- трек на экране -->
+    <path
+        android:pathData="M36,64 C42,64 41,50 48,50 C55,50 54,38 61,38 L72,38"
+        android:strokeColor="#7FD1AE"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+
+    <!-- точка старта -->
+    <path
+        android:fillColor="#F1F8F3"
+        android:pathData="M36,64 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" />
+
+    <!-- кнопки -->
+    <path
+        android:fillColor="#9AA79E"
+        android:pathData="M42,81 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0
+                          M54,81 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0
+                          M66,81 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
+</vector>

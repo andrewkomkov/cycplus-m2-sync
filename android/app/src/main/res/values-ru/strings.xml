@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">M2 Sync</string>
+    <string name="rationale">Приложение забирает записанные заезды с велокомпьютера Cycplus M2 по Bluetooth и сохраняет их в Health Connect. Данные никуда не передаются и остаются на устройстве.</string>
+
+    <string name="title_rides">Заезды с M2</string>
+    <string name="cd_permissions">Разрешения</string>
+    <string name="device_unknown">Велокомпьютер не опрошен</string>
+    <string name="device_hint">нажми «Опросить»</string>
+    <string name="device_default_name">Cycplus M2</string>
+    <string name="battery_caption">заряд</string>
+    <string name="firmware_label">прошивка</string>
+    <string name="memory_line">память: %1$d из %2$d КБ</string>
+    <string name="last_seen">на связи в %1$s</string>
+    <string name="dash">—</string>
+
+    <string name="busy_sync">синхронизация…</string>
+    <string name="busy_info">опрашиваю устройство…</string>
+    <string name="busy_import">импорт в Health Connect…</string>
+    <string name="busy_verify">проверяю записи…</string>
+    <string name="busy_scan">ищу устройство…</string>
+    <string name="busy_other">работаю…</string>
+
+    <string name="btn_sync">Синхронизировать</string>
+    <string name="btn_poll">Опросить</string>
+    <string name="btn_verify">Проверить</string>
+
+    <string name="stat_rides">заездов</string>
+    <string name="stat_km">километров</string>
+    <string name="stat_hours">часов</string>
+    <string name="stat_in_health">в Health</string>
+
+    <string name="log_title">Журнал</string>
+    <string name="log_empty">пусто</string>
+    <string name="rides_empty">Заездов пока нет — нажми «Синхронизировать», когда велокомпьютер включён.</string>
+
+    <string name="chip_moving">%1$d мин в движении</string>
+    <string name="chip_total">%1$d мин всего</string>
+    <string name="chip_hr">%1$d уд/мин</string>
+    <string name="chip_cadence">%1$d об/мин</string>
+    <string name="chip_ascent">+%1$d м</string>
+    <string name="chip_points">%1$d точек</string>
+    <string name="cd_in_health">Сохранено в Health Connect</string>
+    <string name="ride_distance">%1$s км</string>
+    <string name="session_title">Заезд Cycplus M2</string>
+
+    <string name="log_scanning">ищу устройства «%1$s*»</string>
+    <string name="log_found">найдено: %1$s  %2$s  rssi=%3$d</string>
+    <string name="log_nothing_found">ничего не найдено — включён ли велокомпьютер?</string>
+    <string name="log_taking">беру %1$s (%2$s)</string>
+    <string name="log_connected">подключено к %1$s</string>
+    <string name="log_mtu">MTU %1$d</string>
+    <string name="log_notifications">нотификации включены</string>
+    <string name="log_firmware">прошивка %1$s</string>
+    <string name="log_battery">батарея %1$d%%</string>
+    <string name="log_memory">память %1$s КБ свободно</string>
+    <string name="log_rides_on_device">на устройстве заездов: %1$d</string>
+    <string name="log_already_have">уже есть: %1$s</string>
+    <string name="log_downloading">качаю %1$s (%2$d байт)</string>
+    <string name="log_saved">сохранён %1$s</string>
+    <string name="log_downloaded_total">скачано новых файлов: %1$d</string>
+    <string name="log_hc_unavailable">Health Connect недоступен на устройстве</string>
+    <string name="log_missing_perms">нет разрешений Health Connect: %1$s</string>
+    <string name="log_grant_hint">выдай их в приложении (замок вверху) и повтори IMPORT</string>
+    <string name="log_local_files">локальных файлов: %1$d, уже импортировано: %2$d</string>
+    <string name="log_ride_imported">импортирован %1$s: %2$s км, %3$d точек, пульс %4$s, записей в Health Connect: %5$d</string>
+    <string name="log_import_failed">не смог импортировать %1$s</string>
+    <string name="log_hc_status">Health Connect: %1$s</string>
+    <string name="log_available">доступен</string>
+    <string name="log_unavailable">НЕТ</string>
+    <string name="log_perm_count">разрешений выдано: %1$d из %2$d</string>
+    <string name="log_perm_missing">  не выдано: %1$s</string>
+    <string name="log_folder">папка с файлами: %1$s</string>
+    <string name="log_local_rides">локальных заездов: %1$d</string>
+    <string name="log_file_line">  %1$s  %2$d байт  %3$s</string>
+    <string name="log_imported_mark">импортирован</string>
+    <string name="log_new_mark">новый</string>
+    <string name="log_verify_perms">для проверки нужны разрешения на чтение: %1$s</string>
+    <string name="log_verify_count">наших заездов в Health Connect за 60 дней: %1$d</string>
+    <string name="log_verify_line">  %1$s  всего %2$d мин, в движении %3$d мин, %4$s км, пульс-точек %5$d, маршрут %6$s, источник %7$s</string>
+    <string name="log_route_yes">есть</string>
+    <string name="log_route_no">нет</string>
+    <string name="log_perms_header">строки разрешений, которых ждёт Health Connect:</string>
+    <string name="log_command">команда: %1$s</string>
+    <string name="log_failed">сбой [%1$s]</string>
+    <string name="log_done">--- готово [%1$s] ---</string>
+    <string name="log_parse_failed">не разобрал %1$s</string>
+    <string name="log_block_retry">повтор блока</string>
+    <string name="log_scan_failed">скан не удался, код %1$d</string>
+    <string name="notification_text">Работаю с велокомпьютером</string>
+    <string name="notification_channel">Синхронизация</string>
+    <string name="share_ride">Отправить заезд</string>
+    <string name="share_all">Отправить заезды</string>
+    <string name="share_selected">Отправить %1$d</string>
+    <string name="cd_share">Поделиться</string>
+    <string name="cd_share_all">Поделиться всеми</string>
+    <string name="cd_clear_selection">Снять выделение</string>
+    <string name="selected_count">выбрано: %1$d</string>
+    <string name="select_all">Выбрать все</string>
+    <string name="hint_long_press">Долгое нажатие на заезде — выбрать несколько</string>
+</resources>

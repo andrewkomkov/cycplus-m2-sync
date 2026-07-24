@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">M2 Sync</string>
+    <string name="rationale">This app downloads recorded rides from a Cycplus M2 bike computer over Bluetooth and stores them in Health Connect. Nothing is uploaded anywhere — the data stays on your device.</string>
+
+    <!-- Screen -->
+    <string name="title_rides">Rides from M2</string>
+    <string name="cd_permissions">Permissions</string>
+    <string name="device_unknown">Bike computer not polled yet</string>
+    <string name="device_hint">tap “Poll”</string>
+    <string name="device_default_name">Cycplus M2</string>
+    <string name="battery_caption">battery</string>
+    <string name="firmware_label">firmware</string>
+    <string name="memory_line">memory: %1$d of %2$d KB</string>
+    <string name="last_seen">last seen at %1$s</string>
+    <string name="dash">—</string>
+
+    <string name="busy_sync">syncing…</string>
+    <string name="busy_info">polling the device…</string>
+    <string name="busy_import">importing into Health Connect…</string>
+    <string name="busy_verify">verifying records…</string>
+    <string name="busy_scan">looking for the device…</string>
+    <string name="busy_other">working…</string>
+
+    <string name="btn_sync">Sync</string>
+    <string name="btn_poll">Poll</string>
+    <string name="btn_verify">Verify</string>
+
+    <string name="stat_rides">rides</string>
+    <string name="stat_km">kilometres</string>
+    <string name="stat_hours">hours</string>
+    <string name="stat_in_health">in Health</string>
+
+    <string name="log_title">Log</string>
+    <string name="log_empty">empty</string>
+    <string name="rides_empty">No rides yet — tap “Sync” with the bike computer switched on.</string>
+
+    <string name="chip_moving">%1$d min moving</string>
+    <string name="chip_total">%1$d min total</string>
+    <string name="chip_hr">%1$d bpm</string>
+    <string name="chip_cadence">%1$d rpm</string>
+    <string name="chip_ascent">+%1$d m</string>
+    <string name="chip_points">%1$d points</string>
+    <string name="cd_in_health">Saved in Health Connect</string>
+    <string name="ride_distance">%1$s km</string>
+    <string name="session_title">Cycplus M2 ride</string>
+
+    <!-- Log messages -->
+    <string name="log_scanning">looking for devices ‘%1$s*’</string>
+    <string name="log_found">found: %1$s  %2$s  rssi=%3$d</string>
+    <string name="log_nothing_found">nothing found — is the bike computer switched on?</string>
+    <string name="log_taking">using %1$s (%2$s)</string>
+    <string name="log_connected">connected to %1$s</string>
+    <string name="log_mtu">MTU %1$d</string>
+    <string name="log_notifications">notifications enabled</string>
+    <string name="log_firmware">firmware %1$s</string>
+    <string name="log_battery">battery %1$d%%</string>
+    <string name="log_memory">memory %1$s KB free</string>
+    <string name="log_rides_on_device">rides on the device: %1$d</string>
+    <string name="log_already_have">already here: %1$s</string>
+    <string name="log_downloading">downloading %1$s (%2$d bytes)</string>
+    <string name="log_saved">saved %1$s</string>
+    <string name="log_downloaded_total">new files downloaded: %1$d</string>
+    <string name="log_hc_unavailable">Health Connect is not available on this device</string>
+    <string name="log_missing_perms">missing Health Connect permissions: %1$s</string>
+    <string name="log_grant_hint">grant them in the app (lock icon) and run IMPORT again</string>
+    <string name="log_local_files">local files: %1$d, already imported: %2$d</string>
+    <string name="log_ride_imported">imported %1$s: %2$s km, %3$d points, heart rate %4$s, records in Health Connect: %5$d</string>
+    <string name="log_import_failed">could not import %1$s</string>
+    <string name="log_hc_status">Health Connect: %1$s</string>
+    <string name="log_available">available</string>
+    <string name="log_unavailable">NOT available</string>
+    <string name="log_perm_count">permissions granted: %1$d of %2$d</string>
+    <string name="log_perm_missing">  not granted: %1$s</string>
+    <string name="log_folder">files folder: %1$s</string>
+    <string name="log_local_rides">local rides: %1$d</string>
+    <string name="log_file_line">  %1$s  %2$d bytes  %3$s</string>
+    <string name="log_imported_mark">imported</string>
+    <string name="log_new_mark">new</string>
+    <string name="log_verify_perms">verification needs read permissions: %1$s</string>
+    <string name="log_verify_count">our rides in Health Connect over 60 days: %1$d</string>
+    <string name="log_verify_line">  %1$s  %2$d min total, %3$d min moving, %4$s km, heart-rate points %5$d, route %6$s, source %7$s</string>
+    <string name="log_route_yes">present</string>
+    <string name="log_route_no">missing</string>
+    <string name="log_perms_header">permission strings Health Connect expects:</string>
+    <string name="log_command">command: %1$s</string>
+    <string name="log_failed">failed [%1$s]</string>
+    <string name="log_done">--- done [%1$s] ---</string>
+    <string name="log_parse_failed">could not parse %1$s</string>
+    <string name="log_block_retry">retrying a block</string>
+    <string name="log_scan_failed">scan failed, code %1$d</string>
+    <string name="notification_text">Working with the bike computer</string>
+    <string name="notification_channel">Synchronisation</string>
+    <string name="share_ride">Share ride</string>
+    <string name="share_all">Share rides</string>
+    <string name="share_selected">Share %1$d</string>
+    <string name="cd_share">Share</string>
+    <string name="cd_share_all">Share all</string>
+    <string name="cd_clear_selection">Clear selection</string>
+    <string name="selected_count">%1$d selected</string>
+    <string name="select_all">Select all</string>
+    <string name="hint_long_press">Long-press a ride to pick several</string>
+</resources>

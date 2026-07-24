@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Читаемые копии для «Поделиться». -->
+    <cache-path name="share" path="share/" />
+    <!-- Сами скачанные файлы: /Android/data/<пакет>/files/fit -->
+    <external-files-path name="fit" path="fit/" />
+</paths>
