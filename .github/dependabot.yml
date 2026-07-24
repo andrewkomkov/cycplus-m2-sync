@@ -13,6 +13,20 @@ updates:
         patterns: ['androidx.*']
       kotlin:
         patterns: ['org.jetbrains.kotlin*']
+    ignore:
+      # Свежие androidx требуют compileSdk 37, а платформы android-37 в
+      # репозитории Google ещё нет — вернуться, когда появится.
+      - dependency-name: 'androidx.core:core-ktx'
+        versions: ['>=1.16.0']
+      - dependency-name: 'androidx.activity:*'
+        versions: ['>=1.10.0']
+      - dependency-name: 'androidx.lifecycle:*'
+        versions: ['>=2.9.0']
+      # AGP 9 и Gradle 9 идут в одной связке с тем же compileSdk 37.
+      - dependency-name: 'com.android.application'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'gradle'
+        update-types: ['version-update:semver-major']
 
   - package-ecosystem: github-actions
     directory: /
