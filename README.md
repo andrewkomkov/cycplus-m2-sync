@@ -10,9 +10,9 @@ files anywhere you like — **without the vendor cloud, without an account, with
 
 [Читать по-русски](README.ru.md)
 
-| Light on data, honest about it | Same app, English locale |
-| --- | --- |
-| ![Russian UI](docs/screenshot-ru.png) | ![English UI](docs/screenshot-en.png) |
+| Rides | Bulk selection | Settings | Russian locale |
+| --- | --- | --- | --- |
+| ![Ride list](docs/screenshot-en.png) | ![Selecting rides to export](docs/screenshot-select.png) | ![Settings menu](docs/screenshot-menu.png) | ![Russian UI](docs/screenshot-ru.png) |
 
 ## Why this exists
 

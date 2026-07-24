@@ -6,9 +6,9 @@
 Bluetooth, кладёт их в **Health Connect** и отдаёт исходные `.fit` куда угодно — **без облака
 производителя, без аккаунта и без фирменного приложения**.
 
-| Русский интерфейс | Английский |
-| --- | --- |
-| ![Русский интерфейс](docs/screenshot-ru.png) | ![English UI](docs/screenshot-en.png) |
+| Заезды | Выбор нескольких | Настройки | Английский |
+| --- | --- | --- | --- |
+| ![Список заездов](docs/screenshot-ru.png) | ![Выбор заездов для выгрузки](docs/screenshot-select.png) | ![Меню настроек](docs/screenshot-menu.png) | ![English UI](docs/screenshot-en.png) |
 
 ## Зачем
 

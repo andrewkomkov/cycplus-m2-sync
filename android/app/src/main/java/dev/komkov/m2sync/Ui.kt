@@ -9,6 +9,8 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,6 +26,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Bluetooth
 import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.CloudDone
 import androidx.compose.material.icons.rounded.CloudUpload
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.ExpandLess
@@ -37,8 +40,6 @@ import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.Sync
 import androidx.compose.material.icons.rounded.Terrain
 import androidx.compose.material.icons.rounded.Timer
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -342,7 +343,7 @@ fun ActionsRow(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
 @Composable
 fun RideCard(
     ride: RideSummary,
@@ -358,82 +359,90 @@ fun RideCard(
         modifier
             .fillMaxWidth()
             .combinedClickable(onClick = onClick, onLongClick = onLongClick),
+        shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer
             else MaterialTheme.colorScheme.surfaceContainerHigh
         ),
     ) {
-        Column(Modifier.padding(16.dp)) {
+        Column(Modifier.padding(start = 18.dp, end = 6.dp, top = 14.dp, bottom = 14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (selectionMode) {
                     Icon(
                         if (selected) Icons.Rounded.CheckCircle else Icons.Rounded.RadioButtonUnchecked,
                         null,
+                        Modifier.size(20.dp),
                         tint = MaterialTheme.colorScheme.primary,
                     )
-                    Spacer(Modifier.width(12.dp))
+                    Spacer(Modifier.width(10.dp))
                 }
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        stringResource(
-                            R.string.ride_distance,
-                            String.format(locale, "%.2f", ride.distanceM / 1000),
-                        ),
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                    )
-                    Text(
-                        dayFormat().format(ride.start.atZone(ZoneId.systemDefault())),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
+                Text(
+                    stringResource(
+                        R.string.ride_distance,
+                        String.format(locale, "%.2f", ride.distanceM / 1000),
+                    ),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                )
+                Spacer(Modifier.width(10.dp))
+                Text(
+                    dayFormat().format(ride.start.atZone(ZoneId.systemDefault())),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f),
+                )
                 if (ride.imported) {
                     Icon(
-                        Icons.Rounded.CloudUpload,
+                        Icons.Rounded.CloudDone,
                         stringResource(R.string.cd_in_health),
+                        Modifier.size(18.dp),
                         tint = MaterialTheme.colorScheme.primary,
                     )
                 }
                 if (!selectionMode) {
-                    IconButton(onClick = onShare) {
-                        Icon(Icons.Rounded.Share, stringResource(R.string.cd_share))
+                    IconButton(onClick = onShare, modifier = Modifier.size(36.dp)) {
+                        Icon(Icons.Rounded.Share, stringResource(R.string.cd_share), Modifier.size(18.dp))
                     }
                 }
             }
-            Spacer(Modifier.height(10.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                Chip(Icons.Rounded.Timer, stringResource(R.string.chip_moving, ride.movingMin))
-                Chip(Icons.Rounded.Schedule, stringResource(R.string.chip_total, ride.elapsedMin))
-            }
-            Spacer(Modifier.height(6.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                ride.avgHeartRate?.let { Chip(Icons.Rounded.Favorite, stringResource(R.string.chip_hr, it)) }
-                ride.avgCadence?.let { Chip(Icons.Rounded.Refresh, stringResource(R.string.chip_cadence, it)) }
-            }
-            Spacer(Modifier.height(6.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Spacer(Modifier.height(8.dp))
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.padding(end = 12.dp),
+            ) {
+                Metric(Icons.Rounded.Timer, stringResource(R.string.chip_moving, ride.movingMin))
+                Metric(Icons.Rounded.Schedule, stringResource(R.string.chip_total, ride.elapsedMin))
+                ride.avgHeartRate?.let { Metric(Icons.Rounded.Favorite, stringResource(R.string.chip_hr, it)) }
+                ride.avgCadence?.let { Metric(Icons.Rounded.Refresh, stringResource(R.string.chip_cadence, it)) }
                 ride.ascent?.takeIf { it > 0 }?.let {
-                    Chip(Icons.Rounded.Terrain, stringResource(R.string.chip_ascent, it))
+                    Metric(Icons.Rounded.Terrain, stringResource(R.string.chip_ascent, it))
                 }
                 if (ride.hasRoute) {
-                    Chip(Icons.Rounded.Route, stringResource(R.string.chip_points, ride.points))
+                    Metric(Icons.Rounded.Route, stringResource(R.string.chip_points, ride.points))
                 }
             }
         }
     }
 }
 
+/** Компактная метрика: иконка и подпись, без контейнера чипа. */
 @Composable
-private fun Chip(icon: ImageVector, label: String) {
-    AssistChip(
-        onClick = {},
-        label = { Text(label, style = MaterialTheme.typography.labelMedium) },
-        leadingIcon = { Icon(icon, null, Modifier.size(16.dp)) },
-        colors = AssistChipDefaults.assistChipColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
-        ),
-    )
+private fun Metric(icon: ImageVector, label: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            icon,
+            null,
+            Modifier.size(14.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.width(4.dp))
+        Text(
+            label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
 }
 
 @Composable
