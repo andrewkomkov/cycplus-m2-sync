@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.3.1](https://github.com/andrewkomkov/cycplus-m2-sync/compare/v0.3.0...v0.3.1) (2026-07-24)
+
+
+### Build
+
+* bump com.android.application from 8.10.1 to 8.13.2 in /android ([#19](https://github.com/andrewkomkov/cycplus-m2-sync/issues/19)) ([c522b5b](https://github.com/andrewkomkov/cycplus-m2-sync/commit/c522b5b123ce921aa4d935e6addfb9c53deb87a8))
+* bump com.garmin:fit from 21.171.0 to 21.205.0 in /android ([#18](https://github.com/andrewkomkov/cycplus-m2-sync/issues/18)) ([c683857](https://github.com/andrewkomkov/cycplus-m2-sync/commit/c68385753c088b478300e5b91b8d87d74892cbb2))
+* bump org.jetbrains.kotlinx:kotlinx-coroutines-android ([#16](https://github.com/andrewkomkov/cycplus-m2-sync/issues/16)) ([202c502](https://github.com/andrewkomkov/cycplus-m2-sync/commit/202c502bdede78ffcd773e7518a09b1b5c800c02))
+
 ## [0.3.0](https://github.com/andrewkomkov/cycplus-m2-sync/compare/v0.2.0...v0.3.0) (2026-07-24)
 
 
