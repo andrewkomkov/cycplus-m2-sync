@@ -25,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Bluetooth
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.CloudUpload
+import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.ExpandLess
 import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.Favorite
@@ -64,6 +65,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -74,9 +76,25 @@ import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Locale
 
-private val dayFormat: DateTimeFormatter =
-    DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT)
-private val timeFormat: DateTimeFormatter = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)
+/** Локаль читаем через конфигурацию: иначе экран не перерисуется при её смене. */
+@Composable
+private fun currentLocale(): Locale = LocalConfiguration.current.locales[0]
+
+@Composable
+private fun dayFormat(): DateTimeFormatter {
+    val locale = currentLocale()
+    return remember(locale) {
+        DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT).withLocale(locale)
+    }
+}
+
+@Composable
+private fun timeFormat(): DateTimeFormatter {
+    val locale = currentLocale()
+    return remember(locale) {
+        DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(locale)
+    }
+}
 
 /** Рисунок велокомпьютера: корпус, экран с зарядом и кольцо батареи вокруг. */
 @Composable
@@ -214,7 +232,7 @@ fun DeviceCard(
                     Text(
                         stringResource(
                             R.string.last_seen,
-                            timeFormat.format(it.atZone(ZoneId.systemDefault())),
+                            timeFormat().format(it.atZone(ZoneId.systemDefault())),
                         ),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -248,16 +266,17 @@ fun DeviceCard(
 fun TotalsRow(rides: List<RideSummary>, modifier: Modifier = Modifier) {
     val km = rides.sumOf { it.distanceM } / 1000
     val hours = rides.sumOf { it.movingMin } / 60.0
+    val locale = currentLocale()
     Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         StatTile(stringResource(R.string.stat_rides), rides.size.toString(), Modifier.weight(1f))
         StatTile(
             stringResource(R.string.stat_km),
-            String.format(Locale.getDefault(), "%.0f", km),
+            String.format(locale, "%.0f", km),
             Modifier.weight(1f),
         )
         StatTile(
             stringResource(R.string.stat_hours),
-            String.format(Locale.getDefault(), "%.1f", hours),
+            String.format(locale, "%.1f", hours),
             Modifier.weight(1f),
         )
         StatTile(
@@ -334,6 +353,7 @@ fun RideCard(
     onShare: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val locale = currentLocale()
     Card(
         modifier
             .fillMaxWidth()
@@ -357,13 +377,13 @@ fun RideCard(
                     Text(
                         stringResource(
                             R.string.ride_distance,
-                            String.format(Locale.getDefault(), "%.2f", ride.distanceM / 1000),
+                            String.format(locale, "%.2f", ride.distanceM / 1000),
                         ),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                     )
                     Text(
-                        dayFormat.format(ride.start.atZone(ZoneId.systemDefault())),
+                        dayFormat().format(ride.start.atZone(ZoneId.systemDefault())),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -489,5 +509,46 @@ fun RidesList(
             )
         }
         item { Spacer(Modifier.height(24.dp)) }
+    }
+}
+
+@Composable
+fun UpdateCard(
+    update: UpdateChecker.Update,
+    onDownload: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer
+        ),
+    ) {
+        Row(
+            Modifier.padding(16.dp).fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                Icons.Rounded.Download,
+                null,
+                tint = MaterialTheme.colorScheme.onTertiaryContainer,
+            )
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    stringResource(R.string.update_available, update.version),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                )
+                Text(
+                    stringResource(R.string.update_current, BuildConfig.VERSION_NAME),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                )
+            }
+            FilledTonalButton(onClick = onDownload) {
+                Text(stringResource(R.string.update_download), maxLines = 1)
+            }
+        }
     }
 }

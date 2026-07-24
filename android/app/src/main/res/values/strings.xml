@@ -100,4 +100,17 @@
     <string name="selected_count">%1$d selected</string>
     <string name="select_all">Select all</string>
     <string name="hint_long_press">Long-press a ride to pick several</string>
+    <string name="setting_auto_sync">Sync on launch</string>
+    <string name="setting_auto_sync_hint">Look for the bike computer and pull new rides when the app opens</string>
+    <string name="setting_auto_update">Check for updates</string>
+    <string name="setting_auto_update_hint">Ask GitHub once a day whether a newer release exists</string>
+    <string name="update_available">Version %1$s is available</string>
+    <string name="update_current">installed: %1$s</string>
+    <string name="update_download">Download</string>
+    <string name="log_update_found">update available: %1$s</string>
+    <string name="log_update_none">no updates, %1$s is the latest</string>
+    <string name="log_update_failed">update check failed</string>
+    <string name="log_verify_extra">    cadence points %1$d, speed points %2$d, segments %3$d</string>
+    <string name="cd_menu">Settings</string>
+    <string name="menu_check_now">Check for updates now</string>
 </resources>

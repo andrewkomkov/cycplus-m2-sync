@@ -98,4 +98,17 @@
     <string name="selected_count">выбрано: %1$d</string>
     <string name="select_all">Выбрать все</string>
     <string name="hint_long_press">Долгое нажатие на заезде — выбрать несколько</string>
+    <string name="setting_auto_sync">Синк при запуске</string>
+    <string name="setting_auto_sync_hint">Искать велокомпьютер и забирать новые заезды при открытии приложения</string>
+    <string name="setting_auto_update">Проверять обновления</string>
+    <string name="setting_auto_update_hint">Раз в сутки спрашивать GitHub, вышла ли новая версия</string>
+    <string name="update_available">Доступна версия %1$s</string>
+    <string name="update_current">установлена: %1$s</string>
+    <string name="update_download">Скачать</string>
+    <string name="log_update_found">есть обновление: %1$s</string>
+    <string name="log_update_none">обновлений нет, %1$s — последняя</string>
+    <string name="log_update_failed">не смог проверить обновления</string>
+    <string name="log_verify_extra">    точек каденса %1$d, точек скорости %2$d, сегментов %3$d</string>
+    <string name="cd_menu">Настройки</string>
+    <string name="menu_check_now">Проверить обновления сейчас</string>
 </resources>

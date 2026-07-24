@@ -30,6 +30,8 @@ Garmin Connect and the rest can read them — and the `.fit` files stay yours.
 - **No duplicates** — de-duplicated by `clientRecordId`, re-running a sync is safe
 - **Raw `.fit` export** — share one ride or many at once, with readable file names like
   `2026-07-24_10-30_40.99km_cycplus-m2.fit`
+- **Sync on launch** — opening the app finds the bike computer and pulls new rides in ~3 s
+- **Update check** — asks GitHub Releases for a newer version; both toggles live in the ⋮ menu
 - **Fully scriptable over ADB** — every action runs headless, no tapping required
 - **Material 3 UI** with dynamic colour, English and Russian localisation
 - **Device card** — model, firmware, battery, free memory read straight off the device
@@ -126,8 +128,9 @@ python tools/fit_summary.py          # what is inside the downloaded files
 
 ## Privacy
 
-Everything stays on the device. No analytics, no network permission, no account. The app only
-talks to your bike computer over Bluetooth and to Health Connect on the same phone.
+Rides never leave the phone: no analytics, no account, no upload. The only network request the app
+can make is an optional version check against `api.github.com/repos/…/releases/latest`, which sends
+nothing but a User-Agent and can be switched off in the ⋮ menu.
 
 ## Credits
 

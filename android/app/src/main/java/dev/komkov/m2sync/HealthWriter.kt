@@ -55,6 +55,8 @@ object HealthWriter {
         HealthPermission.getReadPermission(ExerciseSessionRecord::class),
         HealthPermission.getReadPermission(HeartRateRecord::class),
         HealthPermission.getReadPermission(DistanceRecord::class),
+        HealthPermission.getReadPermission(CyclingPedalingCadenceRecord::class),
+        HealthPermission.getReadPermission(SpeedRecord::class),
     )
 
     suspend fun readSessions(ctx: Context, since: java.time.Instant): List<ExerciseSessionRecord> =
@@ -81,6 +83,24 @@ object HealthWriter {
         client(ctx).readRecords(
             ReadRecordsRequest(
                 recordType = HeartRateRecord::class,
+                timeRangeFilter = TimeRangeFilter.between(from, to),
+                dataOriginFilter = ownOrigin(ctx),
+            )
+        ).records.sumOf { it.samples.size }
+
+    suspend fun readCadenceCount(ctx: Context, from: java.time.Instant, to: java.time.Instant): Int =
+        client(ctx).readRecords(
+            ReadRecordsRequest(
+                recordType = CyclingPedalingCadenceRecord::class,
+                timeRangeFilter = TimeRangeFilter.between(from, to),
+                dataOriginFilter = ownOrigin(ctx),
+            )
+        ).records.sumOf { it.samples.size }
+
+    suspend fun readSpeedCount(ctx: Context, from: java.time.Instant, to: java.time.Instant): Int =
+        client(ctx).readRecords(
+            ReadRecordsRequest(
+                recordType = SpeedRecord::class,
                 timeRangeFilter = TimeRangeFilter.between(from, to),
                 dataOriginFilter = ownOrigin(ctx),
             )

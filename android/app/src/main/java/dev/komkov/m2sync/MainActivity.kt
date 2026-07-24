@@ -3,6 +3,7 @@ package dev.komkov.m2sync
 import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -15,18 +16,25 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.SelectAll
 import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -36,8 +44,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.health.connect.client.PermissionController
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+
+    companion object {
+        /** Автосинк — один раз на запуск процесса, а не на каждый поворот экрана. */
+        private var autoSyncDone = false
+    }
 
     private val healthPermissions = registerForActivityResult(
         PermissionController.createRequestPermissionResultContract()
@@ -59,6 +73,7 @@ class MainActivity : ComponentActivity() {
         LogBus.init(this)
         enableEdgeToEdge()
         AppState.load(this)
+        Settings.load(this)
 
         setContent {
             M2Theme {
@@ -70,7 +85,14 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
+
+        // При запуске: показать что есть локально, затем — если включено —
+        // сразу пойти к велокомпьютеру и слить новые заезды.
         send(SyncService.ACTION_STATUS)
+        if (Settings.autoSync.value && !autoSyncDone) {
+            autoSyncDone = true
+            send(SyncService.ACTION_SYNC)
+        }
     }
 
     private fun requestAll() {
@@ -111,6 +133,15 @@ private fun Screen(
     var selection by remember { mutableStateOf(emptySet<String>()) }
     val selecting = selection.isNotEmpty()
 
+    val autoSync by Settings.autoSync.collectAsStateWithLifecycle()
+    val autoUpdate by Settings.autoUpdate.collectAsStateWithLifecycle()
+    val update by AppState.update.collectAsStateWithLifecycle()
+
+    var menuOpen by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) { UpdateChecker.checkIfDue(ctx) }
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
@@ -144,6 +175,39 @@ private fun Screen(
                         IconButton(onClick = onPermissions) {
                             Icon(Icons.Rounded.Lock, stringResource(R.string.cd_permissions))
                         }
+                        IconButton(onClick = { menuOpen = true }) {
+                            Icon(Icons.Rounded.MoreVert, stringResource(R.string.cd_menu))
+                        }
+                        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.setting_auto_sync)) },
+                                trailingIcon = {
+                                    Switch(
+                                        checked = autoSync,
+                                        onCheckedChange = { Settings.setAutoSync(ctx, it) },
+                                    )
+                                },
+                                onClick = { Settings.setAutoSync(ctx, !autoSync) },
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.setting_auto_update)) },
+                                trailingIcon = {
+                                    Switch(
+                                        checked = autoUpdate,
+                                        onCheckedChange = { Settings.setAutoUpdate(ctx, it) },
+                                    )
+                                },
+                                onClick = { Settings.setAutoUpdate(ctx, !autoUpdate) },
+                            )
+                            HorizontalDivider()
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.menu_check_now)) },
+                                onClick = {
+                                    menuOpen = false
+                                    scope.launch { UpdateChecker.check(ctx) }
+                                },
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -165,6 +229,14 @@ private fun Screen(
             onShare = { ride -> Sharing.shareRide(ctx, ride) },
             header = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    update?.let {
+                        UpdateCard(it, onDownload = {
+                            ctx.startActivity(
+                                Intent(Intent.ACTION_VIEW, Uri.parse(it.apkUrl ?: it.pageUrl))
+                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            )
+                        })
+                    }
                     DeviceCard(device, busy, action)
                     ActionsRow(onSync, onInfo, onVerify, enabled = !busy)
                     TotalsRow(rides)

@@ -102,6 +102,9 @@ object AppState {
     /** Прогресс скачивания: имя файла, сколько уже байт, сколько всего. */
     val transfer = MutableStateFlow<Triple<String, Int, Int>?>(null)
 
+    /** Найденное на GitHub обновление, если оно новее установленного. */
+    val update = MutableStateFlow<UpdateChecker.Update?>(null)
+
     fun load(ctx: Context) {
         val p = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         p.getString(KEY_DEVICE, null)?.let {

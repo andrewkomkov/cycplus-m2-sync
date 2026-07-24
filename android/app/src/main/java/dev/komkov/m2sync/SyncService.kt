@@ -57,6 +57,13 @@ class SyncService : Service() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val busy = Mutex()
 
+    /**
+     * Команд может прилететь несколько подряд (например STATUS и сразу SYNC).
+     * Останавливаемся только когда доделаны все, иначе scope.cancel() рубит
+     * ещё не начатую работу.
+     */
+    private val pending = java.util.concurrent.atomic.AtomicInteger(0)
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
@@ -88,6 +95,7 @@ class SyncService : Service() {
         val address = intent?.getStringExtra(EXTRA_ADDRESS)
         val force = intent?.getStringExtra(EXTRA_FORCE) != null
 
+        pending.incrementAndGet()
         scope.launch {
             busy.withLock {
                 AppState.busy.value = true
@@ -111,7 +119,7 @@ class SyncService : Service() {
                     AppState.transfer.value = null
                 }
             }
-            stopSelf()
+            if (pending.decrementAndGet() == 0) stopSelf()
         }
         return START_NOT_STICKY
     }
@@ -310,6 +318,12 @@ class SyncService : Service() {
                         R.string.log_route_yes else R.string.log_route_no
                 ),
                 s.metadata.dataOrigin.packageName,
+            )
+            LogBus.i(
+                R.string.log_verify_extra,
+                HealthWriter.readCadenceCount(this, s.startTime, s.endTime),
+                HealthWriter.readSpeedCount(this, s.startTime, s.endTime),
+                s.segments.size,
             )
         }
     }
