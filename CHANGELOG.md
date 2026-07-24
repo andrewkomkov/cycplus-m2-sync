@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.0](https://github.com/andrewkomkov/cycplus-m2-sync/compare/v0.2.0...v0.3.0) (2026-07-24)
+
+
+### Features
+
+* **i18n:** add ukrainian locale and refresh dependencies ([#14](https://github.com/andrewkomkov/cycplus-m2-sync/issues/14)) ([2b90bc0](https://github.com/andrewkomkov/cycplus-m2-sync/commit/2b90bc0af5117a6f8773f30e079b8c8752127978))
+
+
+### Documentation
+
+* add missing screenshots and drop the russian column from the english readme ([a92556c](https://github.com/andrewkomkov/cycplus-m2-sync/commit/a92556c66b03eccf66f05f105c8725d4257bba36))
+
 ## [0.2.0](https://github.com/andrewkomkov/cycplus-m2-sync/compare/v0.1.0...v0.2.0) (2026-07-24)
 
 
