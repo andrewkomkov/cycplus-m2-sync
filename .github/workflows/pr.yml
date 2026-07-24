@@ -15,7 +15,7 @@ jobs:
     steps:
       # release-please собирает версию и changelog из заголовков — если заголовок
       # не по спецификации, релиз молча проедет мимо изменения.
-      - uses: amannn/action-semantic-pull-request@v5
+      - uses: amannn/action-semantic-pull-request@v6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:

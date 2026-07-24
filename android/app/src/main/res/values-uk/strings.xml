@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">M2 Sync</string>
+    <string name="rationale">Застосунок забирає записані заїзди з велокомп’ютера Cycplus M2 через Bluetooth і зберігає їх у Health Connect. Дані нікуди не передаються й залишаються на пристрої.</string>
+
+    <string name="title_rides">Заїзди з M2</string>
+    <string name="cd_permissions">Дозволи</string>
+    <string name="device_unknown">Велокомп’ютер не опитано</string>
+    <string name="device_hint">натисніть «Опитати»</string>
+    <string name="device_default_name">Cycplus M2</string>
+    <string name="battery_caption">заряд</string>
+    <string name="firmware_label">прошивка</string>
+    <string name="memory_line">пам’ять: %1$d з %2$d КБ</string>
+    <string name="last_seen">на зв’язку о %1$s</string>
+    <string name="dash">—</string>
+
+    <string name="busy_sync">синхронізація…</string>
+    <string name="busy_info">опитую пристрій…</string>
+    <string name="busy_import">імпорт до Health Connect…</string>
+    <string name="busy_verify">перевіряю записи…</string>
+    <string name="busy_scan">шукаю пристрій…</string>
+    <string name="busy_other">працюю…</string>
+
+    <string name="btn_sync">Синхронізувати</string>
+    <string name="btn_poll">Опитати</string>
+    <string name="btn_verify">Перевірити</string>
+
+    <string name="stat_rides">заїздів</string>
+    <string name="stat_km">кілометрів</string>
+    <string name="stat_hours">годин</string>
+    <string name="stat_in_health">у Health</string>
+
+    <string name="log_title">Журнал</string>
+    <string name="log_empty">порожньо</string>
+    <string name="rides_empty">Заїздів поки немає — натисніть «Синхронізувати», коли велокомп’ютер увімкнено.</string>
+
+    <string name="chip_moving">%1$d хв у русі</string>
+    <string name="chip_total">%1$d хв загалом</string>
+    <string name="chip_hr">%1$d уд/хв</string>
+    <string name="chip_cadence">%1$d об/хв</string>
+    <string name="chip_ascent">+%1$d м</string>
+    <string name="chip_points">%1$d точок</string>
+    <string name="cd_in_health">Збережено в Health Connect</string>
+    <string name="ride_distance">%1$s км</string>
+    <string name="session_title">Заїзд Cycplus M2</string>
+
+    <string name="log_scanning">шукаю пристрої «%1$s*»</string>
+    <string name="log_found">знайдено: %1$s  %2$s  rssi=%3$d</string>
+    <string name="log_nothing_found">нічого не знайдено — чи увімкнено велокомп’ютер?</string>
+    <string name="log_taking">беру %1$s (%2$s)</string>
+    <string name="log_connected">під’єднано до %1$s</string>
+    <string name="log_mtu">MTU %1$d</string>
+    <string name="log_notifications">сповіщення увімкнено</string>
+    <string name="log_firmware">прошивка %1$s</string>
+    <string name="log_battery">батарея %1$d%%</string>
+    <string name="log_memory">пам’ять %1$s КБ вільно</string>
+    <string name="log_rides_on_device">заїздів на пристрої: %1$d</string>
+    <string name="log_already_have">уже є: %1$s</string>
+    <string name="log_downloading">завантажую %1$s (%2$d байт)</string>
+    <string name="log_saved">збережено %1$s</string>
+    <string name="log_downloaded_total">завантажено нових файлів: %1$d</string>
+    <string name="log_hc_unavailable">Health Connect недоступний на цьому пристрої</string>
+    <string name="log_missing_perms">бракує дозволів Health Connect: %1$s</string>
+    <string name="log_grant_hint">видайте їх у застосунку (значок замка) і повторіть IMPORT</string>
+    <string name="log_local_files">локальних файлів: %1$d, вже імпортовано: %2$d</string>
+    <string name="log_ride_imported">імпортовано %1$s: %2$s км, %3$d точок, пульс %4$s, записів у Health Connect: %5$d</string>
+    <string name="log_import_failed">не вдалося імпортувати %1$s</string>
+    <string name="log_hc_status">Health Connect: %1$s</string>
+    <string name="log_available">доступний</string>
+    <string name="log_unavailable">НЕДОСТУПНИЙ</string>
+    <string name="log_perm_count">дозволів надано: %1$d з %2$d</string>
+    <string name="log_perm_missing">  не надано: %1$s</string>
+    <string name="log_folder">тека з файлами: %1$s</string>
+    <string name="log_local_rides">локальних заїздів: %1$d</string>
+    <string name="log_file_line">  %1$s  %2$d байт  %3$s</string>
+    <string name="log_imported_mark">імпортовано</string>
+    <string name="log_new_mark">новий</string>
+    <string name="log_verify_perms">для перевірки потрібні дозволи на читання: %1$s</string>
+    <string name="log_verify_count">наших заїздів у Health Connect за 60 днів: %1$d</string>
+    <string name="log_verify_line">  %1$s  загалом %2$d хв, у русі %3$d хв, %4$s км, точок пульсу %5$d, маршрут %6$s, джерело %7$s</string>
+    <string name="log_route_yes">є</string>
+    <string name="log_route_no">немає</string>
+    <string name="log_perms_header">рядки дозволів, на які чекає Health Connect:</string>
+    <string name="log_command">команда: %1$s</string>
+    <string name="log_failed">збій [%1$s]</string>
+    <string name="log_done">--- готово [%1$s] ---</string>
+    <string name="log_parse_failed">не вдалося розібрати %1$s</string>
+    <string name="log_block_retry">повтор блока</string>
+    <string name="log_scan_failed">пошук не вдався, код %1$d</string>
+    <string name="notification_text">Працюю з велокомп’ютером</string>
+    <string name="notification_channel">Синхронізація</string>
+    <string name="share_ride">Надіслати заїзд</string>
+    <string name="share_all">Надіслати заїзди</string>
+    <string name="share_selected">Надіслати %1$d</string>
+    <string name="cd_share">Поділитися</string>
+    <string name="cd_share_all">Поділитися всіма</string>
+    <string name="cd_clear_selection">Зняти позначення</string>
+    <string name="selected_count">вибрано: %1$d</string>
+    <string name="select_all">Вибрати всі</string>
+    <string name="hint_long_press">Довге натискання на заїзді — вибрати кілька</string>
+    <string name="setting_auto_sync">Синк при запуску</string>
+    <string name="setting_auto_sync_hint">Шукати велокомп’ютер і забирати нові заїзди під час відкриття застосунку</string>
+    <string name="setting_auto_update">Перевіряти оновлення</string>
+    <string name="setting_auto_update_hint">Раз на добу питати GitHub, чи вийшла новіша версія</string>
+    <string name="update_available">Доступна версія %1$s</string>
+    <string name="update_current">встановлено: %1$s</string>
+    <string name="update_download">Завантажити</string>
+    <string name="log_update_found">є оновлення: %1$s</string>
+    <string name="log_update_none">оновлень немає, %1$s — найновіша</string>
+    <string name="log_update_failed">не вдалося перевірити оновлення</string>
+    <string name="log_verify_extra">    точок каденсу %1$d, точок швидкості %2$d, сегментів %3$d</string>
+    <string name="cd_menu">Налаштування</string>
+    <string name="menu_check_now">Перевірити оновлення зараз</string>
+</resources>
