@@ -1,2 +1,2 @@
 bleak>=1.0
-fitdecode>=0.10
+fitdecode>=0.11.0
