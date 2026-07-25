@@ -325,6 +325,15 @@ class SyncService : Service() {
                 HealthWriter.readSpeedCount(this, s.startTime, s.endTime),
                 s.segments.size,
             )
+            for ((type, byOrigin) in HealthWriter.readOrigins(this, s.startTime, s.endTime)) {
+                val foreign = byOrigin.filterKeys { it != packageName }
+                if (foreign.isEmpty()) continue
+                LogBus.i(
+                    R.string.log_verify_foreign,
+                    type,
+                    foreign.entries.joinToString { "${it.key}=${it.value}" },
+                )
+            }
         }
     }
 

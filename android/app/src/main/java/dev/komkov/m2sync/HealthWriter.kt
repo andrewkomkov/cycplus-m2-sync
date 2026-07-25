@@ -106,6 +106,37 @@ object HealthWriter {
             )
         ).records.sumOf { it.samples.size }
 
+    /**
+     * Кто ещё пишет в то же окно: тип записи -> источник -> число сэмплов.
+     * Fit рисует графики по всем источникам сразу, поэтому чужие записи важнее
+     * своих: именно они объясняют расхождение с .fit.
+     */
+    suspend fun readOrigins(
+        ctx: Context,
+        from: java.time.Instant,
+        to: java.time.Instant,
+    ): Map<String, Map<String, Int>> {
+        val hc = client(ctx)
+        val range = TimeRangeFilter.between(from, to)
+
+        suspend fun <T : Record> count(
+            type: kotlin.reflect.KClass<T>,
+            samples: (T) -> Int,
+        ): Map<String, Int> =
+            hc.readRecords(ReadRecordsRequest(recordType = type, timeRangeFilter = range))
+                .records
+                .groupingBy { it.metadata.dataOrigin.packageName }
+                .fold(0) { acc, r -> acc + samples(r) }
+
+        return linkedMapOf(
+            "heart rate" to count(HeartRateRecord::class) { it.samples.size },
+            "speed" to count(SpeedRecord::class) { it.samples.size },
+            "cadence" to count(CyclingPedalingCadenceRecord::class) { it.samples.size },
+            "distance" to count(DistanceRecord::class) { 1 },
+            "session" to count(ExerciseSessionRecord::class) { 1 },
+        )
+    }
+
     fun available(ctx: Context): Boolean =
         HealthConnectClient.getSdkStatus(ctx) == HealthConnectClient.SDK_AVAILABLE
 
