@@ -110,6 +110,7 @@
     <string name="log_update_failed">не вдалося перевірити оновлення</string>
     <string name="log_verify_extra">    точок каденсу %1$d, точок швидкості %2$d, сегментів %3$d</string>
     <string name="log_verify_calories">    калорій у Health Connect: %1$d ккал</string>
+    <string name="log_verify_foreign">    чужі джерела за %1$s: %2$s</string>
     <string name="cd_menu">Налаштування</string>
     <string name="menu_check_now">Перевірити оновлення зараз</string>
     <string name="menu_profile">Профіль для калорій</string>
