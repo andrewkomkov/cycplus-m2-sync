@@ -18,9 +18,14 @@ That dump is enough to tell whether a model needs a different index file
 
 ```bash
 cd android
-./gradlew :app:assembleDebug :app:lintDebug
+./gradlew :app:testDebugUnitTest :app:assembleDebug :app:lintDebug
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
+
+Tests are plain JVM ones: the calorie and scale maths as unit tests, the screen as
+Compose UI tests on Robolectric — no emulator, no connected phone, and CI runs the same
+task. A change to the screen belongs with a test in
+`android/app/src/test/java/dev/komkov/m2sync/UiTest.kt`.
 
 Anything that touches the protocol or the import has to be checked against a real
 device — please say which model and firmware in the pull request, and paste the

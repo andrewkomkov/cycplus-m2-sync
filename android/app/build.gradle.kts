@@ -63,6 +63,12 @@ android {
     packaging {
         resources.excludes += setOf("META-INF/*.kotlin_module", "META-INF/DEPENDENCIES")
     }
+
+    // UI-тесты идут через Robolectric обычным `test`-таском, без эмулятора,
+    // поэтому им нужны настоящие ресурсы приложения.
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
 }
 
 // Расширение kotlin регистрирует сам AGP 9 (встроенный Kotlin), плагин
@@ -95,4 +101,9 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     // Настоящий org.json: в unit-тестах андроидный — заглушка.
     testImplementation("org.json:json:20250517")
+    testImplementation("org.robolectric:robolectric:4.15.1")
+    testImplementation("androidx.compose.ui:ui-test-junit4")
+    // Манифест с пустой ComponentActivity — только он даёт правилу что запускать,
+    // и попасть должен именно в отладочный вариант, а не в тестовый classpath.
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
 }
