@@ -4,6 +4,7 @@
     <string name="rationale">Застосунок забирає записані заїзди з велокомп’ютера Cycplus M2 через Bluetooth і зберігає їх у Health Connect. Дані нікуди не передаються й залишаються на пристрої.</string>
 
     <string name="title_rides">Заїзди з M2</string>
+    <string name="subtitle_rides">%1$d у списку</string>
     <string name="cd_permissions">Дозволи</string>
     <string name="device_unknown">Велокомп’ютер не опитано</string>
     <string name="device_hint">натисніть «Опитати»</string>
