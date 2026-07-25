@@ -2,6 +2,13 @@
 <resources>
     <string name="app_name">M2 Sync</string>
     <string name="rationale">This app downloads recorded rides from a Cycplus M2 bike computer over Bluetooth and stores them in Health Connect. Nothing is uploaded anywhere — the data stays on your device.</string>
+    <string name="rationale_what">What goes into Health Connect</string>
+    <string name="rationale_ride">Ride: duration, distance, elevation gain</string>
+    <string name="rationale_heart">Heart rate and cadence, sample by sample</string>
+    <string name="rationale_route">GPS route of the ride</string>
+    <string name="rationale_calories">Energy spent, estimated from heart rate</string>
+    <string name="rationale_weight">Weight, when you use a smart scale</string>
+    <string name="rationale_close">Got it</string>
 
     <!-- Screen -->
     <string name="title_rides">Rides from M2</string>
@@ -130,6 +137,7 @@
     <string name="profile_title">Profile for calories</string>
     <string name="profile_hint">Weight comes from Health Connect. Year of birth and sex are not stored there, so the heart-rate formula needs them here — without them the estimate falls back to speed alone.</string>
     <string name="profile_birth_year">Year of birth</string>
+    <string name="profile_year_invalid">Four digits, 1900 or later</string>
     <string name="profile_male">Male</string>
     <string name="profile_female">Female</string>
     <string name="profile_save">Save</string>
