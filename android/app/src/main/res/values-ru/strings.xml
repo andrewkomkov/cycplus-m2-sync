@@ -2,6 +2,13 @@
 <resources>
     <string name="app_name">M2 Sync</string>
     <string name="rationale">Приложение забирает записанные заезды с велокомпьютера Cycplus M2 по Bluetooth и сохраняет их в Health Connect. Данные никуда не передаются и остаются на устройстве.</string>
+    <string name="rationale_what">Что уходит в Health Connect</string>
+    <string name="rationale_ride">Заезд: длительность, расстояние, набор высоты</string>
+    <string name="rationale_heart">Пульс и каденс, каждая точка</string>
+    <string name="rationale_route">GPS-маршрут заезда</string>
+    <string name="rationale_calories">Расход энергии, оценённый по пульсу</string>
+    <string name="rationale_weight">Вес, если пользуешься умными весами</string>
+    <string name="rationale_close">Понятно</string>
 
     <string name="title_rides">Заезды с M2</string>
     <string name="subtitle_rides">%1$d в списке</string>
@@ -128,6 +135,7 @@
     <string name="profile_title">Профиль для калорий</string>
     <string name="profile_hint">Вес берётся из Health Connect. Год рождения и пол там не хранятся, а пульсовой формуле они нужны — без них расход считается только по скорости, грубее.</string>
     <string name="profile_birth_year">Год рождения</string>
+    <string name="profile_year_invalid">Четыре цифры, не раньше 1900</string>
     <string name="profile_male">Мужской</string>
     <string name="profile_female">Женский</string>
     <string name="profile_save">Сохранить</string>

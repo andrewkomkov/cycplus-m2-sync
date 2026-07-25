@@ -45,6 +45,7 @@ import androidx.compose.material.icons.rounded.Sync
 import androidx.compose.material.icons.rounded.Terrain
 import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonGroup
 import androidx.compose.material3.ButtonGroupDefaults
@@ -84,6 +85,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -669,6 +671,7 @@ fun UpdateCard(
  * Профиль для расчёта калорий. Вес приходит из Health Connect, а год рождения
  * и пол там не хранятся — это не типы записей, — поэтому спрашиваем здесь.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ProfileDialog(onDismiss: () -> Unit) {
     val ctx = LocalContext.current
@@ -695,19 +698,29 @@ fun ProfileDialog(onDismiss: () -> Unit) {
                     value = year,
                     onValueChange = { new -> year = new.filter { it.isDigit() }.take(4) },
                     label = { Text(stringResource(R.string.profile_birth_year)) },
+                    supportingText = {
+                        if (!yearValid) Text(stringResource(R.string.profile_year_invalid))
+                    },
                     isError = !yearValid,
                     singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(
-                        selected = sex == Calories.Sex.MALE,
-                        onClick = { sex = Calories.Sex.MALE },
-                        label = { Text(stringResource(R.string.profile_male)) },
+                // Подписи берём заранее: внутри scope группы уже не composable-контекст.
+                val maleLabel = stringResource(R.string.profile_male)
+                val femaleLabel = stringResource(R.string.profile_female)
+                ButtonGroup(
+                    overflowIndicator = {},
+                    horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+                ) {
+                    toggleableItem(
+                        checked = sex == Calories.Sex.MALE,
+                        onCheckedChange = { sex = Calories.Sex.MALE },
+                        label = maleLabel,
                     )
-                    FilterChip(
-                        selected = sex == Calories.Sex.FEMALE,
-                        onClick = { sex = Calories.Sex.FEMALE },
-                        label = { Text(stringResource(R.string.profile_female)) },
+                    toggleableItem(
+                        checked = sex == Calories.Sex.FEMALE,
+                        onCheckedChange = { sex = Calories.Sex.FEMALE },
+                        label = femaleLabel,
                     )
                 }
             }
