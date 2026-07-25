@@ -1,6 +1,5 @@
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
@@ -15,12 +14,12 @@ fun versionCodeOf(name: String): Int {
 
 android {
     namespace = "dev.komkov.m2sync"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "dev.komkov.m2sync"
         minSdk = 33
-        targetSdk = 36
+        targetSdk = 37
         versionCode = versionCodeOf(appVersion)
         versionName = appVersion
     }
@@ -66,6 +65,8 @@ android {
     }
 }
 
+// Расширение kotlin регистрирует сам AGP 9 (встроенный Kotlin), плагин
+// org.jetbrains.kotlin.android для этого больше не нужен.
 kotlin {
     compilerOptions {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
@@ -79,11 +80,11 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
-    implementation("androidx.activity:activity-compose:1.9.3")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
+    implementation("androidx.activity:activity-compose:1.13.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.11.0")
 
-    implementation("androidx.core:core-ktx:1.15.0")
-    implementation("androidx.activity:activity-ktx:1.9.3")
+    implementation("androidx.core:core-ktx:1.19.0")
+    implementation("androidx.activity:activity-ktx:1.13.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
     implementation("androidx.health.connect:connect-client:1.1.0")
     implementation("com.garmin:fit:21.205.0")
