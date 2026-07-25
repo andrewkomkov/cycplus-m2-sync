@@ -346,7 +346,6 @@ fun ActionsRow(
     onSync: () -> Unit,
     onInfo: () -> Unit,
     onVerify: () -> Unit,
-    onWeigh: () -> Unit,
     enabled: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -355,7 +354,6 @@ fun ActionsRow(
     val syncInteraction = remember { MutableInteractionSource() }
     val pollInteraction = remember { MutableInteractionSource() }
     val verifyInteraction = remember { MutableInteractionSource() }
-    val weighInteraction = remember { MutableInteractionSource() }
 
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Button(
@@ -389,23 +387,6 @@ fun ActionsRow(
                         Icon(Icons.Rounded.Bluetooth, null, Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
                         Text(stringResource(R.string.btn_poll), maxLines = 1)
-                    }
-                },
-                menuContent = {},
-            )
-            customItem(
-                buttonGroupContent = {
-                    FilledTonalButton(
-                        onClick = onWeigh,
-                        enabled = enabled,
-                        interactionSource = weighInteraction,
-                        modifier = Modifier
-                            .weight(1f)
-                            .animateWidth(weighInteraction),
-                    ) {
-                        Icon(Icons.Rounded.MonitorWeight, null, Modifier.size(18.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text(stringResource(R.string.btn_weigh), maxLines = 1)
                     }
                 },
                 menuContent = {},
@@ -744,4 +725,55 @@ fun ProfileDialog(onDismiss: () -> Unit) {
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.profile_cancel)) }
         },
     )
+}
+
+/** Последний вес: его же берёт расчёт калорий, поэтому он на виду. */
+@Composable
+fun WeightCard(weight: WeightReading?, onWeigh: () -> Unit, enabled: Boolean) {
+    val locale = currentLocale()
+    Card(
+        Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        ),
+    ) {
+        Row(
+            Modifier.fillMaxWidth().padding(start = 18.dp, end = 10.dp, top = 12.dp, bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                Icons.Rounded.MonitorWeight,
+                null,
+                Modifier.size(22.dp),
+                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+            )
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    if (weight == null) stringResource(R.string.weight_unknown)
+                    else stringResource(
+                        R.string.weight_value,
+                        String.format(locale, "%.2f", weight.kilograms),
+                    ),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                )
+                Text(
+                    weight?.let {
+                        stringResource(
+                            R.string.weight_measured,
+                            dayFormat().format(it.at.atZone(ZoneId.systemDefault())),
+                        )
+                    } ?: stringResource(R.string.weight_hint),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                )
+            }
+            FilledTonalButton(onClick = onWeigh, enabled = enabled) {
+                Text(stringResource(R.string.btn_weigh), maxLines = 1)
+            }
+        }
+    }
 }

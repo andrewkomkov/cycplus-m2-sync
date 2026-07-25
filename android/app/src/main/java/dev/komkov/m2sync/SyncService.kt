@@ -189,6 +189,7 @@ class SyncService : Service() {
         val reading = ScaleClient(this).awaitReading()
         val at = Instant.now()
         HealthWriter.writeWeight(this, reading.kilograms, at)
+        AppState.saveWeight(this, WeightReading(reading.kilograms, at))
         LogBus.i(
             R.string.log_scale_saved,
             String.format(Locale.getDefault(), "%.2f", reading.kilograms),
@@ -279,9 +280,15 @@ class SyncService : Service() {
         RideStore.refresh(this, imported, weight, profile)
     }
 
-    /** Вес нужен и калориям, и списку на экране; без разрешения просто молчим. */
-    private suspend fun weightKg(): Double? =
-        runCatching { HealthWriter.readLatestWeight(this) }.getOrNull()
+    /**
+     * Вес нужен и калориям, и карточке на экране; без разрешения просто молчим.
+     * Попутно кладём его в состояние, чтобы экран показывал актуальную цифру.
+     */
+    private suspend fun weightKg(): Double? {
+        val reading = runCatching { HealthWriter.readLatestWeight(this) }.getOrNull()
+        AppState.saveWeight(this, reading)
+        return reading?.kilograms
+    }
 
     /**
      * Год рождения и пол: сперва медкарта Health Connect, иначе ручной ввод.

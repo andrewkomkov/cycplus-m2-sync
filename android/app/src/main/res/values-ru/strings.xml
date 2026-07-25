@@ -29,6 +29,10 @@
     <string name="log_scale_reading">весы: %1$s кг</string>
     <string name="log_scale_saved">вес записан в Health Connect: %1$s кг</string>
     <string name="btn_weigh">Взвеситься</string>
+    <string name="weight_value">%1$s кг</string>
+    <string name="weight_unknown">Вес неизвестен</string>
+    <string name="weight_measured">замер %1$s</string>
+    <string name="weight_hint">калориям он нужен — встань на весы</string>
     <string name="busy_weigh">жду весы…</string>
 
     <string name="stat_rides">заездов</string>

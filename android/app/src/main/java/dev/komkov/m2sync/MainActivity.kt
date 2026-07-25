@@ -158,6 +158,7 @@ private fun Screen(
     val autoSync by Settings.autoSync.collectAsStateWithLifecycle()
     val autoUpdate by Settings.autoUpdate.collectAsStateWithLifecycle()
     val update by AppState.update.collectAsStateWithLifecycle()
+    val weight by AppState.weight.collectAsStateWithLifecycle()
 
     var menuOpen by remember { mutableStateOf(false) }
     var profileOpen by remember { mutableStateOf(false) }
@@ -296,7 +297,8 @@ private fun Screen(
                         })
                     }
                     DeviceCard(device, busy, action)
-                    ActionsRow(onSync, onInfo, onVerify, onWeigh, enabled = !busy)
+                    ActionsRow(onSync, onInfo, onVerify, enabled = !busy)
+                    WeightCard(weight, onWeigh, enabled = !busy)
                     TotalsRow(rides)
                     LogCard(log)
                 }

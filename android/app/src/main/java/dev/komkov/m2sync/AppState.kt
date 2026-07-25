@@ -41,6 +41,9 @@ data class DeviceSnapshot(
     }
 }
 
+/** Последний вес: показываем на экране и считаем по нему калории. */
+data class WeightReading(val kilograms: Double, val at: Instant)
+
 /** Разобранный заезд для списка на экране. */
 data class RideSummary(
     val file: String,
@@ -102,6 +105,7 @@ object AppState {
     private const val PREFS = "m2sync_state"
     private const val KEY_DEVICE = "device"
     private const val KEY_RIDES = "rides"
+    private const val KEY_WEIGHT = "weight"
 
     val busy = MutableStateFlow(false)
     val action = MutableStateFlow<String?>(null)
@@ -110,6 +114,8 @@ object AppState {
     /** Прогресс скачивания: имя файла, сколько уже байт, сколько всего. */
     val transfer = MutableStateFlow<Triple<String, Int, Int>?>(null)
 
+    val weight = MutableStateFlow<WeightReading?>(null)
+
     /** Найденное на GitHub обновление, если оно новее установленного. */
     val update = MutableStateFlow<UpdateChecker.Update?>(null)
 
@@ -117,6 +123,12 @@ object AppState {
         val p = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         p.getString(KEY_DEVICE, null)?.let {
             runCatching { device.value = DeviceSnapshot.fromJson(JSONObject(it)) }
+        }
+        p.getString(KEY_WEIGHT, null)?.let { raw ->
+            runCatching {
+                val o = JSONObject(raw)
+                weight.value = WeightReading(o.getDouble("kg"), Instant.ofEpochMilli(o.getLong("at")))
+            }
         }
         p.getString(KEY_RIDES, null)?.let { raw ->
             runCatching {
@@ -130,6 +142,15 @@ object AppState {
         device.value = snapshot
         ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
             .putString(KEY_DEVICE, snapshot.toJson().toString()).apply()
+    }
+
+    fun saveWeight(ctx: Context, reading: WeightReading?) {
+        weight.value = reading
+        val json = reading?.let {
+            JSONObject().apply { put("kg", it.kilograms); put("at", it.at.toEpochMilli()) }.toString()
+        }
+        ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putString(KEY_WEIGHT, json).apply()
     }
 
     fun saveRides(ctx: Context, list: List<RideSummary>) {
