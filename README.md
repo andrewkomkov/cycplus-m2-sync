@@ -30,10 +30,16 @@ Garmin Connect and the rest can read them — and the `.fit` files stay yours.
 - **No duplicates** — de-duplicated by `clientRecordId`, re-running a sync is safe
 - **Raw `.fit` export** — share one ride or many at once, with readable file names like
   `2026-07-24_10-30_40.99km_cycplus-m2.fit`
+- **Calories the M2 never records** — estimated from heart rate (Keytel et al., 2005), with a
+  speed-based MET fallback, and written as `TotalCaloriesBurnedRecord`
+- **Smart scale support** — reads weight straight off a Bluetooth scale's advertisement and files
+  it in Health Connect; the fresh weight feeds the calorie estimate
+- **Verify** — reads the rides back out of Health Connect and reports what is missing, plus which
+  other apps wrote records for the same days
 - **Sync on launch** — opening the app finds the bike computer and pulls new rides in ~3 s
 - **Update check** — asks GitHub Releases for a newer version; both toggles live in the ⋮ menu
 - **Fully scriptable over ADB** — every action runs headless, no tapping required
-- **Material 3 UI** with dynamic colour, English and Russian localisation
+- **Material 3 Expressive UI** with dynamic colour, English and Russian localisation
 - **Device card** — model, firmware, battery, free memory read straight off the device
 
 ## Install
@@ -57,10 +63,13 @@ for p in BLUETOOTH_SCAN BLUETOOTH_CONNECT POST_NOTIFICATIONS; do
   adb shell pm grant dev.komkov.m2sync android.permission.$p
 done
 for p in WRITE_EXERCISE WRITE_EXERCISE_ROUTE WRITE_HEART_RATE WRITE_DISTANCE \
-         WRITE_SPEED WRITE_ELEVATION_GAINED READ_EXERCISE READ_HEART_RATE READ_DISTANCE; do
+         WRITE_SPEED WRITE_ELEVATION_GAINED WRITE_TOTAL_CALORIES_BURNED WRITE_WEIGHT \
+         READ_EXERCISE READ_HEART_RATE READ_DISTANCE READ_SPEED READ_WEIGHT; do
   adb shell pm grant dev.komkov.m2sync android.permission.health.$p
 done
 ```
+
+`$S.PERMS` prints the exact list the current build expects, so it stays honest when the set changes.
 
 ## Usage from the terminal
 
@@ -75,6 +84,7 @@ $S.IMPORT                  # import already downloaded files only
 $S.IMPORT -e force 1       # re-import everything (after changing import logic)
 $S.STATUS                  # what is stored locally
 $S.VERIFY                  # read back from Health Connect and compare
+$S.WEIGH                   # wait for a scale reading and store the weight
 $S.PERMS                   # permission strings Health Connect expects
 
 adb logcat -s M2SYNC       # follow the work
@@ -105,8 +115,28 @@ Cycplus M1 / M3, CooSpo BC102 / BC107 / BC200. Newer models (NAV, G2+) list ride
 | `CyclingPedalingCadenceRecord` | `cadence` |
 | `SpeedRecord`, `DistanceRecord` | `enhanced_speed`, session total |
 | `ElevationGainedRecord` | `total_ascent` |
+| `TotalCaloriesBurnedRecord` | estimated — see below |
+| `WeightRecord` | a Bluetooth scale, not the bike computer |
 
-Calories are **not** written — the M2 does not record them.
+### Calories
+
+The M2 records none: `total_calories` is empty in both `session` and `lap`. So the app estimates
+them itself — from heart rate with the Keytel et al. (2005) equation, which needs exactly what the
+`.fit` already has per second, and from speed via MET (Compendium of Physical Activities) where
+heart rate is missing. Both models give gross expenditure over moving time, which is the semantics
+`TotalCaloriesBurnedRecord` asks for. A ride that does carry `total_calories` is taken as is.
+
+The estimate needs weight, year of birth and sex. Weight comes from the latest `WeightRecord` in
+Health Connect — the ⚖ button fills it from a Bluetooth scale. Year of birth and sex are read from
+the Health Connect medical record (FHIR `Patient`) when it has them, and asked for once in
+**⋮ → Profile for calories** otherwise. Change any of it and the rides recalculate on the spot.
+
+### Smart scale
+
+Weight is read from the standard Weight Scale advertisement (`0x181D`) — no pairing, no GATT
+connection, the app just listens. Verified on **Mi Smart Scale 2**. Body composition is not
+available over the air: impedance travels in the 13-byte `0x181B` packet the scale does not
+broadcast, and Mi Fit computes body fat on the phone.
 
 ## Protocol
 
@@ -130,7 +160,9 @@ python tools/fit_summary.py          # what is inside the downloaded files
 
 Rides never leave the phone: no analytics, no account, no upload. The only network request the app
 can make is an optional version check against `api.github.com/repos/…/releases/latest`, which sends
-nothing but a User-Agent and can be switched off in the ⋮ menu.
+nothing but a User-Agent and can be switched off in the ⋮ menu. Weight, year of birth and sex are
+used for the calorie estimate only and never leave the device — the profile lives in the app's own
+preferences, the weight in Health Connect.
 
 ## Credits
 
