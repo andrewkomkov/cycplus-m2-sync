@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.4.0](https://github.com/andrewkomkov/cycplus-m2-sync/compare/v0.3.1...v0.4.0) (2026-07-25)
+
+
+### Features
+
+* **calories:** estimate energy expenditure and write it to health connect ([#25](https://github.com/andrewkomkov/cycplus-m2-sync/issues/25)) ([87c10c9](https://github.com/andrewkomkov/cycplus-m2-sync/commit/87c10c9f35cce8db415e3f837421329110df0e0e))
+* **scale:** read weight from a ble scale into health connect ([#28](https://github.com/andrewkomkov/cycplus-m2-sync/issues/28)) ([0fba1e4](https://github.com/andrewkomkov/cycplus-m2-sync/commit/0fba1e4601bff7f59b1b2ce80baaf7c287561baa))
+* **ui:** rework the rationale screen and the profile dialog ([#29](https://github.com/andrewkomkov/cycplus-m2-sync/issues/29)) ([8e59a3c](https://github.com/andrewkomkov/cycplus-m2-sync/commit/8e59a3c85a959b46844e2a1f70d6b68ddcc70d85))
+* **ui:** rework the screen for material 3 expressive ([#27](https://github.com/andrewkomkov/cycplus-m2-sync/issues/27)) ([7a80cf7](https://github.com/andrewkomkov/cycplus-m2-sync/commit/7a80cf7e13c383c113b35d8af3bef6e10a1904b4))
+* **verify:** report foreign data sources per record type ([#24](https://github.com/andrewkomkov/cycplus-m2-sync/issues/24)) ([30402a7](https://github.com/andrewkomkov/cycplus-m2-sync/commit/30402a7338adf758a9374a73df9f8cda31f08769))
+
+
+### Build
+
+* **android:** bump to agp 9, gradle 9 and compile sdk 37 ([#23](https://github.com/andrewkomkov/cycplus-m2-sync/issues/23)) ([dc1da2c](https://github.com/andrewkomkov/cycplus-m2-sync/commit/dc1da2cab1cdfbc8cf0c869c5ac5c84196af011d))
+
 ## [0.3.1](https://github.com/andrewkomkov/cycplus-m2-sync/compare/v0.3.0...v0.3.1) (2026-07-24)
 
 
