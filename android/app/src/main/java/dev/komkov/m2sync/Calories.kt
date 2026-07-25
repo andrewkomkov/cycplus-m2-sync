@@ -32,6 +32,13 @@ object Calories {
         birthYear?.let { java.time.Year.now().value - it }?.takeIf { it in 1..120 }
 
     /**
+     * Отпечаток входных данных расчёта. Кэш заездов держится на нём: поменялся
+     * вес или профиль — прежнее число калорий недействительно.
+     */
+    fun profileKey(weightKg: Double?): String =
+        "${weightKg ?: "-"}/${Settings.birthYear.value ?: "-"}/${Settings.sex.value ?: "-"}"
+
+    /**
      * @param weightKg вес из Health Connect; без него считать нечего
      * @param age полных лет, нужен только пульсовой модели
      * @return килокалории или null, если данных не хватает

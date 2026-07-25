@@ -125,6 +125,15 @@ object HealthWriter {
             )
         ).records.sumOf { it.samples.size }
 
+    suspend fun readCaloriesTotal(ctx: Context, from: java.time.Instant, to: java.time.Instant): Double =
+        client(ctx).readRecords(
+            ReadRecordsRequest(
+                recordType = TotalCaloriesBurnedRecord::class,
+                timeRangeFilter = TimeRangeFilter.between(from, to),
+                dataOriginFilter = ownOrigin(ctx),
+            )
+        ).records.sumOf { it.energy.inKilocalories }
+
     fun available(ctx: Context): Boolean =
         HealthConnectClient.getSdkStatus(ctx) == HealthConnectClient.SDK_AVAILABLE
 

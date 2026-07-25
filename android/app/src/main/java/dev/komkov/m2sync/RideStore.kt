@@ -18,11 +18,14 @@ object RideStore {
             ?: emptyList()
 
         val cached = AppState.rides.value.associateBy { it.file }
+        // Разбор .fit дорогой, поэтому держим кэш — но калории зависят от веса и
+        // профиля, и после их правки старое число обязано пересчитаться.
+        val profile = Calories.profileKey(weightKg)
 
         val list = files.mapNotNull { file ->
             val known = cached[file.name]
             if (known != null && known.imported == (file.name in importedNames) &&
-                (known.kcal != null || weightKg == null)
+                known.kcalKey == profile
             ) return@mapNotNull known
             runCatching {
                 val ride = FitParser.parse(file)
@@ -42,6 +45,7 @@ object RideStore {
                     hasRoute = ride.hasRoute,
                     imported = file.name in importedNames,
                     kcal = Calories.forRide(ride, weightKg),
+                    kcalKey = profile,
                 )
             }.onFailure { LogBus.e(R.string.log_parse_failed, it, file.name) }.getOrNull()
         }.sortedByDescending { it.start }

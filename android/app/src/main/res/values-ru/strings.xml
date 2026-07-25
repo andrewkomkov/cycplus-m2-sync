@@ -109,6 +109,7 @@
     <string name="log_update_none">обновлений нет, %1$s — последняя</string>
     <string name="log_update_failed">не смог проверить обновления</string>
     <string name="log_verify_extra">    точек каденса %1$d, точек скорости %2$d, сегментов %3$d</string>
+    <string name="log_verify_calories">    калорий в Health Connect: %1$d ккал</string>
     <string name="cd_menu">Настройки</string>
     <string name="menu_check_now">Проверить обновления сейчас</string>
     <string name="menu_profile">Профиль для калорий</string>

@@ -111,6 +111,7 @@
     <string name="log_update_none">no updates, %1$s is the latest</string>
     <string name="log_update_failed">update check failed</string>
     <string name="log_verify_extra">    cadence points %1$d, speed points %2$d, segments %3$d</string>
+    <string name="log_verify_calories">    calories in Health Connect: %1$d kcal</string>
     <string name="cd_menu">Settings</string>
     <string name="menu_check_now">Check for updates now</string>
     <string name="menu_profile">Profile for calories</string>

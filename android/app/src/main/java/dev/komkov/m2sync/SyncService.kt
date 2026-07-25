@@ -335,6 +335,10 @@ class SyncService : Service() {
                 HealthWriter.readSpeedCount(this, s.startTime, s.endTime),
                 s.segments.size,
             )
+            LogBus.i(
+                R.string.log_verify_calories,
+                HealthWriter.readCaloriesTotal(this, s.startTime, s.endTime).toInt(),
+            )
         }
     }
 
