@@ -1,6 +1,7 @@
 package dev.komkov.m2sync
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -78,8 +79,11 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -419,11 +423,25 @@ fun RideCard(
     modifier: Modifier = Modifier,
 ) {
     val locale = currentLocale()
+    val haptics = LocalHapticFeedback.current
+    // Expressive-приём: выбранная карточка не только красится, но и меняет форму —
+    // состояние читается боковым зрением, без вглядывания в цвет.
+    val corner by animateDpAsState(
+        targetValue = if (selected) 8.dp else 24.dp,
+        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+        label = "rideCardCorner",
+    )
     Card(
         modifier
             .fillMaxWidth()
-            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
-        shape = RoundedCornerShape(24.dp),
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onLongClick()
+                },
+            ),
+        shape = RoundedCornerShape(corner),
         colors = CardDefaults.cardColors(
             containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer
             else MaterialTheme.colorScheme.surfaceContainerHigh
@@ -569,12 +587,25 @@ fun RidesList(
         item { header() }
         if (rides.isEmpty()) {
             item {
-                Text(
-                    stringResource(R.string.rides_empty),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(vertical = 24.dp),
-                )
+                // Пустой экран объясняет, что делать дальше, а не просто пустует.
+                Column(
+                    Modifier.fillMaxWidth().padding(vertical = 40.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Icon(
+                        Icons.Rounded.Sync,
+                        null,
+                        Modifier.size(48.dp),
+                        tint = MaterialTheme.colorScheme.outlineVariant,
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        stringResource(R.string.rides_empty),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                    )
+                }
             }
         }
         items(rides, key = { it.file }) { ride ->
