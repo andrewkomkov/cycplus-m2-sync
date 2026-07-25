@@ -2,7 +2,12 @@ package dev.komkov.m2sync
 
 import android.content.Context
 import androidx.health.connect.client.HealthConnectClient
+import androidx.health.connect.client.HealthConnectFeatures
 import androidx.health.connect.client.permission.HealthPermission
+import androidx.health.connect.client.feature.ExperimentalPersonalHealthRecordApi
+import androidx.health.connect.client.records.FhirResource
+import androidx.health.connect.client.records.MedicalResource
+import androidx.health.connect.client.request.ReadMedicalResourcesInitialRequest
 import androidx.health.connect.client.records.CyclingPedalingCadenceRecord
 import androidx.health.connect.client.records.DistanceRecord
 import androidx.health.connect.client.records.ElevationGainedRecord
@@ -63,6 +68,45 @@ object HealthWriter {
         HealthPermission.getReadPermission(SpeedRecord::class),
         HealthPermission.getReadPermission(WeightRecord::class),
     )
+
+    /**
+     * Медкарта — отдельная ветка Health Connect со своим разрешением, и она есть
+     * не на каждом устройстве. Запрашиваем только когда доступна.
+     */
+    @OptIn(ExperimentalPersonalHealthRecordApi::class)
+    val medicalPermissions: Set<String> = setOf(
+        HealthPermission.PERMISSION_READ_MEDICAL_DATA_PERSONAL_DETAILS,
+    )
+
+    @OptIn(ExperimentalPersonalHealthRecordApi::class)
+    fun personalRecordsAvailable(ctx: Context): Boolean = runCatching {
+        client(ctx).features.getFeatureStatus(
+            HealthConnectFeatures.FEATURE_PERSONAL_HEALTH_RECORD
+        ) == HealthConnectFeatures.FEATURE_STATUS_AVAILABLE
+    }.getOrDefault(false)
+
+    /**
+     * Год рождения и пол из FHIR-ресурса Patient. Заполняется только импортом
+     * медкарты от провайдера, поэтому у большинства здесь пусто — тогда null,
+     * и профиль берётся из диалога.
+     */
+    @OptIn(ExperimentalPersonalHealthRecordApi::class)
+    suspend fun readPersonalDetails(ctx: Context): Calories.Profile? {
+        if (!personalRecordsAvailable(ctx)) return null
+        if (HealthPermission.PERMISSION_READ_MEDICAL_DATA_PERSONAL_DETAILS !in granted(ctx)) return null
+        val resources = runCatching {
+            client(ctx).readMedicalResources(
+                ReadMedicalResourcesInitialRequest(
+                    medicalResourceType = MedicalResource.MEDICAL_RESOURCE_TYPE_PERSONAL_DETAILS,
+                    medicalDataSourceIds = emptySet(),
+                )
+            ).medicalResources
+        }.getOrNull().orEmpty()
+
+        return resources
+            .filter { it.fhirResource.type == FhirResource.FHIR_RESOURCE_TYPE_PATIENT }
+            .firstNotNullOfOrNull { Calories.profileFromFhir(it.fhirResource.data) }
+    }
 
     /**
      * Последний известный вес — на нём стоит весь расчёт калорий.
@@ -142,7 +186,12 @@ object HealthWriter {
     suspend fun granted(ctx: Context): Set<String> =
         client(ctx).permissionController.getGrantedPermissions()
 
-    suspend fun write(ctx: Context, ride: FitParser.Ride, weightKg: Double? = null): Int {
+    suspend fun write(
+        ctx: Context,
+        ride: FitParser.Ride,
+        weightKg: Double? = null,
+        profile: Calories.Profile = Calories.Profile.EMPTY,
+    ): Int {
         val hc = client(ctx)
         val zone = ZoneId.systemDefault()
         val startOffset: ZoneOffset = zone.rules.getOffset(ride.start)
@@ -210,7 +259,7 @@ object HealthWriter {
             )
         }
 
-        Calories.forRide(ride, weightKg)?.let {
+        Calories.forRide(ride, weightKg, profile)?.let {
             records += TotalCaloriesBurnedRecord(
                 startTime = ride.start, startZoneOffset = startOffset,
                 endTime = ride.end, endZoneOffset = endOffset,

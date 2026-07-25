@@ -20,13 +20,38 @@ object Calories {
 
     enum class Sex { MALE, FEMALE }
 
+    /** Год рождения и пол: либо из медкарты Health Connect, либо из диалога. */
+    data class Profile(val birthYear: Int?, val sex: Sex?) {
+        val usable: Boolean get() = birthYear != null && sex != null
+
+        companion object {
+            val EMPTY = Profile(null, null)
+        }
+    }
+
     /**
-     * Боевой путь: возраст и пол берём из настроек, а готовое значение из .fit
-     * уважаем — свой расчёт нужен ровно там, где велокомп смолчал.
+     * Разбор FHIR-ресурса Patient из Personal Health Records: там дата рождения
+     * лежит в `birthDate`, пол — в `gender`. Оба поля необязательные.
      */
-    fun forRide(ride: FitParser.Ride, weightKg: Double?): Int? =
+    fun profileFromFhir(json: String): Profile? = runCatching {
+        val o = org.json.JSONObject(json)
+        if (o.optString("resourceType") != "Patient") return null
+        val year = o.optString("birthDate").take(4).toIntOrNull()
+        val sex = when (o.optString("gender").lowercase()) {
+            "male" -> Sex.MALE
+            "female" -> Sex.FEMALE
+            else -> null
+        }
+        Profile(year, sex).takeIf { it.birthYear != null || it.sex != null }
+    }.getOrNull()
+
+    /**
+     * Боевой путь: готовое значение из .fit уважаем — свой расчёт нужен ровно
+     * там, где велокомп смолчал.
+     */
+    fun forRide(ride: FitParser.Ride, weightKg: Double?, profile: Profile): Int? =
         ride.totalCalories
-            ?: estimate(ride, weightKg, ageNow(Settings.birthYear.value), Settings.sex.value)
+            ?: estimate(ride, weightKg, ageNow(profile.birthYear), profile.sex)
 
     private fun ageNow(birthYear: Int?): Int? =
         birthYear?.let { java.time.Year.now().value - it }?.takeIf { it in 1..120 }
@@ -35,8 +60,8 @@ object Calories {
      * Отпечаток входных данных расчёта. Кэш заездов держится на нём: поменялся
      * вес или профиль — прежнее число калорий недействительно.
      */
-    fun profileKey(weightKg: Double?): String =
-        "${weightKg ?: "-"}/${Settings.birthYear.value ?: "-"}/${Settings.sex.value ?: "-"}"
+    fun profileKey(weightKg: Double?, profile: Profile): String =
+        "${weightKg ?: "-"}/${profile.birthYear ?: "-"}/${profile.sex ?: "-"}"
 
     /**
      * @param weightKg вес из Health Connect; без него считать нечего

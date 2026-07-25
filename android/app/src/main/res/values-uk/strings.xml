@@ -123,4 +123,9 @@
     <string name="profile_cancel">Скасувати</string>
     <string name="log_no_weight">у Health Connect немає ваги — калорії не рахуємо</string>
     <string name="log_no_profile">не задано рік народження і стать — калорії оцінюємо за швидкістю, менш точно</string>
+    <string name="log_profile_from_records">рік народження і стать узято з медкартки Health Connect</string>
+    <string name="log_records_status">медкартка: %1$s</string>
+    <string name="log_records_unsupported">не підтримується на пристрої</string>
+    <string name="log_records_empty">підтримується, але особистих даних у ній немає</string>
+    <string name="log_records_has_profile">рік народження і стать беремо з неї</string>
 </resources>

@@ -22,6 +22,8 @@
     <uses-permission android:name="android.permission.health.READ_DISTANCE" />
     <uses-permission android:name="android.permission.health.READ_SPEED" />
     <uses-permission android:name="android.permission.health.READ_WEIGHT" />
+    <!-- Медкарта: год рождения и пол для расчёта калорий, если пользователь её подключил. -->
+    <uses-permission android:name="android.permission.health.READ_MEDICAL_DATA_PERSONAL_DETAILS" />
 
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />
 

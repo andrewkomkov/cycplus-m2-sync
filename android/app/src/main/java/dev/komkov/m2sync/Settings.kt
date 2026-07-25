@@ -33,6 +33,9 @@ object Settings {
         sex.value = p.getString(KEY_SEX, null)?.let { runCatching { Calories.Sex.valueOf(it) }.getOrNull() }
     }
 
+    /** Ручной ввод — запасной путь, когда в медкарте Health Connect пусто. */
+    fun profile(): Calories.Profile = Calories.Profile(birthYear.value, sex.value)
+
     fun setProfile(ctx: Context, year: Int?, value: Calories.Sex?) {
         birthYear.value = year
         sex.value = value

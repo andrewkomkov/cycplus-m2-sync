@@ -123,4 +123,9 @@
     <string name="profile_cancel">Отмена</string>
     <string name="log_no_weight">в Health Connect нет веса — калории не считаем</string>
     <string name="log_no_profile">не заданы год рождения и пол — калории оцениваем по скорости, менее точно</string>
+    <string name="log_profile_from_records">год рождения и пол взяты из медкарты Health Connect</string>
+    <string name="log_records_status">медкарта: %1$s</string>
+    <string name="log_records_unsupported">не поддерживается на устройстве</string>
+    <string name="log_records_empty">поддерживается, но личных данных в ней нет</string>
+    <string name="log_records_has_profile">год рождения и пол берём из неё</string>
 </resources>

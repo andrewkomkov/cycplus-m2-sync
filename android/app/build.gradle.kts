@@ -89,4 +89,6 @@ dependencies {
     implementation("com.garmin:fit:21.205.0")
 
     testImplementation("junit:junit:4.13.2")
+    // Настоящий org.json: в unit-тестах андроидный — заглушка.
+    testImplementation("org.json:json:20250517")
 }

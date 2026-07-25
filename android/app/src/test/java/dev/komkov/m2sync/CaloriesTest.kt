@@ -98,3 +98,40 @@ class CaloriesTest {
         assertTrue("$kcal must not be negative", kcal == null || kcal >= 0)
     }
 }
+
+class ProfileFromFhirTest {
+
+    @Test
+    fun `reads year of birth and sex from a Patient resource`() {
+        val profile = Calories.profileFromFhir(
+            """{"resourceType":"Patient","id":"1","birthDate":"1992-05-17","gender":"male"}"""
+        )
+        assertEquals(1992, profile?.birthYear)
+        assertEquals(Calories.Sex.MALE, profile?.sex)
+        assertTrue(profile!!.usable)
+    }
+
+    @Test
+    fun `a partial record is still worth something`() {
+        val profile = Calories.profileFromFhir("""{"resourceType":"Patient","gender":"female"}""")
+        assertEquals(Calories.Sex.FEMALE, profile?.sex)
+        assertNull(profile?.birthYear)
+        assertTrue(!profile!!.usable)
+    }
+
+    @Test
+    fun `unknown gender is not guessed`() {
+        val profile = Calories.profileFromFhir(
+            """{"resourceType":"Patient","birthDate":"1992-05-17","gender":"other"}"""
+        )
+        assertEquals(1992, profile?.birthYear)
+        assertNull(profile?.sex)
+    }
+
+    @Test
+    fun `other resource types and junk are ignored`() {
+        assertNull(Calories.profileFromFhir("""{"resourceType":"Observation","gender":"male"}"""))
+        assertNull(Calories.profileFromFhir("not json at all"))
+        assertNull(Calories.profileFromFhir("""{"resourceType":"Patient"}"""))
+    }
+}

@@ -56,6 +56,7 @@ class MainActivity : ComponentActivity() {
     private val healthPermissions = registerForActivityResult(
         PermissionController.createRequestPermissionResultContract()
     ) { granted ->
+        // Медкарта необязательна — её отсутствие не считаем недостачей.
         val missing = (HealthWriter.permissions + HealthWriter.readPermissions) - granted
         if (missing.isEmpty()) LogBus.i(R.string.log_perm_count, granted.size, granted.size)
         else LogBus.e(R.string.log_missing_perms, missing.joinToString())
@@ -104,7 +105,16 @@ class MainActivity : ComponentActivity() {
             )
         )
         if (HealthWriter.available(this)) {
-            healthPermissions.launch(HealthWriter.permissions + HealthWriter.readPermissions)
+            // Медкарту просим только там, где она поддерживается: на остальных
+            // устройствах такое разрешение неизвестно системе.
+            val medical = if (HealthWriter.personalRecordsAvailable(this)) {
+                HealthWriter.medicalPermissions
+            } else {
+                emptySet()
+            }
+            healthPermissions.launch(
+                HealthWriter.permissions + HealthWriter.readPermissions + medical
+            )
         } else {
             LogBus.e(R.string.log_hc_unavailable)
         }
