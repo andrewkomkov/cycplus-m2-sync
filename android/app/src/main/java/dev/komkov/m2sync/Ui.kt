@@ -35,6 +35,7 @@ import androidx.compose.material.icons.rounded.ExpandLess
 import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.LocalFireDepartment
+import androidx.compose.material.icons.rounded.MonitorWeight
 import androidx.compose.material.icons.rounded.RadioButtonUnchecked
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Route
@@ -276,6 +277,7 @@ fun DeviceCard(
                             "INFO" -> R.string.busy_info
                             "IMPORT" -> R.string.busy_import
                             "VERIFY" -> R.string.busy_verify
+                            "WEIGH" -> R.string.busy_weigh
                             "SCAN" -> R.string.busy_scan
                             else -> R.string.busy_other
                         }
@@ -723,4 +725,55 @@ fun ProfileDialog(onDismiss: () -> Unit) {
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.profile_cancel)) }
         },
     )
+}
+
+/** Последний вес: его же берёт расчёт калорий, поэтому он на виду. */
+@Composable
+fun WeightCard(weight: WeightReading?, onWeigh: () -> Unit, enabled: Boolean) {
+    val locale = currentLocale()
+    Card(
+        Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        ),
+    ) {
+        Row(
+            Modifier.fillMaxWidth().padding(start = 18.dp, end = 10.dp, top = 12.dp, bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                Icons.Rounded.MonitorWeight,
+                null,
+                Modifier.size(22.dp),
+                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+            )
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    if (weight == null) stringResource(R.string.weight_unknown)
+                    else stringResource(
+                        R.string.weight_value,
+                        String.format(locale, "%.2f", weight.kilograms),
+                    ),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                )
+                Text(
+                    weight?.let {
+                        stringResource(
+                            R.string.weight_measured,
+                            dayFormat().format(it.at.atZone(ZoneId.systemDefault())),
+                        )
+                    } ?: stringResource(R.string.weight_hint),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                )
+            }
+            FilledTonalButton(onClick = onWeigh, enabled = enabled) {
+                Text(stringResource(R.string.btn_weigh), maxLines = 1)
+            }
+        }
+    }
 }

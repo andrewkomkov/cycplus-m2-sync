@@ -25,6 +25,15 @@
     <string name="btn_sync">Синхронізувати</string>
     <string name="btn_poll">Опитати</string>
     <string name="btn_verify">Перевірити</string>
+    <string name="log_scale_waiting">стань на ваги…</string>
+    <string name="log_scale_reading">ваги: %1$s кг</string>
+    <string name="log_scale_saved">вагу записано в Health Connect: %1$s кг</string>
+    <string name="btn_weigh">Зважитись</string>
+    <string name="weight_value">%1$s кг</string>
+    <string name="weight_unknown">Вага невідома</string>
+    <string name="weight_measured">замір %1$s</string>
+    <string name="weight_hint">калоріям вона потрібна — стань на ваги</string>
+    <string name="busy_weigh">чекаю на ваги…</string>
 
     <string name="stat_rides">заїздів</string>
     <string name="stat_km">кілометрів</string>

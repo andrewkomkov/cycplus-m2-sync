@@ -92,6 +92,7 @@ class MainActivity : ComponentActivity() {
                     onSync = { send(SyncService.ACTION_SYNC) },
                     onInfo = { send(SyncService.ACTION_INFO) },
                     onVerify = { send(SyncService.ACTION_VERIFY) },
+                    onWeigh = { send(SyncService.ACTION_WEIGH) },
                     onPermissions = { requestAll() },
                 )
             }
@@ -141,6 +142,7 @@ private fun Screen(
     onSync: () -> Unit,
     onInfo: () -> Unit,
     onVerify: () -> Unit,
+    onWeigh: () -> Unit,
     onPermissions: () -> Unit,
 ) {
     val ctx: Context = LocalContext.current
@@ -156,6 +158,7 @@ private fun Screen(
     val autoSync by Settings.autoSync.collectAsStateWithLifecycle()
     val autoUpdate by Settings.autoUpdate.collectAsStateWithLifecycle()
     val update by AppState.update.collectAsStateWithLifecycle()
+    val weight by AppState.weight.collectAsStateWithLifecycle()
 
     var menuOpen by remember { mutableStateOf(false) }
     var profileOpen by remember { mutableStateOf(false) }
@@ -295,6 +298,7 @@ private fun Screen(
                     }
                     DeviceCard(device, busy, action)
                     ActionsRow(onSync, onInfo, onVerify, enabled = !busy)
+                    WeightCard(weight, onWeigh, enabled = !busy)
                     TotalsRow(rides)
                     LogCard(log)
                 }

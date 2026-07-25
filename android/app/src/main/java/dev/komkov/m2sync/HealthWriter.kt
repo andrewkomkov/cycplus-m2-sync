@@ -42,6 +42,12 @@ object HealthWriter {
     private const val MAX_ROUTE_POINTS = 1000
     private const val MAX_SAMPLES_PER_RECORD = 1000
 
+    private val SCALE_DEVICE = Device(
+        manufacturer = "Xiaomi",
+        model = "Mi Smart Scale 2",
+        type = Device.TYPE_SCALE,
+    )
+
     private val DEVICE = Device(
         manufacturer = "CYCPLUS",
         model = "M2",
@@ -56,6 +62,7 @@ object HealthWriter {
         HealthPermission.getWritePermission(ElevationGainedRecord::class),
         HealthPermission.getWritePermission(CyclingPedalingCadenceRecord::class),
         HealthPermission.getWritePermission(TotalCaloriesBurnedRecord::class),
+        HealthPermission.getWritePermission(WeightRecord::class),
         HealthPermission.PERMISSION_WRITE_EXERCISE_ROUTE,
     )
 
@@ -112,7 +119,7 @@ object HealthWriter {
      * Последний известный вес — на нём стоит весь расчёт калорий.
      * Берём любой источник: весы, Fit, ручной ввод — неважно чей.
      */
-    suspend fun readLatestWeight(ctx: Context): Double? =
+    suspend fun readLatestWeight(ctx: Context): WeightReading? =
         client(ctx).readRecords(
             ReadRecordsRequest(
                 recordType = WeightRecord::class,
@@ -120,7 +127,20 @@ object HealthWriter {
                 ascendingOrder = false,
                 pageSize = 1,
             )
-        ).records.firstOrNull()?.weight?.inKilograms
+        ).records.firstOrNull()?.let { WeightReading(it.weight.inKilograms, it.time) }
+
+    /** Замер с весов. Источник — сами весы, поэтому пишем их как устройство. */
+    suspend fun writeWeight(ctx: Context, kilograms: Double, at: java.time.Instant): Unit =
+        client(ctx).insertRecords(
+            listOf(
+                WeightRecord(
+                    time = at,
+                    zoneOffset = ZoneId.systemDefault().rules.getOffset(at),
+                    weight = androidx.health.connect.client.units.Mass.kilograms(kilograms),
+                    metadata = Metadata.autoRecorded(SCALE_DEVICE),
+                )
+            )
+        ).let { }
 
     suspend fun readSessions(ctx: Context, since: java.time.Instant): List<ExerciseSessionRecord> =
         client(ctx).readRecords(
