@@ -56,6 +56,7 @@ class MainActivity : ComponentActivity() {
     private val healthPermissions = registerForActivityResult(
         PermissionController.createRequestPermissionResultContract()
     ) { granted ->
+        // Медкарта необязательна — её отсутствие не считаем недостачей.
         val missing = (HealthWriter.permissions + HealthWriter.readPermissions) - granted
         if (missing.isEmpty()) LogBus.i(R.string.log_perm_count, granted.size, granted.size)
         else LogBus.e(R.string.log_missing_perms, missing.joinToString())
@@ -104,7 +105,16 @@ class MainActivity : ComponentActivity() {
             )
         )
         if (HealthWriter.available(this)) {
-            healthPermissions.launch(HealthWriter.permissions + HealthWriter.readPermissions)
+            // Медкарту просим только там, где она поддерживается: на остальных
+            // устройствах такое разрешение неизвестно системе.
+            val medical = if (HealthWriter.personalRecordsAvailable(this)) {
+                HealthWriter.medicalPermissions
+            } else {
+                emptySet()
+            }
+            healthPermissions.launch(
+                HealthWriter.permissions + HealthWriter.readPermissions + medical
+            )
         } else {
             LogBus.e(R.string.log_hc_unavailable)
         }
@@ -138,9 +148,12 @@ private fun Screen(
     val update by AppState.update.collectAsStateWithLifecycle()
 
     var menuOpen by remember { mutableStateOf(false) }
+    var profileOpen by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) { UpdateChecker.checkIfDue(ctx) }
+
+    if (profileOpen) ProfileDialog(onDismiss = { profileOpen = false })
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -200,6 +213,13 @@ private fun Screen(
                                 onClick = { Settings.setAutoUpdate(ctx, !autoUpdate) },
                             )
                             HorizontalDivider()
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.menu_profile)) },
+                                onClick = {
+                                    menuOpen = false
+                                    profileOpen = true
+                                },
+                            )
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.menu_check_now)) },
                                 onClick = {

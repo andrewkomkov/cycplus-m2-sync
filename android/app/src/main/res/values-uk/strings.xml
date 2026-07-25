@@ -109,7 +109,24 @@
     <string name="log_update_none">оновлень немає, %1$s — найновіша</string>
     <string name="log_update_failed">не вдалося перевірити оновлення</string>
     <string name="log_verify_extra">    точок каденсу %1$d, точок швидкості %2$d, сегментів %3$d</string>
+    <string name="log_verify_calories">    калорій у Health Connect: %1$d ккал</string>
     <string name="log_verify_foreign">    чужі джерела за %1$s: %2$s</string>
     <string name="cd_menu">Налаштування</string>
     <string name="menu_check_now">Перевірити оновлення зараз</string>
+    <string name="menu_profile">Профіль для калорій</string>
+    <string name="chip_kcal">%1$d ккал</string>
+    <string name="profile_title">Профіль для калорій</string>
+    <string name="profile_hint">Вага береться з Health Connect. Рік народження і стать там не зберігаються, а пульсовій формулі вони потрібні — без них витрати рахуються лише за швидкістю, грубіше.</string>
+    <string name="profile_birth_year">Рік народження</string>
+    <string name="profile_male">Чоловіча</string>
+    <string name="profile_female">Жіноча</string>
+    <string name="profile_save">Зберегти</string>
+    <string name="profile_cancel">Скасувати</string>
+    <string name="log_no_weight">у Health Connect немає ваги — калорії не рахуємо</string>
+    <string name="log_no_profile">не задано рік народження і стать — калорії оцінюємо за швидкістю, менш точно</string>
+    <string name="log_profile_from_records">рік народження і стать узято з медкартки Health Connect</string>
+    <string name="log_records_status">медкартка: %1$s</string>
+    <string name="log_records_unsupported">не підтримується на пристрої</string>
+    <string name="log_records_empty">підтримується, але особистих даних у ній немає</string>
+    <string name="log_records_has_profile">рік народження і стать беремо з неї</string>
 </resources>

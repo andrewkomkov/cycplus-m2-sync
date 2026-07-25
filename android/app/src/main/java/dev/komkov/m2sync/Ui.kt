@@ -32,6 +32,7 @@ import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.ExpandLess
 import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.Favorite
+import androidx.compose.material.icons.rounded.LocalFireDepartment
 import androidx.compose.material.icons.rounded.RadioButtonUnchecked
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Route
@@ -40,6 +41,7 @@ import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.Sync
 import androidx.compose.material.icons.rounded.Terrain
 import androidx.compose.material.icons.rounded.Timer
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -49,9 +51,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -67,11 +72,13 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -415,6 +422,7 @@ fun RideCard(
                 Metric(Icons.Rounded.Schedule, stringResource(R.string.chip_total, ride.elapsedMin))
                 ride.avgHeartRate?.let { Metric(Icons.Rounded.Favorite, stringResource(R.string.chip_hr, it)) }
                 ride.avgCadence?.let { Metric(Icons.Rounded.Refresh, stringResource(R.string.chip_cadence, it)) }
+                ride.kcal?.let { Metric(Icons.Rounded.LocalFireDepartment, stringResource(R.string.chip_kcal, it)) }
                 ride.ascent?.takeIf { it > 0 }?.let {
                     Metric(Icons.Rounded.Terrain, stringResource(R.string.chip_ascent, it))
                 }
@@ -560,4 +568,66 @@ fun UpdateCard(
             }
         }
     }
+}
+
+/**
+ * Профиль для расчёта калорий. Вес приходит из Health Connect, а год рождения
+ * и пол там не хранятся — это не типы записей, — поэтому спрашиваем здесь.
+ */
+@Composable
+fun ProfileDialog(onDismiss: () -> Unit) {
+    val ctx = LocalContext.current
+    val savedYear by Settings.birthYear.collectAsStateWithLifecycle()
+    val savedSex by Settings.sex.collectAsStateWithLifecycle()
+
+    var year by remember { mutableStateOf(savedYear?.toString() ?: "") }
+    var sex by remember { mutableStateOf(savedSex) }
+
+    val parsedYear = year.toIntOrNull()
+    val yearValid = year.isEmpty() || (parsedYear != null && parsedYear in 1900..java.time.Year.now().value)
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.profile_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    stringResource(R.string.profile_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                OutlinedTextField(
+                    value = year,
+                    onValueChange = { new -> year = new.filter { it.isDigit() }.take(4) },
+                    label = { Text(stringResource(R.string.profile_birth_year)) },
+                    isError = !yearValid,
+                    singleLine = true,
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(
+                        selected = sex == Calories.Sex.MALE,
+                        onClick = { sex = Calories.Sex.MALE },
+                        label = { Text(stringResource(R.string.profile_male)) },
+                    )
+                    FilterChip(
+                        selected = sex == Calories.Sex.FEMALE,
+                        onClick = { sex = Calories.Sex.FEMALE },
+                        label = { Text(stringResource(R.string.profile_female)) },
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = yearValid,
+                onClick = {
+                    Settings.setProfile(ctx, parsedYear, sex)
+                    onDismiss()
+                },
+            ) { Text(stringResource(R.string.profile_save)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.profile_cancel)) }
+        },
+    )
 }

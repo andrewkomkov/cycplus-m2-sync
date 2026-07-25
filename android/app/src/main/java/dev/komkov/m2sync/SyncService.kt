@@ -233,11 +233,16 @@ class SyncService : Service() {
         val files = fitDir(this).listFiles { f -> f.name.endsWith(".fit") }?.sorted() ?: emptyList()
         LogBus.i(R.string.log_local_files, files.size, imported.size)
 
+        val weight = weightKg()
+        val profile = profile()
+        if (weight == null) LogBus.i(R.string.log_no_weight)
+        else if (!profile.usable) LogBus.i(R.string.log_no_profile)
+
         for (file in files) {
             if (!force && file.name in imported) continue
             try {
                 val ride = FitParser.parse(file)
-                val count = HealthWriter.write(this, ride)
+                val count = HealthWriter.write(this, ride, weight, profile)
                 imported += file.name
                 prefs.edit().putStringSet(KEY_IMPORTED, imported).apply()
                 LogBus.i(
@@ -252,7 +257,24 @@ class SyncService : Service() {
                 LogBus.e(R.string.log_import_failed, e, file.name)
             }
         }
-        RideStore.refresh(this, imported)
+        RideStore.refresh(this, imported, weight, profile)
+    }
+
+    /** Вес нужен и калориям, и списку на экране; без разрешения просто молчим. */
+    private suspend fun weightKg(): Double? =
+        runCatching { HealthWriter.readLatestWeight(this) }.getOrNull()
+
+    /**
+     * Год рождения и пол: сперва медкарта Health Connect, иначе ручной ввод.
+     * У медкарты приоритет — это данные самого пользователя, а не наша копия.
+     */
+    private suspend fun profile(): Calories.Profile {
+        val fromRecords = runCatching { HealthWriter.readPersonalDetails(this) }.getOrNull()
+        if (fromRecords != null) {
+            LogBus.i(R.string.log_profile_from_records)
+            return fromRecords
+        }
+        return Settings.profile()
     }
 
     private suspend fun doStatus() {
@@ -265,13 +287,22 @@ class SyncService : Service() {
             val granted = HealthWriter.granted(this)
             LogBus.i(R.string.log_perm_count, granted.size, HealthWriter.permissions.size)
             (HealthWriter.permissions - granted).forEach { LogBus.i(R.string.log_perm_missing, it) }
+            // Различаем «медкарты нет на устройстве» и «есть, но пустая».
+            LogBus.i(
+                R.string.log_records_status,
+                getString(
+                    if (!HealthWriter.personalRecordsAvailable(this)) R.string.log_records_unsupported
+                    else if (HealthWriter.readPersonalDetails(this) != null) R.string.log_records_has_profile
+                    else R.string.log_records_empty
+                ),
+            )
         }
         val dir = fitDir(this)
         val files = dir.listFiles { f -> f.name.endsWith(".fit") } ?: emptyArray()
         LogBus.i(R.string.log_folder, dir.absolutePath)
         LogBus.i(R.string.log_local_rides, files.size)
         val imported = importedNames()
-        RideStore.refresh(this, imported)
+        RideStore.refresh(this, imported, weightKg())
         files.sortedBy { it.name }.forEach {
             LogBus.i(
                 R.string.log_file_line,
@@ -324,6 +355,10 @@ class SyncService : Service() {
                 HealthWriter.readCadenceCount(this, s.startTime, s.endTime),
                 HealthWriter.readSpeedCount(this, s.startTime, s.endTime),
                 s.segments.size,
+            )
+            LogBus.i(
+                R.string.log_verify_calories,
+                HealthWriter.readCaloriesTotal(this, s.startTime, s.endTime).toInt(),
             )
             for ((type, byOrigin) in HealthWriter.readOrigins(this, s.startTime, s.endTime)) {
                 val foreign = byOrigin.filterKeys { it != packageName }

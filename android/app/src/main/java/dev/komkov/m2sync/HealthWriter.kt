@@ -2,7 +2,12 @@ package dev.komkov.m2sync
 
 import android.content.Context
 import androidx.health.connect.client.HealthConnectClient
+import androidx.health.connect.client.HealthConnectFeatures
 import androidx.health.connect.client.permission.HealthPermission
+import androidx.health.connect.client.feature.ExperimentalPersonalHealthRecordApi
+import androidx.health.connect.client.records.FhirResource
+import androidx.health.connect.client.records.MedicalResource
+import androidx.health.connect.client.request.ReadMedicalResourcesInitialRequest
 import androidx.health.connect.client.records.CyclingPedalingCadenceRecord
 import androidx.health.connect.client.records.DistanceRecord
 import androidx.health.connect.client.records.ElevationGainedRecord
@@ -12,11 +17,14 @@ import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.Record
 import androidx.health.connect.client.records.SpeedRecord
+import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
+import androidx.health.connect.client.records.WeightRecord
 import androidx.health.connect.client.records.metadata.DataOrigin
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
 import androidx.health.connect.client.records.metadata.Device
 import androidx.health.connect.client.records.metadata.Metadata
+import androidx.health.connect.client.units.Energy
 import androidx.health.connect.client.units.Length
 import androidx.health.connect.client.units.Velocity
 import java.time.ZoneId
@@ -47,17 +55,72 @@ object HealthWriter {
         HealthPermission.getWritePermission(SpeedRecord::class),
         HealthPermission.getWritePermission(ElevationGainedRecord::class),
         HealthPermission.getWritePermission(CyclingPedalingCadenceRecord::class),
+        HealthPermission.getWritePermission(TotalCaloriesBurnedRecord::class),
         HealthPermission.PERMISSION_WRITE_EXERCISE_ROUTE,
     )
 
-    /** Только для самопроверки: прочитать то, что сами же записали. */
+    /** Самопроверка плюс вес: калории считаем сами, а вес ведёт кто-то другой. */
     val readPermissions: Set<String> = setOf(
         HealthPermission.getReadPermission(ExerciseSessionRecord::class),
         HealthPermission.getReadPermission(HeartRateRecord::class),
         HealthPermission.getReadPermission(DistanceRecord::class),
         HealthPermission.getReadPermission(CyclingPedalingCadenceRecord::class),
         HealthPermission.getReadPermission(SpeedRecord::class),
+        HealthPermission.getReadPermission(WeightRecord::class),
     )
+
+    /**
+     * Медкарта — отдельная ветка Health Connect со своим разрешением, и она есть
+     * не на каждом устройстве. Запрашиваем только когда доступна.
+     */
+    @OptIn(ExperimentalPersonalHealthRecordApi::class)
+    val medicalPermissions: Set<String> = setOf(
+        HealthPermission.PERMISSION_READ_MEDICAL_DATA_PERSONAL_DETAILS,
+    )
+
+    @OptIn(ExperimentalPersonalHealthRecordApi::class)
+    fun personalRecordsAvailable(ctx: Context): Boolean = runCatching {
+        client(ctx).features.getFeatureStatus(
+            HealthConnectFeatures.FEATURE_PERSONAL_HEALTH_RECORD
+        ) == HealthConnectFeatures.FEATURE_STATUS_AVAILABLE
+    }.getOrDefault(false)
+
+    /**
+     * Год рождения и пол из FHIR-ресурса Patient. Заполняется только импортом
+     * медкарты от провайдера, поэтому у большинства здесь пусто — тогда null,
+     * и профиль берётся из диалога.
+     */
+    @OptIn(ExperimentalPersonalHealthRecordApi::class)
+    suspend fun readPersonalDetails(ctx: Context): Calories.Profile? {
+        if (!personalRecordsAvailable(ctx)) return null
+        if (HealthPermission.PERMISSION_READ_MEDICAL_DATA_PERSONAL_DETAILS !in granted(ctx)) return null
+        val resources = runCatching {
+            client(ctx).readMedicalResources(
+                ReadMedicalResourcesInitialRequest(
+                    medicalResourceType = MedicalResource.MEDICAL_RESOURCE_TYPE_PERSONAL_DETAILS,
+                    medicalDataSourceIds = emptySet(),
+                )
+            ).medicalResources
+        }.getOrNull().orEmpty()
+
+        return resources
+            .filter { it.fhirResource.type == FhirResource.FHIR_RESOURCE_TYPE_PATIENT }
+            .firstNotNullOfOrNull { Calories.profileFromFhir(it.fhirResource.data) }
+    }
+
+    /**
+     * Последний известный вес — на нём стоит весь расчёт калорий.
+     * Берём любой источник: весы, Fit, ручной ввод — неважно чей.
+     */
+    suspend fun readLatestWeight(ctx: Context): Double? =
+        client(ctx).readRecords(
+            ReadRecordsRequest(
+                recordType = WeightRecord::class,
+                timeRangeFilter = TimeRangeFilter.before(java.time.Instant.now()),
+                ascendingOrder = false,
+                pageSize = 1,
+            )
+        ).records.firstOrNull()?.weight?.inKilograms
 
     suspend fun readSessions(ctx: Context, since: java.time.Instant): List<ExerciseSessionRecord> =
         client(ctx).readRecords(
@@ -106,6 +169,14 @@ object HealthWriter {
             )
         ).records.sumOf { it.samples.size }
 
+    suspend fun readCaloriesTotal(ctx: Context, from: java.time.Instant, to: java.time.Instant): Double =
+        client(ctx).readRecords(
+            ReadRecordsRequest(
+                recordType = TotalCaloriesBurnedRecord::class,
+                timeRangeFilter = TimeRangeFilter.between(from, to),
+                dataOriginFilter = ownOrigin(ctx),
+            )
+        ).records.sumOf { it.energy.inKilocalories }
     /**
      * Кто ещё пишет в то же окно: тип записи -> источник -> число сэмплов.
      * Fit рисует графики по всем источникам сразу, поэтому чужие записи важнее
@@ -145,7 +216,12 @@ object HealthWriter {
     suspend fun granted(ctx: Context): Set<String> =
         client(ctx).permissionController.getGrantedPermissions()
 
-    suspend fun write(ctx: Context, ride: FitParser.Ride): Int {
+    suspend fun write(
+        ctx: Context,
+        ride: FitParser.Ride,
+        weightKg: Double? = null,
+        profile: Calories.Profile = Calories.Profile.EMPTY,
+    ): Int {
         val hc = client(ctx)
         val zone = ZoneId.systemDefault()
         val startOffset: ZoneOffset = zone.rules.getOffset(ride.start)
@@ -210,6 +286,15 @@ object HealthWriter {
                 endTime = ride.end, endZoneOffset = endOffset,
                 distance = Length.meters(it),
                 metadata = meta("distance"),
+            )
+        }
+
+        Calories.forRide(ride, weightKg, profile)?.let {
+            records += TotalCaloriesBurnedRecord(
+                startTime = ride.start, startZoneOffset = startOffset,
+                endTime = ride.end, endZoneOffset = endOffset,
+                energy = Energy.kilocalories(it.toDouble()),
+                metadata = meta("calories"),
             )
         }
 
