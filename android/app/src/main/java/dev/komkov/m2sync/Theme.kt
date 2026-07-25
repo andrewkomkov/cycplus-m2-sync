@@ -1,8 +1,9 @@
 package dev.komkov.m2sync
 
-import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialExpressiveTheme
+import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -24,6 +25,14 @@ private val FallbackLight = lightColorScheme(
     tertiary = Color(0xFFB3261E),
 )
 
+/**
+ * Material 3 Expressive — язык оформления Android 16+.
+ *
+ * От обычной темы отличается моушен-схемой: она задаёт пружинную анимацию всем
+ * компонентам разом, поэтому нажатия и появления ощущаются живыми без ручной
+ * настройки каждого перехода.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun M2Theme(content: @Composable () -> Unit) {
     val dark = isSystemInDarkTheme()
@@ -33,5 +42,10 @@ fun M2Theme(content: @Composable () -> Unit) {
         if (dark) dynamicDarkColorScheme(ctx) else dynamicLightColorScheme(ctx)
     }.getOrElse { if (dark) FallbackDark else FallbackLight }
 
-    MaterialTheme(colorScheme = colors, content = content)
+    MaterialExpressiveTheme(
+        colorScheme = colors,
+        // Выразительная схема: заметнее отскок, чем у standard.
+        motionScheme = MotionScheme.expressive(),
+        content = content,
+    )
 }
