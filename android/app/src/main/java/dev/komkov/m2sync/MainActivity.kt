@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -22,6 +23,7 @@ import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -29,7 +31,13 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.MediumFlexibleTopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -160,6 +168,10 @@ private fun Screen(
 
     if (profileOpen) ProfileDialog(onDismiss = { profileOpen = false })
 
+    // Системное «назад» снимает выделение, а не закрывает приложение — с
+    // predictive back это ещё и показывает, куда именно вернёшься.
+    BackHandler(enabled = selecting) { selection = emptySet() }
+
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
@@ -178,19 +190,7 @@ private fun Screen(
                     )
                 },
                 actions = {
-                    if (selecting) {
-                        IconButton(onClick = {
-                            Sharing.shareAll(ctx, rides.filter { it.file in selection })
-                        }) {
-                            Icon(Icons.Rounded.Share, stringResource(R.string.cd_share))
-                        }
-                        IconButton(onClick = { selection = rides.map { it.file }.toSet() }) {
-                            Icon(Icons.Rounded.SelectAll, stringResource(R.string.select_all))
-                        }
-                        IconButton(onClick = { selection = emptySet() }) {
-                            Icon(Icons.Rounded.Close, stringResource(R.string.cd_clear_selection))
-                        }
-                    } else {
+                    if (!selecting) {
                         IconButton(
                             onClick = { Sharing.shareAll(ctx, rides) },
                             enabled = rides.isNotEmpty(),
@@ -247,6 +247,30 @@ private fun Screen(
                 ),
             )
         },
+        floatingActionButtonPosition = FabPosition.Center,
+        floatingActionButton = {
+            // Панель у нижнего края: в режиме выделения действия должны быть
+            // под большим пальцем, а не в шапке экрана.
+            AnimatedVisibility(
+                visible = selecting,
+                enter = fadeIn() + scaleIn(),
+                exit = fadeOut() + scaleOut(),
+            ) {
+                HorizontalFloatingToolbar(expanded = true) {
+                    IconButton(onClick = {
+                        Sharing.shareAll(ctx, rides.filter { it.file in selection })
+                    }) {
+                        Icon(Icons.Rounded.Share, stringResource(R.string.cd_share))
+                    }
+                    IconButton(onClick = { selection = rides.map { it.file }.toSet() }) {
+                        Icon(Icons.Rounded.SelectAll, stringResource(R.string.select_all))
+                    }
+                    IconButton(onClick = { selection = emptySet() }) {
+                        Icon(Icons.Rounded.Close, stringResource(R.string.cd_clear_selection))
+                    }
+                }
+            }
+        },
     ) { inner ->
         RidesList(
             rides = rides,
@@ -276,6 +300,7 @@ private fun Screen(
                 }
             },
             modifier = Modifier.padding(inner).padding(horizontal = 16.dp),
+            bottomInset = if (selecting) 96.dp else 0.dp,
         )
     }
 }
