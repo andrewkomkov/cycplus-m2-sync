@@ -92,6 +92,7 @@ class MainActivity : ComponentActivity() {
                     onSync = { send(SyncService.ACTION_SYNC) },
                     onInfo = { send(SyncService.ACTION_INFO) },
                     onVerify = { send(SyncService.ACTION_VERIFY) },
+                    onWeigh = { send(SyncService.ACTION_WEIGH) },
                     onPermissions = { requestAll() },
                 )
             }
@@ -141,6 +142,7 @@ private fun Screen(
     onSync: () -> Unit,
     onInfo: () -> Unit,
     onVerify: () -> Unit,
+    onWeigh: () -> Unit,
     onPermissions: () -> Unit,
 ) {
     val ctx: Context = LocalContext.current
@@ -294,7 +296,7 @@ private fun Screen(
                         })
                     }
                     DeviceCard(device, busy, action)
-                    ActionsRow(onSync, onInfo, onVerify, enabled = !busy)
+                    ActionsRow(onSync, onInfo, onVerify, onWeigh, enabled = !busy)
                     TotalsRow(rides)
                     LogCard(log)
                 }

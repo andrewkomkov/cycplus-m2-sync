@@ -38,6 +38,7 @@ class SyncService : Service() {
         const val ACTION_PERMS = "dev.komkov.m2sync.PERMS"
         const val ACTION_VERIFY = "dev.komkov.m2sync.VERIFY"
         const val ACTION_INFO = "dev.komkov.m2sync.INFO"
+        const val ACTION_WEIGH = "dev.komkov.m2sync.WEIGH"
 
         const val EXTRA_NAME = "name"
         const val EXTRA_ADDRESS = "address"
@@ -108,6 +109,7 @@ class SyncService : Service() {
                         ACTION_PERMS -> doPerms()
                         ACTION_VERIFY -> doVerify()
                         ACTION_INFO -> doInfo(prefix, address)
+                        ACTION_WEIGH -> doWeigh()
                         else -> doStatus()
                     }
                 } catch (e: Exception) {
@@ -176,6 +178,23 @@ class SyncService : Service() {
         }
 
         doImport()
+    }
+
+    /**
+     * Взвешивание: ждём, пока человек встанет на весы и цифра устаканится,
+     * и кладём результат в Health Connect — оттуда его берёт расчёт калорий.
+     */
+    private suspend fun doWeigh() {
+        LogBus.i(R.string.log_scale_waiting)
+        val reading = ScaleClient(this).awaitReading()
+        val at = Instant.now()
+        HealthWriter.writeWeight(this, reading.kilograms, at)
+        LogBus.i(
+            R.string.log_scale_saved,
+            String.format(Locale.getDefault(), "%.2f", reading.kilograms),
+        )
+        // Вес поменялся — калории в списке пересчитываем сразу.
+        RideStore.refresh(this, importedNames(), reading.kilograms, profile())
     }
 
     /** Быстрый опрос устройства без скачивания — для карточки на экране. */

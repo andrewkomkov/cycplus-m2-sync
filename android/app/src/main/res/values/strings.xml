@@ -26,6 +26,11 @@
     <string name="btn_sync">Sync</string>
     <string name="btn_poll">Poll</string>
     <string name="btn_verify">Verify</string>
+    <string name="log_scale_waiting">step on the scale…</string>
+    <string name="log_scale_reading">scale: %1$s kg</string>
+    <string name="log_scale_saved">weight saved to Health Connect: %1$s kg</string>
+    <string name="btn_weigh">Weigh in</string>
+    <string name="busy_weigh">waiting for the scale…</string>
 
     <string name="stat_rides">rides</string>
     <string name="stat_km">kilometres</string>

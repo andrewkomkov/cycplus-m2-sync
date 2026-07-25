@@ -35,6 +35,7 @@ import androidx.compose.material.icons.rounded.ExpandLess
 import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.LocalFireDepartment
+import androidx.compose.material.icons.rounded.MonitorWeight
 import androidx.compose.material.icons.rounded.RadioButtonUnchecked
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Route
@@ -276,6 +277,7 @@ fun DeviceCard(
                             "INFO" -> R.string.busy_info
                             "IMPORT" -> R.string.busy_import
                             "VERIFY" -> R.string.busy_verify
+                            "WEIGH" -> R.string.busy_weigh
                             "SCAN" -> R.string.busy_scan
                             else -> R.string.busy_other
                         }
@@ -344,6 +346,7 @@ fun ActionsRow(
     onSync: () -> Unit,
     onInfo: () -> Unit,
     onVerify: () -> Unit,
+    onWeigh: () -> Unit,
     enabled: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -352,6 +355,7 @@ fun ActionsRow(
     val syncInteraction = remember { MutableInteractionSource() }
     val pollInteraction = remember { MutableInteractionSource() }
     val verifyInteraction = remember { MutableInteractionSource() }
+    val weighInteraction = remember { MutableInteractionSource() }
 
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Button(
@@ -385,6 +389,23 @@ fun ActionsRow(
                         Icon(Icons.Rounded.Bluetooth, null, Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
                         Text(stringResource(R.string.btn_poll), maxLines = 1)
+                    }
+                },
+                menuContent = {},
+            )
+            customItem(
+                buttonGroupContent = {
+                    FilledTonalButton(
+                        onClick = onWeigh,
+                        enabled = enabled,
+                        interactionSource = weighInteraction,
+                        modifier = Modifier
+                            .weight(1f)
+                            .animateWidth(weighInteraction),
+                    ) {
+                        Icon(Icons.Rounded.MonitorWeight, null, Modifier.size(18.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text(stringResource(R.string.btn_weigh), maxLines = 1)
                     }
                 },
                 menuContent = {},

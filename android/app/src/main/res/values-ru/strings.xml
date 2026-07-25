@@ -25,6 +25,11 @@
     <string name="btn_sync">Синхронизировать</string>
     <string name="btn_poll">Опросить</string>
     <string name="btn_verify">Проверить</string>
+    <string name="log_scale_waiting">встань на весы…</string>
+    <string name="log_scale_reading">весы: %1$s кг</string>
+    <string name="log_scale_saved">вес записан в Health Connect: %1$s кг</string>
+    <string name="btn_weigh">Взвеситься</string>
+    <string name="busy_weigh">жду весы…</string>
 
     <string name="stat_rides">заездов</string>
     <string name="stat_km">километров</string>
