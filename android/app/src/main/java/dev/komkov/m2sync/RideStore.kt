@@ -6,7 +6,12 @@ import java.time.Duration
 /** Строит список заездов для экрана из локальных .fit файлов. */
 object RideStore {
 
-    fun refresh(ctx: Context, importedNames: Set<String>): List<RideSummary> {
+    /** @param weightKg вес из Health Connect; без него калории не посчитать. */
+    fun refresh(
+        ctx: Context,
+        importedNames: Set<String>,
+        weightKg: Double? = null,
+    ): List<RideSummary> {
         val files = SyncService.fitDir(ctx)
             .listFiles { f -> f.name.endsWith(".fit") }
             ?.sortedByDescending { it.name }
@@ -16,7 +21,9 @@ object RideStore {
 
         val list = files.mapNotNull { file ->
             val known = cached[file.name]
-            if (known != null && known.imported == (file.name in importedNames)) return@mapNotNull known
+            if (known != null && known.imported == (file.name in importedNames) &&
+                (known.kcal != null || weightKg == null)
+            ) return@mapNotNull known
             runCatching {
                 val ride = FitParser.parse(file)
                 val cadences = ride.points.mapNotNull { it.cadence }.filter { it > 0 }
@@ -34,6 +41,7 @@ object RideStore {
                     points = ride.points.size,
                     hasRoute = ride.hasRoute,
                     imported = file.name in importedNames,
+                    kcal = Calories.forRide(ride, weightKg),
                 )
             }.onFailure { LogBus.e(R.string.log_parse_failed, it, file.name) }.getOrNull()
         }.sortedByDescending { it.start }

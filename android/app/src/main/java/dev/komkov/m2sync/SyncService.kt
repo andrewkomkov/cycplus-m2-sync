@@ -233,11 +233,17 @@ class SyncService : Service() {
         val files = fitDir(this).listFiles { f -> f.name.endsWith(".fit") }?.sorted() ?: emptyList()
         LogBus.i(R.string.log_local_files, files.size, imported.size)
 
+        val weight = weightKg()
+        if (weight == null) LogBus.i(R.string.log_no_weight)
+        else if (Settings.birthYear.value == null || Settings.sex.value == null) {
+            LogBus.i(R.string.log_no_profile)
+        }
+
         for (file in files) {
             if (!force && file.name in imported) continue
             try {
                 val ride = FitParser.parse(file)
-                val count = HealthWriter.write(this, ride)
+                val count = HealthWriter.write(this, ride, weight)
                 imported += file.name
                 prefs.edit().putStringSet(KEY_IMPORTED, imported).apply()
                 LogBus.i(
@@ -252,8 +258,12 @@ class SyncService : Service() {
                 LogBus.e(R.string.log_import_failed, e, file.name)
             }
         }
-        RideStore.refresh(this, imported)
+        RideStore.refresh(this, imported, weight)
     }
+
+    /** Вес нужен и калориям, и списку на экране; без разрешения просто молчим. */
+    private suspend fun weightKg(): Double? =
+        runCatching { HealthWriter.readLatestWeight(this) }.getOrNull()
 
     private suspend fun doStatus() {
         val available = HealthWriter.available(this)
@@ -271,7 +281,7 @@ class SyncService : Service() {
         LogBus.i(R.string.log_folder, dir.absolutePath)
         LogBus.i(R.string.log_local_rides, files.size)
         val imported = importedNames()
-        RideStore.refresh(this, imported)
+        RideStore.refresh(this, imported, weightKg())
         files.sortedBy { it.name }.forEach {
             LogBus.i(
                 R.string.log_file_line,

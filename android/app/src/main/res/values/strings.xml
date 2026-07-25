@@ -113,4 +113,15 @@
     <string name="log_verify_extra">    cadence points %1$d, speed points %2$d, segments %3$d</string>
     <string name="cd_menu">Settings</string>
     <string name="menu_check_now">Check for updates now</string>
+    <string name="menu_profile">Profile for calories</string>
+    <string name="chip_kcal">%1$d kcal</string>
+    <string name="profile_title">Profile for calories</string>
+    <string name="profile_hint">Weight comes from Health Connect. Year of birth and sex are not stored there, so the heart-rate formula needs them here — without them the estimate falls back to speed alone.</string>
+    <string name="profile_birth_year">Year of birth</string>
+    <string name="profile_male">Male</string>
+    <string name="profile_female">Female</string>
+    <string name="profile_save">Save</string>
+    <string name="profile_cancel">Cancel</string>
+    <string name="log_no_weight">no weight in Health Connect — calories not calculated</string>
+    <string name="log_no_profile">year of birth and sex are not set — calories estimated from speed, less precisely</string>
 </resources>

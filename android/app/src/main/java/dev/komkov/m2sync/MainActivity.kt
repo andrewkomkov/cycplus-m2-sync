@@ -138,9 +138,12 @@ private fun Screen(
     val update by AppState.update.collectAsStateWithLifecycle()
 
     var menuOpen by remember { mutableStateOf(false) }
+    var profileOpen by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) { UpdateChecker.checkIfDue(ctx) }
+
+    if (profileOpen) ProfileDialog(onDismiss = { profileOpen = false })
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -200,6 +203,13 @@ private fun Screen(
                                 onClick = { Settings.setAutoUpdate(ctx, !autoUpdate) },
                             )
                             HorizontalDivider()
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.menu_profile)) },
+                                onClick = {
+                                    menuOpen = false
+                                    profileOpen = true
+                                },
+                            )
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.menu_check_now)) },
                                 onClick = {

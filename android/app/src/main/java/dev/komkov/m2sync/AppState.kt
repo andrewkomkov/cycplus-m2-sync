@@ -54,6 +54,8 @@ data class RideSummary(
     val points: Int,
     val hasRoute: Boolean,
     val imported: Boolean,
+    /** Наша оценка: велокомп калорий не пишет. */
+    val kcal: Int? = null,
 ) {
     fun toJson(): JSONObject = JSONObject().apply {
         put("file", file)
@@ -67,6 +69,7 @@ data class RideSummary(
         put("points", points)
         put("hasRoute", hasRoute)
         put("imported", imported)
+        put("kcal", kcal ?: JSONObject.NULL)
     }
 
     companion object {
@@ -82,6 +85,7 @@ data class RideSummary(
             points = o.getInt("points"),
             hasRoute = o.getBoolean("hasRoute"),
             imported = o.getBoolean("imported"),
+            kcal = o.opt("kcal")?.takeIf { it != JSONObject.NULL }?.let { (it as Number).toInt() },
         )
     }
 }

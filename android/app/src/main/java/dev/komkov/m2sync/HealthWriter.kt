@@ -12,11 +12,14 @@ import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.Record
 import androidx.health.connect.client.records.SpeedRecord
+import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
+import androidx.health.connect.client.records.WeightRecord
 import androidx.health.connect.client.records.metadata.DataOrigin
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
 import androidx.health.connect.client.records.metadata.Device
 import androidx.health.connect.client.records.metadata.Metadata
+import androidx.health.connect.client.units.Energy
 import androidx.health.connect.client.units.Length
 import androidx.health.connect.client.units.Velocity
 import java.time.ZoneId
@@ -47,17 +50,33 @@ object HealthWriter {
         HealthPermission.getWritePermission(SpeedRecord::class),
         HealthPermission.getWritePermission(ElevationGainedRecord::class),
         HealthPermission.getWritePermission(CyclingPedalingCadenceRecord::class),
+        HealthPermission.getWritePermission(TotalCaloriesBurnedRecord::class),
         HealthPermission.PERMISSION_WRITE_EXERCISE_ROUTE,
     )
 
-    /** Только для самопроверки: прочитать то, что сами же записали. */
+    /** Самопроверка плюс вес: калории считаем сами, а вес ведёт кто-то другой. */
     val readPermissions: Set<String> = setOf(
         HealthPermission.getReadPermission(ExerciseSessionRecord::class),
         HealthPermission.getReadPermission(HeartRateRecord::class),
         HealthPermission.getReadPermission(DistanceRecord::class),
         HealthPermission.getReadPermission(CyclingPedalingCadenceRecord::class),
         HealthPermission.getReadPermission(SpeedRecord::class),
+        HealthPermission.getReadPermission(WeightRecord::class),
     )
+
+    /**
+     * Последний известный вес — на нём стоит весь расчёт калорий.
+     * Берём любой источник: весы, Fit, ручной ввод — неважно чей.
+     */
+    suspend fun readLatestWeight(ctx: Context): Double? =
+        client(ctx).readRecords(
+            ReadRecordsRequest(
+                recordType = WeightRecord::class,
+                timeRangeFilter = TimeRangeFilter.before(java.time.Instant.now()),
+                ascendingOrder = false,
+                pageSize = 1,
+            )
+        ).records.firstOrNull()?.weight?.inKilograms
 
     suspend fun readSessions(ctx: Context, since: java.time.Instant): List<ExerciseSessionRecord> =
         client(ctx).readRecords(
@@ -114,7 +133,7 @@ object HealthWriter {
     suspend fun granted(ctx: Context): Set<String> =
         client(ctx).permissionController.getGrantedPermissions()
 
-    suspend fun write(ctx: Context, ride: FitParser.Ride): Int {
+    suspend fun write(ctx: Context, ride: FitParser.Ride, weightKg: Double? = null): Int {
         val hc = client(ctx)
         val zone = ZoneId.systemDefault()
         val startOffset: ZoneOffset = zone.rules.getOffset(ride.start)
@@ -179,6 +198,15 @@ object HealthWriter {
                 endTime = ride.end, endZoneOffset = endOffset,
                 distance = Length.meters(it),
                 metadata = meta("distance"),
+            )
+        }
+
+        Calories.forRide(ride, weightKg)?.let {
+            records += TotalCaloriesBurnedRecord(
+                startTime = ride.start, startZoneOffset = startOffset,
+                endTime = ride.end, endZoneOffset = endOffset,
+                energy = Energy.kilocalories(it.toDouble()),
+                metadata = meta("calories"),
             )
         }
 
