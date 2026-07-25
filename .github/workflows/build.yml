@@ -25,6 +25,17 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v6
 
+      # Экранные тесты идут на Robolectric, эмулятор для них не нужен.
+      - name: Unit and UI tests
+        working-directory: android
+        run: ./gradlew :app:testDebugUnitTest --no-daemon
+
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: test-report
+          path: android/app/build/reports/tests/testDebugUnitTest
+
       - name: Assemble debug
         working-directory: android
         run: ./gradlew :app:assembleDebug --no-daemon
