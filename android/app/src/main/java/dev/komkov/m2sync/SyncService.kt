@@ -302,7 +302,9 @@ class SyncService : Service() {
         LogBus.i(R.string.log_folder, dir.absolutePath)
         LogBus.i(R.string.log_local_rides, files.size)
         val imported = importedNames()
-        RideStore.refresh(this, imported, weightKg())
+        // Профиль обязателен и здесь: иначе STATUS молча пересчитает калории
+        // по скорости и затрёт в списке то, что посчитано по пульсу.
+        RideStore.refresh(this, imported, weightKg(), profile())
         files.sortedBy { it.name }.forEach {
             LogBus.i(
                 R.string.log_file_line,

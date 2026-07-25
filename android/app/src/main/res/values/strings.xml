@@ -5,6 +5,7 @@
 
     <!-- Screen -->
     <string name="title_rides">Rides from M2</string>
+    <string name="subtitle_rides">%1$d in the list</string>
     <string name="cd_permissions">Permissions</string>
     <string name="device_unknown">Bike computer not polled yet</string>
     <string name="device_hint">tap “Poll”</string>

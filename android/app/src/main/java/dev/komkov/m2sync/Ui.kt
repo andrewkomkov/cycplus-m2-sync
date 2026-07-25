@@ -41,7 +41,11 @@ import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.Sync
 import androidx.compose.material.icons.rounded.Terrain
 import androidx.compose.material.icons.rounded.Timer
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonGroup
+import androidx.compose.material3.ButtonGroupDefaults
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -50,6 +54,7 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.OutlinedButton
@@ -185,6 +190,7 @@ fun DeviceArt(battery: Int?, modifier: Modifier = Modifier) {
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun DeviceCard(
     device: DeviceSnapshot?,
@@ -249,7 +255,14 @@ fun DeviceCard(
             }
         }
         AnimatedVisibility(busy) {
-            Column(Modifier.padding(horizontal = 20.dp).padding(bottom = 16.dp)) {
+            Row(
+                Modifier.padding(horizontal = 20.dp).padding(bottom = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                // Expressive-индикатор: морфящаяся фигура вместо полосы, она же
+                // подсказывает, что работа идёт, но её длительность неизвестна.
+                LoadingIndicator()
+                Spacer(Modifier.width(12.dp))
                 Text(
                     stringResource(
                         when (action) {
@@ -263,8 +276,6 @@ fun DeviceCard(
                     ),
                     style = MaterialTheme.typography.labelMedium,
                 )
-                Spacer(Modifier.height(6.dp))
-                LinearProgressIndicator(Modifier.fillMaxWidth())
             }
         }
     }
@@ -321,6 +332,7 @@ private fun StatTile(label: String, value: String, modifier: Modifier = Modifier
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ActionsRow(
     onSync: () -> Unit,
@@ -329,23 +341,66 @@ fun ActionsRow(
     enabled: Boolean,
     modifier: Modifier = Modifier,
 ) {
+    // Главное действие отдельной кнопкой: втроём в один ряд подписи не помещаются,
+    // а «Синхронизировать» — то, ради чего экран открывают.
+    val syncInteraction = remember { MutableInteractionSource() }
+    val pollInteraction = remember { MutableInteractionSource() }
+    val verifyInteraction = remember { MutableInteractionSource() }
+
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Button(onClick = onSync, enabled = enabled, modifier = Modifier.fillMaxWidth()) {
+        Button(
+            onClick = onSync,
+            enabled = enabled,
+            interactionSource = syncInteraction,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
             Icon(Icons.Rounded.Sync, null, Modifier.size(20.dp))
             Spacer(Modifier.width(8.dp))
             Text(stringResource(R.string.btn_sync), maxLines = 1)
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilledTonalButton(onClick = onInfo, enabled = enabled, modifier = Modifier.weight(1f)) {
-                Icon(Icons.Rounded.Bluetooth, null, Modifier.size(18.dp))
-                Spacer(Modifier.width(6.dp))
-                Text(stringResource(R.string.btn_poll), maxLines = 1)
-            }
-            OutlinedButton(onClick = onVerify, enabled = enabled, modifier = Modifier.weight(1f)) {
-                Icon(Icons.Rounded.CheckCircle, null, Modifier.size(18.dp))
-                Spacer(Modifier.width(6.dp))
-                Text(stringResource(R.string.btn_verify), maxLines = 1)
-            }
+        // ButtonGroup из Expressive: соседняя кнопка поджимается, когда нажимают
+        // её пару, поэтому две второстепенные читаются как один орган управления.
+        ButtonGroup(
+            overflowIndicator = {},
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+        ) {
+            customItem(
+                buttonGroupContent = {
+                    FilledTonalButton(
+                        onClick = onInfo,
+                        enabled = enabled,
+                        interactionSource = pollInteraction,
+                        shape = ButtonGroupDefaults.connectedLeadingButtonShape,
+                        modifier = Modifier
+                            .weight(1f)
+                            .animateWidth(pollInteraction),
+                    ) {
+                        Icon(Icons.Rounded.Bluetooth, null, Modifier.size(18.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text(stringResource(R.string.btn_poll), maxLines = 1)
+                    }
+                },
+                menuContent = {},
+            )
+            customItem(
+                buttonGroupContent = {
+                    OutlinedButton(
+                        onClick = onVerify,
+                        enabled = enabled,
+                        interactionSource = verifyInteraction,
+                        shape = ButtonGroupDefaults.connectedTrailingButtonShape,
+                        modifier = Modifier
+                            .weight(1f)
+                            .animateWidth(verifyInteraction),
+                    ) {
+                        Icon(Icons.Rounded.CheckCircle, null, Modifier.size(18.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text(stringResource(R.string.btn_verify), maxLines = 1)
+                    }
+                },
+                menuContent = {},
+            )
         }
     }
 }
