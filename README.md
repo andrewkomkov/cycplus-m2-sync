@@ -37,7 +37,9 @@ Garmin Connect and the rest can read them — and the `.fit` files stay yours.
 - **Verify** — reads the rides back out of Health Connect and reports what is missing, plus which
   other apps wrote records for the same days
 - **Sync on launch** — opening the app finds the bike computer and pulls new rides in ~3 s
-- **Update check** — asks GitHub Releases for a newer version; both toggles live in the ⋮ menu
+- **Update check** — asks GitHub Releases for a newer version, then downloads and installs it in
+  place: the APK is fetched in-app, checked against the published sha256, and handed to the system
+  installer, so all you see is Android's own "update this app?" dialog
 - **Ride in detail** — tap a ride for its route on an OpenStreetMap basemap plus elevation,
   speed, heart-rate and cadence charts you can scrub with a finger
 - **3D fly-through** — fly the track from a bird's-eye chase camera, with the map draped on the

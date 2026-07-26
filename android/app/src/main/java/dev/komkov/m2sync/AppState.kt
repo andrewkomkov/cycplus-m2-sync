@@ -119,6 +119,9 @@ object AppState {
     /** Найденное на GitHub обновление, если оно новее установленного. */
     val update = MutableStateFlow<UpdateChecker.Update?>(null)
 
+    /** Ход скачивания и установки этого обновления; null — ничего не идёт. */
+    val updateProgress = MutableStateFlow<UpdateProgress?>(null)
+
     fun load(ctx: Context) {
         val p = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         p.getString(KEY_DEVICE, null)?.let {

@@ -195,4 +195,14 @@
     <string name="layer_map">Схема</string>
     <string name="layer_satellite">Супутник</string>
     <string name="setting_map_layer">Підкладка</string>
+    <string name="update_downloading">завантажую…</string>
+    <string name="update_verifying">перевіряю файл…</string>
+    <string name="update_installing">встановлюю…</string>
+    <string name="log_update_downloading">завантажую версію %1$s</string>
+    <string name="log_update_download_failed">не вдалося завантажити оновлення</string>
+    <string name="log_update_verified">контрольна сума збіглася з опублікованою</string>
+    <string name="log_update_checksum_failed">контрольна сума не збіглася — файл не встановлено</string>
+    <string name="log_update_installed">оновлення встановлено</string>
+    <string name="log_update_install_failed">не вдалося встановити оновлення: %1$s</string>
+    <string name="log_update_needs_permission">дозволь M2 Sync встановлювати застосунки і натисни «Завантажити» ще раз</string>
 </resources>

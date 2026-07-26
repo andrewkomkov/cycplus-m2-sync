@@ -11,6 +11,8 @@
          как connectedDevice система не даёт без разрешений на Bluetooth. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Обновление ставится из релизов GitHub: магазина у приложения нет. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <!-- Health Connect -->
     <uses-permission android:name="android.permission.health.WRITE_EXERCISE" />
@@ -89,6 +91,12 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <!-- Ответ системы на сессию установки обновления. Не exported: его
+             дёргает только наш собственный PendingIntent. -->
+        <receiver
+            android:name=".InstallReceiver"
+            android:exported="false" />
 
         <!-- Управление из терминала: adb shell am broadcast -a dev.komkov.m2sync.SYNC -->
         <receiver
