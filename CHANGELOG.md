@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/andrewkomkov/cycplus-m2-sync/compare/v0.5.0...v0.6.0) (2026-07-26)
+
+
+### Features
+
+* **update:** install a new version without leaving the app ([#33](https://github.com/andrewkomkov/cycplus-m2-sync/issues/33)) ([6d4c607](https://github.com/andrewkomkov/cycplus-m2-sync/commit/6d4c6077d96da70a2aa7496f8aa3f9688a559bf0))
+
 ## [0.5.0](https://github.com/andrewkomkov/cycplus-m2-sync/compare/v0.4.0...v0.5.0) (2026-07-26)
 
 
