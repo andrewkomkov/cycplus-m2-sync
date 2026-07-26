@@ -149,4 +149,52 @@
     <string name="log_records_unsupported">not supported on this device</string>
     <string name="log_records_empty">supported, but has no personal details</string>
     <string name="log_records_has_profile">year of birth and sex taken from it</string>
+
+    <!-- Ride detail, charts and 3D fly-through -->
+    <string name="cd_back">Back</string>
+    <string name="cd_close">Close</string>
+    <string name="cd_play">Play</string>
+    <string name="cd_pause">Pause</string>
+    <string name="cd_restart">Start over</string>
+    <string name="cd_basemap">Map basemap</string>
+    <string name="btn_fly">Fly this ride in 3D</string>
+    <string name="fly_progress">%1$s / %2$s km</string>
+    <string name="fly_rate">%1$d\u00d7</string>
+
+    <string name="unit_km">km</string>
+    <string name="unit_m">m</string>
+    <string name="unit_kmh">km/h</string>
+    <string name="unit_bpm">bpm</string>
+    <string name="unit_rpm">rpm</string>
+    <string name="unit_kcal">kcal</string>
+
+    <string name="chart_elevation">Elevation</string>
+    <string name="chart_speed">Speed</string>
+    <string name="chart_heart_rate">Heart rate</string>
+    <string name="chart_cadence">Cadence</string>
+    <string name="chart_at">at %1$s km</string>
+    <string name="chart_average">average for the ride</string>
+    <string name="chart_axis_km">%1$s km</string>
+
+    <string name="detail_distance">distance</string>
+    <string name="detail_moving">moving</string>
+    <string name="detail_avg_speed">average speed</string>
+    <string name="detail_max_speed">top speed</string>
+    <string name="detail_ascent">elevation gain</string>
+    <string name="detail_avg_hr">average heart rate</string>
+    <string name="detail_max_hr">peak heart rate</string>
+    <string name="detail_calories">energy</string>
+    <string name="detail_elapsed">total time</string>
+    <string name="detail_altitude_range">altitude</string>
+
+    <string name="setting_map_tiles">Map basemap</string>
+    <string name="setting_map_tiles_hint">Load OpenStreetMap tiles under the route; off keeps the ride fully offline</string>
+    <string name="log_ble_grant_hint">grant Bluetooth access (lock icon) and run the sync again</string>
+    <string name="log_command_background">could not run the command: the app is in the background, open it first</string>
+    <string name="cd_reset_view">Reset the view</string>
+    <string name="detail_unreadable">Could not read the .fit file of this ride</string>
+    <string name="layer_none">Off</string>
+    <string name="layer_map">Map</string>
+    <string name="layer_satellite">Satellite</string>
+    <string name="setting_map_layer">Basemap</string>
 </resources>

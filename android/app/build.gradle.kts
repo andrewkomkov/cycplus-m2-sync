@@ -39,6 +39,13 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Отладочная сборка живёт рядом с релизной, а не поверх неё: ключи
+            // разные, и иначе установка требовала бы снести приложение вместе
+            // со всеми скачанными .fit.
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+        }
         release {
             // Без R8 dex раздувается до 50 МБ: FIT SDK и material-icons тянут
             // тысячи неиспользуемых классов.

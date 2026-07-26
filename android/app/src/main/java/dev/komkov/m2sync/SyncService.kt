@@ -43,6 +43,18 @@ class SyncService : Service() {
         const val EXTRA_NAME = "name"
         const val EXTRA_ADDRESS = "address"
 
+        /** Действия, которым нужно радио: остальные обходятся локальными файлами. */
+        private val BLE_ACTIONS = setOf(ACTION_SCAN, ACTION_SYNC, ACTION_INFO, ACTION_WEIGH)
+
+        private val BLE_PERMISSIONS = arrayOf(
+            android.Manifest.permission.BLUETOOTH_SCAN,
+            android.Manifest.permission.BLUETOOTH_CONNECT,
+        )
+
+        fun bleGranted(ctx: Context): Boolean = BLE_PERMISSIONS.all {
+            ctx.checkSelfPermission(it) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        }
+
         /** `-e force 1` — переимпортировать уже загруженные файлы. */
         const val EXTRA_FORCE = "force"
 
@@ -81,6 +93,13 @@ class SyncService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        val action = intent?.action ?: ACTION_STATUS
+
+        // Тип сервиса — по делу: connectedDevice система отдаёт только тому, у
+        // кого есть разрешения на Bluetooth, а листать локальные файлы можно и
+        // без радио. Раньше здесь всегда стоял connectedDevice, и приложение
+        // без выданных разрешений падало прямо на запуске.
+        val needsRadio = action in BLE_ACTIONS && bleGranted(this)
         startForeground(
             1,
             Notification.Builder(this, CHANNEL_ID)
@@ -88,10 +107,17 @@ class SyncService : Service() {
                 .setContentText(getString(R.string.notification_text))
                 .setSmallIcon(android.R.drawable.stat_sys_data_bluetooth)
                 .build(),
-            ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE,
+            if (needsRadio) ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
+            else ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC,
         )
 
-        val action = intent?.action ?: ACTION_STATUS
+        if (action in BLE_ACTIONS && !bleGranted(this)) {
+            LogBus.e(R.string.log_missing_perms, BLE_PERMISSIONS.joinToString())
+            LogBus.i(R.string.log_ble_grant_hint)
+            stopSelf()
+            return START_NOT_STICKY
+        }
+
         val prefix = intent?.getStringExtra(EXTRA_NAME) ?: DEFAULT_PREFIX
         val address = intent?.getStringExtra(EXTRA_ADDRESS)
         val force = intent?.getStringExtra(EXTRA_FORCE) != null

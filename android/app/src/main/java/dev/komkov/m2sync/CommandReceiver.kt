@@ -26,6 +26,10 @@ class CommandReceiver : BroadcastReceiver() {
                 putExtra(SyncService.EXTRA_ADDRESS, it)
             }
         }
-        context.startForegroundService(forward)
+        // Из фона система запускать foreground-сервис не даёт, и раньше это
+        // роняло приложение прямо в приёмнике. Команда из терминала — не повод
+        // падать: сообщаем в журнал и ждём, когда экран будет открыт.
+        runCatching { context.startForegroundService(forward) }
+            .onFailure { LogBus.e(R.string.log_command_background, it) }
     }
 }

@@ -38,6 +38,11 @@ Garmin Connect and the rest can read them — and the `.fit` files stay yours.
   other apps wrote records for the same days
 - **Sync on launch** — opening the app finds the bike computer and pulls new rides in ~3 s
 - **Update check** — asks GitHub Releases for a newer version; both toggles live in the ⋮ menu
+- **Ride in detail** — tap a ride for its route on an OpenStreetMap basemap plus elevation,
+  speed, heart-rate and cadence charts you can scrub with a finger
+- **3D fly-through** — fly the track from a bird's-eye chase camera, with the map draped on the
+  ground in perspective; drag to orbit, pinch to zoom, double-tap to recentre. No API key and no
+  account, and the basemap switches off if you want the ride to stay fully offline
 - **Fully scriptable over ADB** — every action runs headless, no tapping required
 - **Material 3 Expressive UI** with dynamic colour, English and Russian localisation
 - **Device card** — model, firmware, battery, free memory read straight off the device
@@ -55,6 +60,9 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
 Requirements: Android 13 or newer with Health Connect (built into Android 14+).
+
+Debug builds install as `dev.komkov.m2sync.debug`, so they sit next to a release build instead of
+replacing it. Substitute that package name in the ADB commands below when you build from source.
 
 Permissions can be granted from the app (lock icon), or entirely from a terminal:
 

@@ -437,4 +437,158 @@ class UiTest {
         compose.onNodeWithText("Cycplus M2").assertExists()
         compose.onNodeWithText("E3:E8:F7:E3:09:44").assertExists()
     }
+
+    // --- заезд крупным планом ---
+
+    /** Прямой трек на север: координаты, высота, пульс и каденс — всё есть. */
+    private fun track(
+        count: Int = 120,
+        heartRate: Int? = 140,
+        cadence: Int? = 80,
+    ): RideTrack {
+        val begin = Instant.parse("2026-07-25T10:20:49Z")
+        val points = (0 until count).map { i ->
+            FitParser.Point(
+                time = begin.plusSeconds(i.toLong()),
+                lat = 60.0 + i * 0.0001,
+                lon = 30.0,
+                altitude = 100.0 + i * 0.5,
+                speed = 8.0,
+                heartRate = heartRate,
+                cadence = cadence,
+                distance = i * 11.132,
+            )
+        }
+        val parsed = FitParser.Ride(
+            fileName = "20260725102049.fit",
+            start = points.first().time,
+            end = points.last().time,
+            sport = "cycling",
+            totalDistance = (count - 1) * 11.132,
+            totalTimerTime = count.toDouble(),
+            totalAscent = 59,
+            totalCalories = null,
+            avgHeartRate = heartRate,
+            points = points,
+            activeSpans = listOf(points.first().time to points.last().time),
+        )
+        return RideTrack.build(ride(), parsed)
+    }
+
+    @Test
+    fun `chart card offers only the metrics the ride has`() {
+        setContent {
+            RideChartCard(
+                track = track(heartRate = null, cadence = null),
+                metric = TrackMetric.ELEVATION,
+                onMetric = {},
+                highlight = null,
+                onHighlight = {},
+            )
+        }
+
+        compose.onNodeWithText(string(R.string.chart_elevation)).assertExists()
+        compose.onNodeWithText(string(R.string.chart_speed)).assertExists()
+        compose.onNodeWithText(string(R.string.chart_heart_rate)).assertDoesNotExist()
+        compose.onNodeWithText(string(R.string.chart_cadence)).assertDoesNotExist()
+    }
+
+    @Test
+    fun `chart card switches metric on a chip`() {
+        var picked: TrackMetric? = null
+        setContent {
+            RideChartCard(
+                track = track(),
+                metric = TrackMetric.ELEVATION,
+                onMetric = { picked = it },
+                highlight = null,
+                onHighlight = {},
+            )
+        }
+
+        compose.onNodeWithText(string(R.string.chart_heart_rate)).performClick()
+        assertEquals(TrackMetric.HEART_RATE, picked)
+    }
+
+    /** Без протяжки подпись говорит про среднее, с ней — про точку под пальцем. */
+    @Test
+    fun `chart card labels the average until a point is picked`() {
+        setContent {
+            RideChartCard(
+                track = track(),
+                metric = TrackMetric.HEART_RATE,
+                onMetric = {},
+                highlight = null,
+                onHighlight = {},
+            )
+        }
+
+        compose.onNodeWithText(string(R.string.chart_average)).assertExists()
+        compose.onNodeWithText("140 " + string(R.string.unit_bpm)).assertExists()
+    }
+
+    @Test
+    fun `chart card reports the picked point`() {
+        setContent {
+            RideChartCard(
+                track = track(),
+                metric = TrackMetric.SPEED,
+                onMetric = {},
+                highlight = 40,
+                onHighlight = {},
+            )
+        }
+
+        compose.onNodeWithText(string(R.string.chart_at, "0.45"), substring = true).assertExists()
+    }
+
+    // --- полёт ---
+
+    @Test
+    fun `fly view shows the controls and the starting readings`() {
+        // Полёт крутит бесконечный кадровый цикл, поэтому часы двигаем вручную:
+        // иначе тест никогда не дождётся простоя.
+        compose.mainClock.autoAdvance = false
+        val flown = track()
+        setContent {
+            FlyView(flown, tiles = TileSource(compose.activity, kotlinx.coroutines.MainScope())) {}
+        }
+        compose.mainClock.advanceTimeByFrame()
+
+        compose.onNodeWithContentDescription(string(R.string.cd_close)).assertExists()
+        compose.onNodeWithContentDescription(string(R.string.cd_pause)).assertExists()
+        compose.onNodeWithContentDescription(string(R.string.cd_restart)).assertExists()
+        compose.onNodeWithText(string(R.string.fly_rate, 4)).assertExists()
+        compose.onNodeWithText(string(R.string.unit_kmh)).assertExists()
+    }
+
+    @Test
+    fun `fly view closes on the cross`() {
+        compose.mainClock.autoAdvance = false
+        var closed = false
+        val flown = track()
+        setContent {
+            FlyView(flown, tiles = TileSource(compose.activity, kotlinx.coroutines.MainScope())) {
+                closed = true
+            }
+        }
+        compose.mainClock.advanceTimeByFrame()
+
+        compose.onNodeWithContentDescription(string(R.string.cd_close)).performClick()
+        compose.mainClock.advanceTimeByFrame()
+        assertTrue(closed)
+    }
+
+    /** Вид не трогали — кнопки возврата камеры быть не должно. */
+    @Test
+    fun `fly view hides the reset until the camera is moved`() {
+        compose.mainClock.autoAdvance = false
+        val flown = track()
+        setContent {
+            FlyView(flown, tiles = TileSource(compose.activity, kotlinx.coroutines.MainScope())) {}
+        }
+        compose.mainClock.advanceTimeByFrame()
+
+        compose.onNodeWithContentDescription(string(R.string.cd_reset_view)).assertDoesNotExist()
+    }
 }
