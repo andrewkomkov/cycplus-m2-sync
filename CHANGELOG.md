@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.5.0](https://github.com/andrewkomkov/cycplus-m2-sync/compare/v0.4.0...v0.5.0) (2026-07-26)
+
+
+### Features
+
+* **ui:** open a ride on a map with charts and a 3d fly-through ([#32](https://github.com/andrewkomkov/cycplus-m2-sync/issues/32)) ([5282fc4](https://github.com/andrewkomkov/cycplus-m2-sync/commit/5282fc45121d72c83cb8c209a59165fae4204def))
+
+
+### Documentation
+
+* refresh docs and screenshots for 0.4.0, add compose ui tests ([#30](https://github.com/andrewkomkov/cycplus-m2-sync/issues/30)) ([e8888a1](https://github.com/andrewkomkov/cycplus-m2-sync/commit/e8888a1a9f9597a4610c630b289359bff4b660fc))
+
 ## [0.4.0](https://github.com/andrewkomkov/cycplus-m2-sync/compare/v0.3.1...v0.4.0) (2026-07-25)
 
 
