@@ -197,4 +197,14 @@
     <string name="layer_map">Map</string>
     <string name="layer_satellite">Satellite</string>
     <string name="setting_map_layer">Basemap</string>
+    <string name="update_downloading">downloading…</string>
+    <string name="update_verifying">checking the download…</string>
+    <string name="update_installing">installing…</string>
+    <string name="log_update_downloading">downloading version %1$s</string>
+    <string name="log_update_download_failed">could not download the update</string>
+    <string name="log_update_verified">checksum matches the published one</string>
+    <string name="log_update_checksum_failed">checksum does not match — the download was not installed</string>
+    <string name="log_update_installed">update installed</string>
+    <string name="log_update_install_failed">could not install the update: %1$s</string>
+    <string name="log_update_needs_permission">allow installing apps from M2 Sync, then tap Download again</string>
 </resources>

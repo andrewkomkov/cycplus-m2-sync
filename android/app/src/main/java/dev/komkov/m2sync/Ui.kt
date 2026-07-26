@@ -58,6 +58,7 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.FilterChip
@@ -626,11 +627,13 @@ fun RidesList(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun UpdateCard(
     update: UpdateChecker.Update,
     onDownload: () -> Unit,
     modifier: Modifier = Modifier,
+    progress: UpdateProgress? = null,
 ) {
     Card(
         modifier.fillMaxWidth(),
@@ -655,13 +658,37 @@ fun UpdateCard(
                     color = MaterialTheme.colorScheme.onTertiaryContainer,
                 )
                 Text(
-                    stringResource(R.string.update_current, BuildConfig.VERSION_NAME),
+                    when (progress?.stage) {
+                        UpdateProgress.Stage.DOWNLOAD -> stringResource(R.string.update_downloading)
+                        UpdateProgress.Stage.VERIFY -> stringResource(R.string.update_verifying)
+                        UpdateProgress.Stage.INSTALL -> stringResource(R.string.update_installing)
+                        null -> stringResource(R.string.update_current, BuildConfig.VERSION_NAME)
+                    },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onTertiaryContainer,
                 )
             }
-            FilledTonalButton(onClick = onDownload) {
-                Text(stringResource(R.string.update_download), maxLines = 1)
+            // Пока идёт установка, кнопки нет: нажимать второй раз нечего, а
+            // полоса на её месте отвечает на «сколько ещё ждать».
+            if (progress == null) {
+                FilledTonalButton(onClick = onDownload) {
+                    Text(stringResource(R.string.update_download), maxLines = 1)
+                }
+            }
+        }
+        if (progress != null) {
+            val fraction = progress.fraction
+            Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 16.dp)) {
+                // Длину ответа сервер может и не прислать — тогда полоса просто
+                // бежит, не обещая доли.
+                if (fraction == null) {
+                    LinearWavyProgressIndicator(Modifier.fillMaxWidth())
+                } else {
+                    LinearWavyProgressIndicator(
+                        progress = { fraction },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
             }
         }
     }

@@ -23,7 +23,14 @@ object UpdateChecker {
     private const val KEY_LAST_CHECK = "last_check"
     private const val CHECK_INTERVAL_MS = 12 * 60 * 60 * 1000L
 
-    data class Update(val version: String, val apkUrl: String?, val pageUrl: String, val notes: String?)
+    data class Update(
+        val version: String,
+        val apkUrl: String?,
+        val pageUrl: String,
+        val notes: String?,
+        /** Сумма, опубликованная рядом с APK; сверяется перед установкой. */
+        val sha256Url: String? = null,
+    )
 
     /** Тихая проверка при запуске: не чаще раза в 12 часов и только если включена. */
     suspend fun checkIfDue(ctx: Context) {
@@ -46,22 +53,13 @@ object UpdateChecker {
                 AppState.update.value = null
                 return@withContext null
             }
-            val assets = json.optJSONArray("assets")
-            var apk: String? = null
-            if (assets != null) {
-                for (i in 0 until assets.length()) {
-                    val asset = assets.getJSONObject(i)
-                    if (asset.optString("name").endsWith(".apk")) {
-                        apk = asset.optString("browser_download_url")
-                        break
-                    }
-                }
-            }
+            val (apk, sha) = assets(json.optJSONArray("assets"))
             val update = Update(
                 version = tag,
                 apkUrl = apk,
                 pageUrl = json.optString("html_url", RELEASES_URL),
                 notes = json.optString("body").takeIf { it.isNotBlank() },
+                sha256Url = sha,
             )
             LogBus.i(R.string.log_update_found, tag)
             AppState.update.value = update
@@ -86,6 +84,30 @@ object UpdateChecker {
         } finally {
             connection.disconnect()
         }
+    }
+
+    /**
+     * Ссылки на APK и на его контрольную сумму из списка файлов релиза.
+     *
+     * Порядок файлов в ответе не гарантирован, поэтому проходим весь список, а
+     * `.apk.sha256` не путаем с `.apk`: он на `.apk` не заканчивается.
+     */
+    fun assets(list: org.json.JSONArray?): Pair<String?, String?> {
+        var apk: String? = null
+        var sha: String? = null
+        if (list != null) {
+            for (i in 0 until list.length()) {
+                val asset = list.optJSONObject(i) ?: continue
+                val name = asset.optString("name")
+                val url = asset.optString("browser_download_url").takeIf { it.isNotEmpty() } ?: continue
+                if (name.endsWith(".apk.sha256")) {
+                    if (sha == null) sha = url
+                } else if (name.endsWith(".apk")) {
+                    if (apk == null) apk = url
+                }
+            }
+        }
+        return apk to sha
     }
 
     /** Сравнение вида 1.10.0 против 1.9.3 по числам, а не по строкам. */

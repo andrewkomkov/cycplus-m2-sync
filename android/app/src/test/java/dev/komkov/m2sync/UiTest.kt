@@ -414,6 +414,39 @@ class UiTest {
         assertTrue(downloaded)
     }
 
+    /** Пока идёт установка, нажимать нечего: кнопка уступает место полосе. */
+    @Test
+    fun `update card swaps the button for progress while installing`() {
+        setContent {
+            UpdateCard(
+                update = UpdateChecker.Update(
+                    version = "0.9.9",
+                    apkUrl = "https://example.invalid/app.apk",
+                    pageUrl = "https://example.invalid/releases",
+                    notes = null,
+                ),
+                onDownload = {},
+                progress = UpdateProgress(UpdateProgress.Stage.DOWNLOAD, 5, 10),
+            )
+        }
+
+        compose.onNodeWithText(string(R.string.update_downloading)).assertExists()
+        compose.onNodeWithText(string(R.string.update_download)).assertDoesNotExist()
+    }
+
+    @Test
+    fun `update card names the stage it is on`() {
+        setContent {
+            UpdateCard(
+                update = UpdateChecker.Update("0.9.9", null, "https://example.invalid", null),
+                onDownload = {},
+                progress = UpdateProgress(UpdateProgress.Stage.INSTALL),
+            )
+        }
+
+        compose.onNodeWithText(string(R.string.update_installing)).assertExists()
+    }
+
     // --- карточка устройства ---
 
     @Test

@@ -182,6 +182,7 @@ private fun Screen(
     val autoUpdate by Settings.autoUpdate.collectAsStateWithLifecycle()
     val mapLayer by Settings.mapLayer.collectAsStateWithLifecycle()
     val update by AppState.update.collectAsStateWithLifecycle()
+    val updateProgress by AppState.updateProgress.collectAsStateWithLifecycle()
     val weight by AppState.weight.collectAsStateWithLifecycle()
 
     var menuOpen by remember { mutableStateOf(false) }
@@ -328,12 +329,11 @@ private fun Screen(
             header = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     update?.let {
-                        UpdateCard(it, onDownload = {
-                            ctx.startActivity(
-                                Intent(Intent.ACTION_VIEW, Uri.parse(it.apkUrl ?: it.pageUrl))
-                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                            )
-                        })
+                        UpdateCard(
+                            update = it,
+                            onDownload = { Updater.start(ctx, it) },
+                            progress = updateProgress,
+                        )
                     }
                     DeviceCard(device, busy, action)
                     ActionsRow(onSync, onInfo, onVerify, enabled = !busy)
