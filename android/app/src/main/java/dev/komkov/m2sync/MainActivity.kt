@@ -46,6 +46,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -76,7 +77,14 @@ class MainActivity : ComponentActivity() {
         ActivityResultContracts.RequestMultiplePermissions()
     ) { result ->
         val denied = result.filterValues { !it }.keys
-        if (denied.isNotEmpty()) LogBus.e(R.string.log_missing_perms, denied.joinToString())
+        if (denied.isNotEmpty()) {
+            LogBus.e(R.string.log_missing_perms, denied.joinToString())
+        } else if (Settings.autoSync.value && !autoSyncDone) {
+            // Разрешения только что дали — синк, отложенный на старте, можно
+            // наконец выполнить, не заставляя жать кнопку вручную.
+            autoSyncDone = true
+            send(SyncService.ACTION_SYNC)
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -99,15 +107,18 @@ class MainActivity : ComponentActivity() {
         }
 
         // При запуске: показать что есть локально, затем — если включено —
-        // сразу пойти к велокомпьютеру и слить новые заезды.
+        // сразу пойти к велокомпьютеру и слить новые заезды. Без разрешений на
+        // Bluetooth сначала спрашиваем их: синк всё равно был бы невозможен.
         send(SyncService.ACTION_STATUS)
-        if (Settings.autoSync.value && !autoSyncDone) {
+        if (!SyncService.bleGranted(this)) {
+            requestBle()
+        } else if (Settings.autoSync.value && !autoSyncDone) {
             autoSyncDone = true
             send(SyncService.ACTION_SYNC)
         }
     }
 
-    private fun requestAll() {
+    private fun requestBle() {
         blePermissions.launch(
             arrayOf(
                 Manifest.permission.BLUETOOTH_SCAN,
@@ -115,6 +126,10 @@ class MainActivity : ComponentActivity() {
                 Manifest.permission.POST_NOTIFICATIONS,
             )
         )
+    }
+
+    private fun requestAll() {
+        requestBle()
         if (HealthWriter.available(this)) {
             // Медкарту просим только там, где она поддерживается: на остальных
             // устройствах такое разрешение неизвестно системе.
@@ -155,8 +170,17 @@ private fun Screen(
     var selection by remember { mutableStateOf(emptySet<String>()) }
     val selecting = selection.isNotEmpty()
 
+    // Открытый заезд помним по имени файла, а не по объекту: список
+    // пересобирается после каждого синка, и ссылка на старый протухла бы.
+    var openRide by rememberSaveable { mutableStateOf<String?>(null) }
+    rides.firstOrNull { it.file == openRide }?.let { ride ->
+        RideDetailScreen(ride, onBack = { openRide = null })
+        return
+    }
+
     val autoSync by Settings.autoSync.collectAsStateWithLifecycle()
     val autoUpdate by Settings.autoUpdate.collectAsStateWithLifecycle()
+    val mapLayer by Settings.mapLayer.collectAsStateWithLifecycle()
     val update by AppState.update.collectAsStateWithLifecycle()
     val weight by AppState.weight.collectAsStateWithLifecycle()
 
@@ -227,6 +251,19 @@ private fun Screen(
                                 },
                                 onClick = { Settings.setAutoUpdate(ctx, !autoUpdate) },
                             )
+                            // Состояний три, поэтому не тумблер: пункт называет
+                            // текущую подложку и по нажатию берёт следующую.
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.setting_map_layer)) },
+                                trailingIcon = {
+                                    Text(
+                                        stringResource(mapLayer.label),
+                                        style = MaterialTheme.typography.labelLarge,
+                                        color = MaterialTheme.colorScheme.primary,
+                                    )
+                                },
+                                onClick = { Settings.setMapLayer(ctx, mapLayer.next()) },
+                            )
                             HorizontalDivider()
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.menu_profile)) },
@@ -282,6 +319,8 @@ private fun Screen(
                 if (selecting) {
                     selection = if (ride.file in selection) selection - ride.file
                     else selection + ride.file
+                } else {
+                    openRide = ride.file
                 }
             },
             onLongClick = { ride -> selection = selection + ride.file },
