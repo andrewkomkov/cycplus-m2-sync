@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/andrewkomkov/cycplus-m2-sync/compare/v0.6.0...v0.6.1) (2026-07-26)
+
+
+### Documentation
+
+* correct what reaches strava through health connect ([#35](https://github.com/andrewkomkov/cycplus-m2-sync/issues/35)) ([6bd27cb](https://github.com/andrewkomkov/cycplus-m2-sync/commit/6bd27cb99787dbc5cafa97a65c7d1a611058fd36))
+
 ## [0.6.0](https://github.com/andrewkomkov/cycplus-m2-sync/compare/v0.5.0...v0.6.0) (2026-07-26)
 
 
