@@ -19,8 +19,14 @@ files anywhere you like — **without the vendor cloud, without an account, with
 The stock workflow sends every ride through the vendor's cloud, and the Google side of it is
 disappearing too: the **Google Fit APIs are shut down at the end of 2026** and the Fit app is being
 replaced by Google Health, with **Health Connect** as the on-device store everything now talks to.
-This app writes directly into Health Connect, so your rides land where Google Health, Strava,
-Garmin Connect and the rest can read them — and the `.fit` files stay yours.
+This app writes directly into Health Connect, so your rides land where Google Health and anything
+else that reads that store can pick them up — and the `.fit` files stay yours.
+
+Strava is the exception worth knowing about: its Health Connect link only goes one way. Strava
+writes activities into Health Connect and reads weight back out, but it never reads activities
+from it, so rides will not reach Strava this way. Getting them there means uploading the `.fit`
+yourself — the share button hands you the file — because as of June 2026 Strava's API needs a paid
+Strava subscription on its Standard tier, which is where an app like this one lands.
 
 ## Features
 
