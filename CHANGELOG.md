@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.0](https://github.com/andrewkomkov/cycplus-m2-sync/compare/v0.6.1...v0.7.0) (2026-07-27)
+
+
+### Features
+
+* **ui:** add haptic feedback where it carries meaning ([#40](https://github.com/andrewkomkov/cycplus-m2-sync/issues/40)) ([bdb488b](https://github.com/andrewkomkov/cycplus-m2-sync/commit/bdb488b5dded97c7312edbb7d996f7808379002a))
+
 ## [0.6.1](https://github.com/andrewkomkov/cycplus-m2-sync/compare/v0.6.0...v0.6.1) (2026-07-26)
 
 
