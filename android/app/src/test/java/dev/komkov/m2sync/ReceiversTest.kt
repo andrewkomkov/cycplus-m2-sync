@@ -1,6 +1,7 @@
 package dev.komkov.m2sync
 
 import android.content.ActivityNotFoundException
+import android.content.ComponentName
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
@@ -89,8 +90,7 @@ class ReceiversTest {
     fun `a refused service start is logged instead of crashing`() {
         val refusing =
             object : ContextWrapper(app) {
-                override fun startForegroundService(service: Intent): android.content.ComponentName? =
-                    throw IllegalStateException("app is in background")
+                override fun startForegroundService(service: Intent): ComponentName? = error("app is in background")
             }
 
         CommandReceiver().onReceive(refusing, Intent(SyncService.ACTION_SCAN))
