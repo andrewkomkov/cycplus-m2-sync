@@ -82,6 +82,15 @@ android {
     // поэтому им нужны настоящие ресурсы приложения.
     testOptions {
         unitTests.isIncludeAndroidResources = true
+
+        // Robolectric грузит классы своим classloader'ом, и без этого JaCoCo не
+        // видит у них строк — экранные тесты давали ровно 0% покрытия Compose.
+        unitTests.all {
+            it.extensions.configure(JacocoTaskExtension::class.java) {
+                isIncludeNoLocationClasses = true
+                excludes = listOf("jdk.internal.*")
+            }
+        }
     }
 }
 
