@@ -1,0 +1,30 @@
+# Правится поверх дефолтной конфигурации detekt (--build-upon-default-config),
+# поэтому здесь только отклонения от неё.
+
+naming:
+  FunctionNaming:
+    # В Compose функции-компоненты по конвенции пишутся с заглавной буквы.
+    ignoreAnnotated: ['Composable']
+
+complexity:
+  # Фейки и билдеры тестовых данных повторяют сигнатуры того, что подменяют,
+  # а тестовый сценарий бывает вложенным — к дизайну продакшн-кода это не про.
+  LongParameterList:
+    excludes: ['**/test/**']
+  NestedBlockDepth:
+    excludes: ['**/test/**']
+
+style:
+  MaxLineLength:
+    # Один предел с ktlint_official, чтобы линтеры не тянули код в разные стороны.
+    maxLineLength: 140
+  # Шэдоу Robolectric требуют protected-членов в final-классах, а падать в
+  # тестовом фейке уместнее исключением с внятным текстом, чем check/error.
+  ProtectedMemberInFinalClass:
+    excludes: ['**/test/**']
+  UseCheckOrError:
+    excludes: ['**/test/**']
+  MagicNumber:
+    # Протокол CycPlus M2 и формат FIT — это байтовые константы, смещения и
+    # идентификаторы полей. Именовать каждое число здесь только зашумляет код.
+    active: false

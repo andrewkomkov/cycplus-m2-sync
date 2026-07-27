@@ -12,7 +12,6 @@ package dev.komkov.m2sync
  * обмен, — это и есть семантика TotalCaloriesBurnedRecord.
  */
 object Calories {
-
     /** Разрыв между точками больше этого считаем остановкой и не оплачиваем. */
     private const val MAX_GAP_SECONDS = 30L
 
@@ -21,7 +20,10 @@ object Calories {
     enum class Sex { MALE, FEMALE }
 
     /** Год рождения и пол: либо из медкарты Health Connect, либо из диалога. */
-    data class Profile(val birthYear: Int?, val sex: Sex?) {
+    data class Profile(
+        val birthYear: Int?,
+        val sex: Sex?,
+    ) {
         val usable: Boolean get() = birthYear != null && sex != null
 
         companion object {
@@ -33,35 +35,48 @@ object Calories {
      * Разбор FHIR-ресурса Patient из Personal Health Records: там дата рождения
      * лежит в `birthDate`, пол — в `gender`. Оба поля необязательные.
      */
-    fun profileFromFhir(json: String): Profile? = runCatching {
-        val o = org.json.JSONObject(json)
-        if (o.optString("resourceType") != "Patient") return null
-        val year = o.optString("birthDate").take(4).toIntOrNull()
-        val sex = when (o.optString("gender").lowercase()) {
-            "male" -> Sex.MALE
-            "female" -> Sex.FEMALE
-            else -> null
-        }
-        Profile(year, sex).takeIf { it.birthYear != null || it.sex != null }
-    }.getOrNull()
+    fun profileFromFhir(json: String): Profile? =
+        runCatching {
+            val o = org.json.JSONObject(json)
+            if (o.optString("resourceType") != "Patient") return null
+            val year = o.optString("birthDate").take(4).toIntOrNull()
+            val sex =
+                when (o.optString("gender").lowercase()) {
+                    "male" -> Sex.MALE
+                    "female" -> Sex.FEMALE
+                    else -> null
+                }
+            Profile(year, sex).takeIf { it.birthYear != null || it.sex != null }
+        }.getOrNull()
 
     /**
      * Боевой путь: готовое значение из .fit уважаем — свой расчёт нужен ровно
      * там, где велокомп смолчал.
      */
-    fun forRide(ride: FitParser.Ride, weightKg: Double?, profile: Profile): Int? =
+    fun forRide(
+        ride: FitParser.Ride,
+        weightKg: Double?,
+        profile: Profile,
+    ): Int? =
         ride.totalCalories
             ?: estimate(ride, weightKg, ageNow(profile.birthYear), profile.sex)
 
     private fun ageNow(birthYear: Int?): Int? =
-        birthYear?.let { java.time.Year.now().value - it }?.takeIf { it in 1..120 }
+        birthYear
+            ?.let {
+                java.time.Year
+                    .now()
+                    .value - it
+            }?.takeIf { it in 1..120 }
 
     /**
      * Отпечаток входных данных расчёта. Кэш заездов держится на нём: поменялся
      * вес или профиль — прежнее число калорий недействительно.
      */
-    fun profileKey(weightKg: Double?, profile: Profile): String =
-        "${weightKg ?: "-"}/${profile.birthYear ?: "-"}/${profile.sex ?: "-"}"
+    fun profileKey(
+        weightKg: Double?,
+        profile: Profile,
+    ): String = "${weightKg ?: "-"}/${profile.birthYear ?: "-"}/${profile.sex ?: "-"}"
 
     /**
      * @param weightKg вес из Health Connect; без него считать нечего
@@ -87,11 +102,12 @@ object Calories {
 
             val minutes = seconds / 60.0
             val hr = cur.heartRate ?: prev.heartRate
-            val perMinute = if (hr != null && hr > 0 && age != null && sex != null) {
-                keytelKcalPerMinute(hr, weightKg, age, sex)
-            } else {
-                metKcalPerMinute(cur.speed ?: prev.speed ?: 0.0, weightKg)
-            }
+            val perMinute =
+                if (hr != null && hr > 0 && age != null && sex != null) {
+                    keytelKcalPerMinute(hr, weightKg, age, sex)
+                } else {
+                    metKcalPerMinute(cur.speed ?: prev.speed ?: 0.0, weightKg)
+                }
             kcal += perMinute * minutes
         }
         return kcal.takeIf { it > 0 }?.toInt()
@@ -104,25 +120,35 @@ object Calories {
      * На низком пульсе выражение уходит в минус — такие интервалы не вычитаем
      * из общей суммы, а считаем нулевыми.
      */
-    private fun keytelKcalPerMinute(hr: Int, weightKg: Double, age: Int, sex: Sex): Double {
-        val kj = when (sex) {
-            Sex.MALE -> -55.0969 + 0.6309 * hr + 0.1988 * weightKg + 0.2017 * age
-            Sex.FEMALE -> -20.4022 + 0.4472 * hr - 0.1263 * weightKg + 0.074 * age
-        }
+    private fun keytelKcalPerMinute(
+        hr: Int,
+        weightKg: Double,
+        age: Int,
+        sex: Sex,
+    ): Double {
+        val kj =
+            when (sex) {
+                Sex.MALE -> -55.0969 + 0.6309 * hr + 0.1988 * weightKg + 0.2017 * age
+                Sex.FEMALE -> -20.4022 + 0.4472 * hr - 0.1263 * weightKg + 0.074 * age
+            }
         return (kj / KJ_PER_KCAL).coerceAtLeast(0.0)
     }
 
     /** MET для велосипеда по скорости; speed в м/с, как в .fit. */
-    private fun metKcalPerMinute(speedMs: Double, weightKg: Double): Double {
+    private fun metKcalPerMinute(
+        speedMs: Double,
+        weightKg: Double,
+    ): Double {
         val kmh = speedMs * 3.6
-        val met = when {
-            kmh < 16.0 -> 4.0
-            kmh < 19.2 -> 6.8
-            kmh < 22.4 -> 8.0
-            kmh < 25.6 -> 10.0
-            kmh < 30.6 -> 12.0
-            else -> 15.8
-        }
+        val met =
+            when {
+                kmh < 16.0 -> 4.0
+                kmh < 19.2 -> 6.8
+                kmh < 22.4 -> 8.0
+                kmh < 25.6 -> 10.0
+                kmh < 30.6 -> 12.0
+                else -> 15.8
+            }
         // Классическое MET-уравнение: 1 MET = 3.5 мл O2/кг/мин, 5 ккал на литр O2.
         return met * 3.5 * weightKg / 200.0
     }

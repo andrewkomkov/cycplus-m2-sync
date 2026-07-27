@@ -3,27 +3,27 @@ package dev.komkov.m2sync
 import android.content.Context
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.HealthConnectFeatures
-import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.feature.ExperimentalPersonalHealthRecordApi
-import androidx.health.connect.client.records.FhirResource
-import androidx.health.connect.client.records.MedicalResource
-import androidx.health.connect.client.request.ReadMedicalResourcesInitialRequest
+import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.CyclingPedalingCadenceRecord
 import androidx.health.connect.client.records.DistanceRecord
 import androidx.health.connect.client.records.ElevationGainedRecord
 import androidx.health.connect.client.records.ExerciseRoute
 import androidx.health.connect.client.records.ExerciseSegment
 import androidx.health.connect.client.records.ExerciseSessionRecord
+import androidx.health.connect.client.records.FhirResource
 import androidx.health.connect.client.records.HeartRateRecord
+import androidx.health.connect.client.records.MedicalResource
 import androidx.health.connect.client.records.Record
 import androidx.health.connect.client.records.SpeedRecord
 import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
 import androidx.health.connect.client.records.WeightRecord
 import androidx.health.connect.client.records.metadata.DataOrigin
-import androidx.health.connect.client.request.ReadRecordsRequest
-import androidx.health.connect.client.time.TimeRangeFilter
 import androidx.health.connect.client.records.metadata.Device
 import androidx.health.connect.client.records.metadata.Metadata
+import androidx.health.connect.client.request.ReadMedicalResourcesInitialRequest
+import androidx.health.connect.client.request.ReadRecordsRequest
+import androidx.health.connect.client.time.TimeRangeFilter
 import androidx.health.connect.client.units.Energy
 import androidx.health.connect.client.units.Length
 import androidx.health.connect.client.units.Velocity
@@ -37,60 +37,65 @@ import java.time.ZoneOffset
  * файла обновляет запись, а не плодит дубли.
  */
 object HealthWriter {
-
     /** Больше точек Health Connect в один маршрут не принимает. */
     private const val MAX_ROUTE_POINTS = 1000
     private const val MAX_SAMPLES_PER_RECORD = 1000
 
-    private val SCALE_DEVICE = Device(
-        manufacturer = "Xiaomi",
-        model = "Mi Smart Scale 2",
-        type = Device.TYPE_SCALE,
-    )
+    private val SCALE_DEVICE =
+        Device(
+            manufacturer = "Xiaomi",
+            model = "Mi Smart Scale 2",
+            type = Device.TYPE_SCALE,
+        )
 
-    private val DEVICE = Device(
-        manufacturer = "CYCPLUS",
-        model = "M2",
-        type = Device.TYPE_UNKNOWN,
-    )
+    private val DEVICE =
+        Device(
+            manufacturer = "CYCPLUS",
+            model = "M2",
+            type = Device.TYPE_UNKNOWN,
+        )
 
-    val permissions: Set<String> = setOf(
-        HealthPermission.getWritePermission(ExerciseSessionRecord::class),
-        HealthPermission.getWritePermission(HeartRateRecord::class),
-        HealthPermission.getWritePermission(DistanceRecord::class),
-        HealthPermission.getWritePermission(SpeedRecord::class),
-        HealthPermission.getWritePermission(ElevationGainedRecord::class),
-        HealthPermission.getWritePermission(CyclingPedalingCadenceRecord::class),
-        HealthPermission.getWritePermission(TotalCaloriesBurnedRecord::class),
-        HealthPermission.getWritePermission(WeightRecord::class),
-        HealthPermission.PERMISSION_WRITE_EXERCISE_ROUTE,
-    )
+    val permissions: Set<String> =
+        setOf(
+            HealthPermission.getWritePermission(ExerciseSessionRecord::class),
+            HealthPermission.getWritePermission(HeartRateRecord::class),
+            HealthPermission.getWritePermission(DistanceRecord::class),
+            HealthPermission.getWritePermission(SpeedRecord::class),
+            HealthPermission.getWritePermission(ElevationGainedRecord::class),
+            HealthPermission.getWritePermission(CyclingPedalingCadenceRecord::class),
+            HealthPermission.getWritePermission(TotalCaloriesBurnedRecord::class),
+            HealthPermission.getWritePermission(WeightRecord::class),
+            HealthPermission.PERMISSION_WRITE_EXERCISE_ROUTE,
+        )
 
     /** Самопроверка плюс вес: калории считаем сами, а вес ведёт кто-то другой. */
-    val readPermissions: Set<String> = setOf(
-        HealthPermission.getReadPermission(ExerciseSessionRecord::class),
-        HealthPermission.getReadPermission(HeartRateRecord::class),
-        HealthPermission.getReadPermission(DistanceRecord::class),
-        HealthPermission.getReadPermission(CyclingPedalingCadenceRecord::class),
-        HealthPermission.getReadPermission(SpeedRecord::class),
-        HealthPermission.getReadPermission(WeightRecord::class),
-    )
+    val readPermissions: Set<String> =
+        setOf(
+            HealthPermission.getReadPermission(ExerciseSessionRecord::class),
+            HealthPermission.getReadPermission(HeartRateRecord::class),
+            HealthPermission.getReadPermission(DistanceRecord::class),
+            HealthPermission.getReadPermission(CyclingPedalingCadenceRecord::class),
+            HealthPermission.getReadPermission(SpeedRecord::class),
+            HealthPermission.getReadPermission(WeightRecord::class),
+        )
 
     /**
      * Медкарта — отдельная ветка Health Connect со своим разрешением, и она есть
      * не на каждом устройстве. Запрашиваем только когда доступна.
      */
     @OptIn(ExperimentalPersonalHealthRecordApi::class)
-    val medicalPermissions: Set<String> = setOf(
-        HealthPermission.PERMISSION_READ_MEDICAL_DATA_PERSONAL_DETAILS,
-    )
+    val medicalPermissions: Set<String> =
+        setOf(
+            HealthPermission.PERMISSION_READ_MEDICAL_DATA_PERSONAL_DETAILS,
+        )
 
     @OptIn(ExperimentalPersonalHealthRecordApi::class)
-    fun personalRecordsAvailable(ctx: Context): Boolean = runCatching {
-        client(ctx).features.getFeatureStatus(
-            HealthConnectFeatures.FEATURE_PERSONAL_HEALTH_RECORD
-        ) == HealthConnectFeatures.FEATURE_STATUS_AVAILABLE
-    }.getOrDefault(false)
+    fun personalRecordsAvailable(ctx: Context): Boolean =
+        runCatching {
+            client(ctx).features.getFeatureStatus(
+                HealthConnectFeatures.FEATURE_PERSONAL_HEALTH_RECORD,
+            ) == HealthConnectFeatures.FEATURE_STATUS_AVAILABLE
+        }.getOrDefault(false)
 
     /**
      * Год рождения и пол из FHIR-ресурса Patient. Заполняется только импортом
@@ -101,14 +106,16 @@ object HealthWriter {
     suspend fun readPersonalDetails(ctx: Context): Calories.Profile? {
         if (!personalRecordsAvailable(ctx)) return null
         if (HealthPermission.PERMISSION_READ_MEDICAL_DATA_PERSONAL_DETAILS !in granted(ctx)) return null
-        val resources = runCatching {
-            client(ctx).readMedicalResources(
-                ReadMedicalResourcesInitialRequest(
-                    medicalResourceType = MedicalResource.MEDICAL_RESOURCE_TYPE_PERSONAL_DETAILS,
-                    medicalDataSourceIds = emptySet(),
-                )
-            ).medicalResources
-        }.getOrNull().orEmpty()
+        val resources =
+            runCatching {
+                client(ctx)
+                    .readMedicalResources(
+                        ReadMedicalResourcesInitialRequest(
+                            medicalResourceType = MedicalResource.MEDICAL_RESOURCE_TYPE_PERSONAL_DETAILS,
+                            medicalDataSourceIds = emptySet(),
+                        ),
+                    ).medicalResources
+            }.getOrNull().orEmpty()
 
         return resources
             .filter { it.fhirResource.type == FhirResource.FHIR_RESOURCE_TYPE_PATIENT }
@@ -120,83 +127,128 @@ object HealthWriter {
      * Берём любой источник: весы, Fit, ручной ввод — неважно чей.
      */
     suspend fun readLatestWeight(ctx: Context): WeightReading? =
-        client(ctx).readRecords(
-            ReadRecordsRequest(
-                recordType = WeightRecord::class,
-                timeRangeFilter = TimeRangeFilter.before(java.time.Instant.now()),
-                ascendingOrder = false,
-                pageSize = 1,
-            )
-        ).records.firstOrNull()?.let { WeightReading(it.weight.inKilograms, it.time) }
+        client(ctx)
+            .readRecords(
+                ReadRecordsRequest(
+                    recordType = WeightRecord::class,
+                    timeRangeFilter = TimeRangeFilter.before(java.time.Instant.now()),
+                    ascendingOrder = false,
+                    pageSize = 1,
+                ),
+            ).records
+            .firstOrNull()
+            ?.let { WeightReading(it.weight.inKilograms, it.time) }
 
     /** Замер с весов. Источник — сами весы, поэтому пишем их как устройство. */
-    suspend fun writeWeight(ctx: Context, kilograms: Double, at: java.time.Instant): Unit =
-        client(ctx).insertRecords(
-            listOf(
-                WeightRecord(
-                    time = at,
-                    zoneOffset = ZoneId.systemDefault().rules.getOffset(at),
-                    weight = androidx.health.connect.client.units.Mass.kilograms(kilograms),
-                    metadata = Metadata.autoRecorded(SCALE_DEVICE),
-                )
-            )
-        ).let { }
+    suspend fun writeWeight(
+        ctx: Context,
+        kilograms: Double,
+        at: java.time.Instant,
+    ): Unit =
+        client(ctx)
+            .insertRecords(
+                listOf(
+                    WeightRecord(
+                        time = at,
+                        zoneOffset = ZoneId.systemDefault().rules.getOffset(at),
+                        weight =
+                            androidx.health.connect.client.units.Mass
+                                .kilograms(kilograms),
+                        metadata = Metadata.autoRecorded(SCALE_DEVICE),
+                    ),
+                ),
+            ).let { }
 
-    suspend fun readSessions(ctx: Context, since: java.time.Instant): List<ExerciseSessionRecord> =
-        client(ctx).readRecords(
-            ReadRecordsRequest(
-                recordType = ExerciseSessionRecord::class,
-                timeRangeFilter = TimeRangeFilter.after(since),
-            )
-        ).records
+    suspend fun readSessions(
+        ctx: Context,
+        since: java.time.Instant,
+    ): List<ExerciseSessionRecord> =
+        client(ctx)
+            .readRecords(
+                ReadRecordsRequest(
+                    recordType = ExerciseSessionRecord::class,
+                    timeRangeFilter = TimeRangeFilter.after(since),
+                ),
+            ).records
 
     /** Только свои записи: иначе в окно попадает то, что параллельно писал Google Fit. */
     private fun ownOrigin(ctx: Context) = setOf(DataOrigin(ctx.packageName))
 
-    suspend fun readDistanceTotal(ctx: Context, from: java.time.Instant, to: java.time.Instant): Double =
-        client(ctx).readRecords(
-            ReadRecordsRequest(
-                recordType = DistanceRecord::class,
-                timeRangeFilter = TimeRangeFilter.between(from, to),
-                dataOriginFilter = ownOrigin(ctx),
-            )
-        ).records.sumOf { it.distance.inMeters }
+    suspend fun readDistanceTotal(
+        ctx: Context,
+        from: java.time.Instant,
+        to: java.time.Instant,
+    ): Double =
+        client(ctx)
+            .readRecords(
+                ReadRecordsRequest(
+                    recordType = DistanceRecord::class,
+                    timeRangeFilter = TimeRangeFilter.between(from, to),
+                    dataOriginFilter = ownOrigin(ctx),
+                ),
+            ).records
+            .sumOf { it.distance.inMeters }
 
-    suspend fun readHeartRateCount(ctx: Context, from: java.time.Instant, to: java.time.Instant): Int =
-        client(ctx).readRecords(
-            ReadRecordsRequest(
-                recordType = HeartRateRecord::class,
-                timeRangeFilter = TimeRangeFilter.between(from, to),
-                dataOriginFilter = ownOrigin(ctx),
-            )
-        ).records.sumOf { it.samples.size }
+    suspend fun readHeartRateCount(
+        ctx: Context,
+        from: java.time.Instant,
+        to: java.time.Instant,
+    ): Int =
+        client(ctx)
+            .readRecords(
+                ReadRecordsRequest(
+                    recordType = HeartRateRecord::class,
+                    timeRangeFilter = TimeRangeFilter.between(from, to),
+                    dataOriginFilter = ownOrigin(ctx),
+                ),
+            ).records
+            .sumOf { it.samples.size }
 
-    suspend fun readCadenceCount(ctx: Context, from: java.time.Instant, to: java.time.Instant): Int =
-        client(ctx).readRecords(
-            ReadRecordsRequest(
-                recordType = CyclingPedalingCadenceRecord::class,
-                timeRangeFilter = TimeRangeFilter.between(from, to),
-                dataOriginFilter = ownOrigin(ctx),
-            )
-        ).records.sumOf { it.samples.size }
+    suspend fun readCadenceCount(
+        ctx: Context,
+        from: java.time.Instant,
+        to: java.time.Instant,
+    ): Int =
+        client(ctx)
+            .readRecords(
+                ReadRecordsRequest(
+                    recordType = CyclingPedalingCadenceRecord::class,
+                    timeRangeFilter = TimeRangeFilter.between(from, to),
+                    dataOriginFilter = ownOrigin(ctx),
+                ),
+            ).records
+            .sumOf { it.samples.size }
 
-    suspend fun readSpeedCount(ctx: Context, from: java.time.Instant, to: java.time.Instant): Int =
-        client(ctx).readRecords(
-            ReadRecordsRequest(
-                recordType = SpeedRecord::class,
-                timeRangeFilter = TimeRangeFilter.between(from, to),
-                dataOriginFilter = ownOrigin(ctx),
-            )
-        ).records.sumOf { it.samples.size }
+    suspend fun readSpeedCount(
+        ctx: Context,
+        from: java.time.Instant,
+        to: java.time.Instant,
+    ): Int =
+        client(ctx)
+            .readRecords(
+                ReadRecordsRequest(
+                    recordType = SpeedRecord::class,
+                    timeRangeFilter = TimeRangeFilter.between(from, to),
+                    dataOriginFilter = ownOrigin(ctx),
+                ),
+            ).records
+            .sumOf { it.samples.size }
 
-    suspend fun readCaloriesTotal(ctx: Context, from: java.time.Instant, to: java.time.Instant): Double =
-        client(ctx).readRecords(
-            ReadRecordsRequest(
-                recordType = TotalCaloriesBurnedRecord::class,
-                timeRangeFilter = TimeRangeFilter.between(from, to),
-                dataOriginFilter = ownOrigin(ctx),
-            )
-        ).records.sumOf { it.energy.inKilocalories }
+    suspend fun readCaloriesTotal(
+        ctx: Context,
+        from: java.time.Instant,
+        to: java.time.Instant,
+    ): Double =
+        client(ctx)
+            .readRecords(
+                ReadRecordsRequest(
+                    recordType = TotalCaloriesBurnedRecord::class,
+                    timeRangeFilter = TimeRangeFilter.between(from, to),
+                    dataOriginFilter = ownOrigin(ctx),
+                ),
+            ).records
+            .sumOf { it.energy.inKilocalories }
+
     /**
      * Кто ещё пишет в то же окно: тип записи -> источник -> число сэмплов.
      * Fit рисует графики по всем источникам сразу, поэтому чужие записи важнее
@@ -214,7 +266,8 @@ object HealthWriter {
             type: kotlin.reflect.KClass<T>,
             samples: (T) -> Int,
         ): Map<String, Int> =
-            hc.readRecords(ReadRecordsRequest(recordType = type, timeRangeFilter = range))
+            hc
+                .readRecords(ReadRecordsRequest(recordType = type, timeRangeFilter = range))
                 .records
                 .groupingBy { it.metadata.dataOrigin.packageName }
                 .fold(0) { acc, r -> acc + samples(r) }
@@ -228,13 +281,11 @@ object HealthWriter {
         )
     }
 
-    fun available(ctx: Context): Boolean =
-        HealthConnectClient.getSdkStatus(ctx) == HealthConnectClient.SDK_AVAILABLE
+    fun available(ctx: Context): Boolean = HealthConnectClient.getSdkStatus(ctx) == HealthConnectClient.SDK_AVAILABLE
 
     fun client(ctx: Context): HealthConnectClient = HealthConnectClient.getOrCreate(ctx)
 
-    suspend fun granted(ctx: Context): Set<String> =
-        client(ctx).permissionController.getGrantedPermissions()
+    suspend fun granted(ctx: Context): Set<String> = client(ctx).permissionController.getGrantedPermissions()
 
     suspend fun write(
         ctx: Context,
@@ -252,17 +303,18 @@ object HealthWriter {
 
         val records = ArrayList<Record>()
 
-        val route = ride.points
-            .filter { it.lat != null && it.lon != null }
-            .downsample(MAX_ROUTE_POINTS)
-            .map {
-                ExerciseRoute.Location(
-                    time = it.time,
-                    latitude = it.lat!!,
-                    longitude = it.lon!!,
-                    altitude = it.altitude?.let { a -> Length.meters(a) },
-                )
-            }
+        val route =
+            ride.points
+                .filter { it.lat != null && it.lon != null }
+                .downsample(MAX_ROUTE_POINTS)
+                .map {
+                    ExerciseRoute.Location(
+                        time = it.time,
+                        latitude = it.lat!!,
+                        longitude = it.lon!!,
+                        altitude = it.altitude?.let { a -> Length.meters(a) },
+                    )
+                }
 
         // Сессия занимает всё время заезда, а остановки размечаем паузами —
         // тогда «активная длительность» в Health Connect совпадёт со временем в движении.
@@ -271,96 +323,121 @@ object HealthWriter {
             if (i > 0) {
                 val gapStart = ride.activeSpans[i - 1].second
                 if (gapStart.isBefore(span.first)) {
-                    segments += ExerciseSegment(
-                        startTime = gapStart,
-                        endTime = span.first,
-                        segmentType = ExerciseSegment.EXERCISE_SEGMENT_TYPE_PAUSE,
-                    )
+                    segments +=
+                        ExerciseSegment(
+                            startTime = gapStart,
+                            endTime = span.first,
+                            segmentType = ExerciseSegment.EXERCISE_SEGMENT_TYPE_PAUSE,
+                        )
                 }
             }
-            segments += ExerciseSegment(
-                startTime = span.first,
-                endTime = span.second,
-                segmentType = ExerciseSegment.EXERCISE_SEGMENT_TYPE_BIKING,
-            )
+            segments +=
+                ExerciseSegment(
+                    startTime = span.first,
+                    endTime = span.second,
+                    segmentType = ExerciseSegment.EXERCISE_SEGMENT_TYPE_BIKING,
+                )
         }
 
-        records += ExerciseSessionRecord(
-            startTime = ride.start,
-            startZoneOffset = startOffset,
-            endTime = ride.end,
-            endZoneOffset = endOffset,
-            exerciseType = ExerciseSessionRecord.EXERCISE_TYPE_BIKING,
-            title = ctx.getString(R.string.session_title),
-            notes = ride.fileName,
-            metadata = Metadata.autoRecorded(DEVICE, id),
-            segments = segments.filter {
-                !it.startTime.isBefore(ride.start) && !it.endTime.isAfter(ride.end)
-            },
-            exerciseRoute = if (route.isNotEmpty()) ExerciseRoute(route) else null,
-        )
+        records +=
+            ExerciseSessionRecord(
+                startTime = ride.start,
+                startZoneOffset = startOffset,
+                endTime = ride.end,
+                endZoneOffset = endOffset,
+                exerciseType = ExerciseSessionRecord.EXERCISE_TYPE_BIKING,
+                title = ctx.getString(R.string.session_title),
+                notes = ride.fileName,
+                metadata = Metadata.autoRecorded(DEVICE, id),
+                segments =
+                    segments.filter {
+                        !it.startTime.isBefore(ride.start) && !it.endTime.isAfter(ride.end)
+                    },
+                exerciseRoute = if (route.isNotEmpty()) ExerciseRoute(route) else null,
+            )
 
         ride.totalDistance?.takeIf { it > 0 }?.let {
-            records += DistanceRecord(
-                startTime = ride.start, startZoneOffset = startOffset,
-                endTime = ride.end, endZoneOffset = endOffset,
-                distance = Length.meters(it),
-                metadata = meta("distance"),
-            )
+            records +=
+                DistanceRecord(
+                    startTime = ride.start,
+                    startZoneOffset = startOffset,
+                    endTime = ride.end,
+                    endZoneOffset = endOffset,
+                    distance = Length.meters(it),
+                    metadata = meta("distance"),
+                )
         }
 
         Calories.forRide(ride, weightKg, profile)?.let {
-            records += TotalCaloriesBurnedRecord(
-                startTime = ride.start, startZoneOffset = startOffset,
-                endTime = ride.end, endZoneOffset = endOffset,
-                energy = Energy.kilocalories(it.toDouble()),
-                metadata = meta("calories"),
-            )
+            records +=
+                TotalCaloriesBurnedRecord(
+                    startTime = ride.start,
+                    startZoneOffset = startOffset,
+                    endTime = ride.end,
+                    endZoneOffset = endOffset,
+                    energy = Energy.kilocalories(it.toDouble()),
+                    metadata = meta("calories"),
+                )
         }
 
         ride.totalAscent?.takeIf { it > 0 }?.let {
-            records += ElevationGainedRecord(
-                startTime = ride.start, startZoneOffset = startOffset,
-                endTime = ride.end, endZoneOffset = endOffset,
-                elevation = Length.meters(it.toDouble()),
-                metadata = meta("ascent"),
-            )
+            records +=
+                ElevationGainedRecord(
+                    startTime = ride.start,
+                    startZoneOffset = startOffset,
+                    endTime = ride.end,
+                    endZoneOffset = endOffset,
+                    elevation = Length.meters(it.toDouble()),
+                    metadata = meta("ascent"),
+                )
         }
 
         val hrPoints = ride.points.filter { (it.heartRate ?: 0) > 0 }
         hrPoints.chunked(MAX_SAMPLES_PER_RECORD).forEachIndexed { i, chunk ->
-            records += HeartRateRecord(
-                startTime = chunk.first().time, startZoneOffset = startOffset,
-                endTime = chunk.last().time.plusSeconds(1), endZoneOffset = endOffset,
-                samples = chunk.map {
-                    HeartRateRecord.Sample(it.time, it.heartRate!!.toLong())
-                },
-                metadata = meta("hr$i"),
-            )
+            records +=
+                HeartRateRecord(
+                    startTime = chunk.first().time,
+                    startZoneOffset = startOffset,
+                    endTime = chunk.last().time.plusSeconds(1),
+                    endZoneOffset = endOffset,
+                    samples =
+                        chunk.map {
+                            HeartRateRecord.Sample(it.time, it.heartRate!!.toLong())
+                        },
+                    metadata = meta("hr$i"),
+                )
         }
 
         val cadencePoints = ride.points.filter { (it.cadence ?: 0) > 0 }
         cadencePoints.chunked(MAX_SAMPLES_PER_RECORD).forEachIndexed { i, chunk ->
-            records += CyclingPedalingCadenceRecord(
-                startTime = chunk.first().time, startZoneOffset = startOffset,
-                endTime = chunk.last().time.plusSeconds(1), endZoneOffset = endOffset,
-                samples = chunk.map {
-                    CyclingPedalingCadenceRecord.Sample(it.time, it.cadence!!.toDouble())
-                },
-                metadata = meta("cadence$i"),
-            )
+            records +=
+                CyclingPedalingCadenceRecord(
+                    startTime = chunk.first().time,
+                    startZoneOffset = startOffset,
+                    endTime = chunk.last().time.plusSeconds(1),
+                    endZoneOffset = endOffset,
+                    samples =
+                        chunk.map {
+                            CyclingPedalingCadenceRecord.Sample(it.time, it.cadence!!.toDouble())
+                        },
+                    metadata = meta("cadence$i"),
+                )
         }
 
         val speedPoints = ride.points.filter { (it.speed ?: 0.0) > 0.0 }
         speedPoints.chunked(MAX_SAMPLES_PER_RECORD).forEachIndexed { i, chunk ->
-            records += SpeedRecord(
-                startTime = chunk.first().time, startZoneOffset = startOffset,
-                endTime = chunk.last().time.plusSeconds(1), endZoneOffset = endOffset,
-                samples = chunk.map {
-                    SpeedRecord.Sample(it.time, Velocity.metersPerSecond(it.speed!!))
-                },
-                metadata = meta("speed$i"),
-            )
+            records +=
+                SpeedRecord(
+                    startTime = chunk.first().time,
+                    startZoneOffset = startOffset,
+                    endTime = chunk.last().time.plusSeconds(1),
+                    endZoneOffset = endOffset,
+                    samples =
+                        chunk.map {
+                            SpeedRecord.Sample(it.time, Velocity.metersPerSecond(it.speed!!))
+                        },
+                    metadata = meta("speed$i"),
+                )
         }
 
         hc.insertRecords(records)

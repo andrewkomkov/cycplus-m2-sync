@@ -1,6 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.plugin.compose")
+    jacoco
 }
 
 // Версию двигает release-please по conventional commits, руками не трогаем.
@@ -45,6 +46,8 @@ android {
             // со всеми скачанными .fit.
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
+            // Данные покрытия юнит-тестов уезжают в SonarCloud.
+            enableUnitTestCoverage = true
         }
         release {
             // Без R8 dex раздувается до 50 МБ: FIT SDK и material-icons тянут
@@ -52,8 +55,12 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            signingConfig = if (keystorePath != null) signingConfigs.getByName("release")
-            else signingConfigs.getByName("debug")
+            signingConfig =
+                if (keystorePath != null) {
+                    signingConfigs.getByName("release")
+                } else {
+                    signingConfigs.getByName("debug")
+                }
         }
     }
 
@@ -75,6 +82,15 @@ android {
     // поэтому им нужны настоящие ресурсы приложения.
     testOptions {
         unitTests.isIncludeAndroidResources = true
+
+        // Robolectric грузит классы своим classloader'ом, и без этого JaCoCo не
+        // видит у них строк — экранные тесты давали ровно 0% покрытия Compose.
+        unitTests.all {
+            it.extensions.configure(JacocoTaskExtension::class.java) {
+                isIncludeNoLocationClasses = true
+                excludes = listOf("jdk.internal.*")
+            }
+        }
     }
 }
 
@@ -84,6 +100,37 @@ kotlin {
     compilerOptions {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
     }
+}
+
+// XML-отчёт о покрытии для SonarCloud: HTML в CI никто не читает.
+tasks.register<JacocoReport>("jacocoTestReport") {
+    dependsOn("testDebugUnitTest")
+
+    reports {
+        xml.required.set(true)
+        html.required.set(false)
+    }
+
+    // Сгенерированный код покрывать нечем и незачем.
+    val generated =
+        listOf(
+            "**/R.class",
+            "**/R$*.class",
+            "**/BuildConfig.*",
+            "**/Manifest*.*",
+            "**/*ComposableSingletons*",
+        )
+
+    // Берём выход самой задачи компиляции: у AGP 9 со встроенным Kotlin классы
+    // лежат в intermediates/built_in_kotlinc, и этот путь уже дважды переезжал.
+    classDirectories.setFrom(
+        tasks.named("compileDebugKotlin").map {
+            it.outputs.files.asFileTree
+                .matching { exclude(generated) }
+        },
+    )
+    sourceDirectories.setFrom(files("src/main/java"))
+    executionData.setFrom(fileTree(layout.buildDirectory) { include("**/*.exec") })
 }
 
 dependencies {

@@ -11,14 +11,23 @@ import org.junit.Test
  * даёт те самые 72.65 кг, которые весы показали на экране.
  */
 class ScaleClientTest {
-
     /** ctrl + сырой вес little-endian + семь байт отметки времени. */
-    private fun packet(ctrl: Int, raw: Int): ByteArray = byteArrayOf(
-        ctrl.toByte(),
-        (raw and 0xFF).toByte(),
-        ((raw shr 8) and 0xFF).toByte(),
-        0xEA.toByte(), 0x07, 7, 25, 8, 29, 24,
-    )
+    private fun packet(
+        ctrl: Int,
+        raw: Int,
+    ): ByteArray =
+        byteArrayOf(
+            ctrl.toByte(),
+            (raw and 0xFF).toByte(),
+            ((raw shr 8) and 0xFF).toByte(),
+            0xEA.toByte(),
+            0x07,
+            7,
+            25,
+            8,
+            29,
+            24,
+        )
 
     @Test
     fun `stabilized reading in kilograms`() {

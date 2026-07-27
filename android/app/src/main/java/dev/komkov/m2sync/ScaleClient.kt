@@ -9,8 +9,8 @@ import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.os.ParcelUuid
 import kotlinx.coroutines.delay
-import java.util.concurrent.atomic.AtomicReference
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicReference
 
 /** Один замер с весов. */
 data class ScaleReading(
@@ -32,8 +32,9 @@ data class ScaleReading(
  * считает жир на телефоне сам.
  */
 @SuppressLint("MissingPermission")
-class ScaleClient(private val ctx: Context) {
-
+class ScaleClient(
+    private val ctx: Context,
+) {
     companion object {
         /** Weight Scale и Body Composition из списка назначенных номеров Bluetooth. */
         val WEIGHT_SCALE: UUID = UUID.fromString("0000181d-0000-1000-8000-00805f9b34fb")
@@ -62,11 +63,12 @@ class ScaleClient(private val ctx: Context) {
             val ctrl = data[0].toInt() and 0xFF
             val raw = (data[1].toInt() and 0xFF) or ((data[2].toInt() and 0xFF) shl 8)
 
-            val kg = when {
-                ctrl and FLAG_POUNDS != 0 -> raw / OTHER_DIVISOR / POUNDS_PER_KG
-                ctrl and FLAG_JIN != 0 -> raw / OTHER_DIVISOR / JIN_PER_KG
-                else -> raw / KG_DIVISOR
-            }
+            val kg =
+                when {
+                    ctrl and FLAG_POUNDS != 0 -> raw / OTHER_DIVISOR / POUNDS_PER_KG
+                    ctrl and FLAG_JIN != 0 -> raw / OTHER_DIVISOR / JIN_PER_KG
+                    else -> raw / KG_DIVISOR
+                }
             if (kg <= 0) return null
 
             return ScaleReading(
@@ -92,30 +94,38 @@ class ScaleClient(private val ctx: Context) {
         val stable = AtomicReference<ScaleReading?>(null)
         val lastSeen = AtomicReference<Double?>(null)
 
-        val cb = object : ScanCallback() {
-            override fun onScanResult(callbackType: Int, result: ScanResult) {
-                val record = result.scanRecord ?: return
-                val data = record.serviceData[ParcelUuid(WEIGHT_SCALE)]
-                    ?: record.serviceData[ParcelUuid(BODY_COMPOSITION)]
-                    ?: return
-                val reading = parse(data) ?: return
+        val cb =
+            object : ScanCallback() {
+                override fun onScanResult(
+                    callbackType: Int,
+                    result: ScanResult,
+                ) {
+                    val record = result.scanRecord ?: return
+                    val data =
+                        record.serviceData[ParcelUuid(WEIGHT_SCALE)]
+                            ?: record.serviceData[ParcelUuid(BODY_COMPOSITION)]
+                            ?: return
+                    val reading = parse(data) ?: return
 
-                if (lastSeen.getAndSet(reading.kilograms) != reading.kilograms) {
-                    LogBus.i(R.string.log_scale_reading, String.format("%.2f", reading.kilograms))
+                    if (lastSeen.getAndSet(reading.kilograms) != reading.kilograms) {
+                        LogBus.i(R.string.log_scale_reading, String.format("%.2f", reading.kilograms))
+                    }
+                    if (reading.stabilized) stable.compareAndSet(null, reading)
                 }
-                if (reading.stabilized) stable.compareAndSet(null, reading)
+
+                override fun onScanFailed(errorCode: Int) = LogBus.e(R.string.log_scan_failed, errorCode)
             }
 
-            override fun onScanFailed(errorCode: Int) = LogBus.e(R.string.log_scan_failed, errorCode)
-        }
-
         // Фильтруем по сервису: чужой рекламы в эфире много, а нам нужен один профиль.
-        val filters = listOf(WEIGHT_SCALE, BODY_COMPOSITION).map {
-            ScanFilter.Builder().setServiceData(ParcelUuid(it), byteArrayOf(), byteArrayOf()).build()
-        }
-        val settings = ScanSettings.Builder()
-            .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
-            .build()
+        val filters =
+            listOf(WEIGHT_SCALE, BODY_COMPOSITION).map {
+                ScanFilter.Builder().setServiceData(ParcelUuid(it), byteArrayOf(), byteArrayOf()).build()
+            }
+        val settings =
+            ScanSettings
+                .Builder()
+                .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+                .build()
         scanner.startScan(filters, settings, cb)
         try {
             val deadline = System.currentTimeMillis() + timeoutMs

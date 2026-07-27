@@ -29,7 +29,6 @@ import java.util.Locale
  *   adb logcat -s M2SYNC
  */
 class SyncService : Service() {
-
     companion object {
         const val ACTION_SCAN = "dev.komkov.m2sync.SCAN"
         const val ACTION_SYNC = "dev.komkov.m2sync.SYNC"
@@ -46,14 +45,16 @@ class SyncService : Service() {
         /** Действия, которым нужно радио: остальные обходятся локальными файлами. */
         private val BLE_ACTIONS = setOf(ACTION_SCAN, ACTION_SYNC, ACTION_INFO, ACTION_WEIGH)
 
-        private val BLE_PERMISSIONS = arrayOf(
-            android.Manifest.permission.BLUETOOTH_SCAN,
-            android.Manifest.permission.BLUETOOTH_CONNECT,
-        )
+        private val BLE_PERMISSIONS =
+            arrayOf(
+                android.Manifest.permission.BLUETOOTH_SCAN,
+                android.Manifest.permission.BLUETOOTH_CONNECT,
+            )
 
-        fun bleGranted(ctx: Context): Boolean = BLE_PERMISSIONS.all {
-            ctx.checkSelfPermission(it) == android.content.pm.PackageManager.PERMISSION_GRANTED
-        }
+        fun bleGranted(ctx: Context): Boolean =
+            BLE_PERMISSIONS.all {
+                ctx.checkSelfPermission(it) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            }
 
         /** `-e force 1` — переимпортировать уже загруженные файлы. */
         const val EXTRA_FORCE = "force"
@@ -63,8 +64,7 @@ class SyncService : Service() {
         private const val KEY_IMPORTED = "imported"
         private const val DEFAULT_PREFIX = "M2_"
 
-        fun fitDir(ctx: Context): File =
-            File(ctx.getExternalFilesDir(null), "fit").apply { mkdirs() }
+        fun fitDir(ctx: Context): File = File(ctx.getExternalFilesDir(null), "fit").apply { mkdirs() }
     }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -75,7 +75,9 @@ class SyncService : Service() {
      * Останавливаемся только когда доделаны все, иначе scope.cancel() рубит
      * ещё не начатую работу.
      */
-    private val pending = java.util.concurrent.atomic.AtomicInteger(0)
+    private val pending =
+        java.util.concurrent.atomic
+            .AtomicInteger(0)
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -88,11 +90,15 @@ class SyncService : Service() {
                 CHANNEL_ID,
                 getString(R.string.notification_channel),
                 NotificationManager.IMPORTANCE_LOW,
-            )
+            ),
         )
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+    override fun onStartCommand(
+        intent: Intent?,
+        flags: Int,
+        startId: Int,
+    ): Int {
         val action = intent?.action ?: ACTION_STATUS
 
         // Тип сервиса — по делу: connectedDevice система отдаёт только тому, у
@@ -102,13 +108,17 @@ class SyncService : Service() {
         val needsRadio = action in BLE_ACTIONS && bleGranted(this)
         startForeground(
             1,
-            Notification.Builder(this, CHANNEL_ID)
+            Notification
+                .Builder(this, CHANNEL_ID)
                 .setContentTitle(getString(R.string.app_name))
                 .setContentText(getString(R.string.notification_text))
                 .setSmallIcon(android.R.drawable.stat_sys_data_bluetooth)
                 .build(),
-            if (needsRadio) ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
-            else ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC,
+            if (needsRadio) {
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
+            } else {
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+            },
         )
 
         if (action in BLE_ACTIONS && !bleGranted(this)) {
@@ -165,14 +175,21 @@ class SyncService : Service() {
         if (found.isEmpty()) LogBus.i(R.string.log_nothing_found)
     }
 
-    private suspend fun doSync(prefix: String, address: String?) {
+    private suspend fun doSync(
+        prefix: String,
+        address: String?,
+    ) {
         val client = M2Client(this)
-        val target = address ?: run {
-            LogBus.i(R.string.log_scanning, prefix)
-            client.scan(prefix).firstOrNull()?.also {
-                LogBus.i(R.string.log_taking, it.name, it.address)
-            }?.address ?: throw M2Error("bike computer not found")
-        }
+        val target =
+            address ?: run {
+                LogBus.i(R.string.log_scanning, prefix)
+                client
+                    .scan(prefix)
+                    .firstOrNull()
+                    ?.also {
+                        LogBus.i(R.string.log_taking, it.name, it.address)
+                    }?.address ?: throw M2Error("bike computer not found")
+            }
 
         try {
             client.connect(target)
@@ -225,12 +242,16 @@ class SyncService : Service() {
     }
 
     /** Быстрый опрос устройства без скачивания — для карточки на экране. */
-    private suspend fun doInfo(prefix: String, address: String?) {
+    private suspend fun doInfo(
+        prefix: String,
+        address: String?,
+    ) {
         val client = M2Client(this)
-        val target = address ?: run {
-            LogBus.i(R.string.log_scanning, prefix)
-            client.scan(prefix).firstOrNull()?.address
-        } ?: throw M2Error("bike computer not found")
+        val target =
+            address ?: run {
+                LogBus.i(R.string.log_scanning, prefix)
+                client.scan(prefix).firstOrNull()?.address
+            } ?: throw M2Error("bike computer not found")
         try {
             client.connect(target)
             snapshot(client, target)
@@ -239,7 +260,10 @@ class SyncService : Service() {
         }
     }
 
-    private suspend fun snapshot(client: M2Client, address: String) {
+    private suspend fun snapshot(
+        client: M2Client,
+        address: String,
+    ) {
         val firmware = client.readFirmware()?.also { LogBus.i(R.string.log_firmware, it) }
         val battery = client.readBattery()?.also { LogBus.i(R.string.log_battery, it) }
         val disk = client.diskSpace()?.also { LogBus.i(R.string.log_memory, it) }
@@ -253,12 +277,11 @@ class SyncService : Service() {
                 freeKb = disk?.substringBefore('/')?.trim()?.toIntOrNull(),
                 totalKb = disk?.substringAfter('/')?.trim()?.toIntOrNull(),
                 seenAt = Instant.now(),
-            )
+            ),
         )
     }
 
-    private fun importedNames(): Set<String> =
-        getSharedPreferences(PREFS, Context.MODE_PRIVATE).getStringSet(KEY_IMPORTED, emptySet())!!
+    private fun importedNames(): Set<String> = getSharedPreferences(PREFS, Context.MODE_PRIVATE).getStringSet(KEY_IMPORTED, emptySet())!!
 
     private suspend fun doImport(force: Boolean = false) {
         if (!HealthWriter.available(this)) {
@@ -281,8 +304,11 @@ class SyncService : Service() {
 
         val weight = weightKg()
         val profile = profile()
-        if (weight == null) LogBus.i(R.string.log_no_weight)
-        else if (!profile.usable) LogBus.i(R.string.log_no_profile)
+        if (weight == null) {
+            LogBus.i(R.string.log_no_weight)
+        } else if (!profile.usable) {
+            LogBus.i(R.string.log_no_profile)
+        }
 
         for (file in files) {
             if (!force && file.name in imported) continue
@@ -343,9 +369,13 @@ class SyncService : Service() {
             LogBus.i(
                 R.string.log_records_status,
                 getString(
-                    if (!HealthWriter.personalRecordsAvailable(this)) R.string.log_records_unsupported
-                    else if (HealthWriter.readPersonalDetails(this) != null) R.string.log_records_has_profile
-                    else R.string.log_records_empty
+                    if (!HealthWriter.personalRecordsAvailable(this)) {
+                        R.string.log_records_unsupported
+                    } else if (HealthWriter.readPersonalDetails(this) != null) {
+                        R.string.log_records_has_profile
+                    } else {
+                        R.string.log_records_empty
+                    },
                 ),
             )
         }
@@ -363,7 +393,7 @@ class SyncService : Service() {
                 it.name,
                 it.length(),
                 getString(
-                    if (it.name in imported) R.string.log_imported_mark else R.string.log_new_mark
+                    if (it.name in imported) R.string.log_imported_mark else R.string.log_new_mark,
                 ),
             )
         }
@@ -378,15 +408,18 @@ class SyncService : Service() {
             return
         }
         val since = Instant.now().minus(Duration.ofDays(60))
-        val sessions = HealthWriter.readSessions(this, since)
-            .filter { it.metadata.dataOrigin.packageName == packageName }
+        val sessions =
+            HealthWriter
+                .readSessions(this, since)
+                .filter { it.metadata.dataOrigin.packageName == packageName }
         LogBus.i(R.string.log_verify_count, sessions.size)
         for (s in sessions.sortedBy { it.startTime }) {
             // Считаем по своим сегментам: агрегат Health Connect не фильтруется
             // по источнику и смешал бы наши данные с чужими.
-            val moving = s.segments
-                .filter { it.segmentType != ExerciseSegment.EXERCISE_SEGMENT_TYPE_PAUSE }
-                .sumOf { Duration.between(it.startTime, it.endTime).seconds } / 60
+            val moving =
+                s.segments
+                    .filter { it.segmentType != ExerciseSegment.EXERCISE_SEGMENT_TYPE_PAUSE }
+                    .sumOf { Duration.between(it.startTime, it.endTime).seconds } / 60
             LogBus.i(
                 R.string.log_verify_line,
                 s.startTime.toString(),
@@ -399,8 +432,11 @@ class SyncService : Service() {
                 ),
                 HealthWriter.readHeartRateCount(this, s.startTime, s.endTime),
                 getString(
-                    if (s.exerciseRouteResult is androidx.health.connect.client.records.ExerciseRouteResult.Data)
-                        R.string.log_route_yes else R.string.log_route_no
+                    if (s.exerciseRouteResult is androidx.health.connect.client.records.ExerciseRouteResult.Data) {
+                        R.string.log_route_yes
+                    } else {
+                        R.string.log_route_no
+                    },
                 ),
                 s.metadata.dataOrigin.packageName,
             )
@@ -428,7 +464,8 @@ class SyncService : Service() {
 
     private fun doPerms() {
         LogBus.i(R.string.log_perms_header)
-        (HealthWriter.permissions + HealthWriter.readPermissions).sorted()
+        (HealthWriter.permissions + HealthWriter.readPermissions)
+            .sorted()
             .forEach { LogBus.i("  $it") }
     }
 }

@@ -7,7 +7,6 @@ import org.junit.Test
 import java.time.Instant
 
 class CaloriesTest {
-
     private val start: Instant = Instant.parse("2026-07-24T08:30:00Z")
 
     /** Заезд из [seconds] секундных точек с постоянным пульсом и скоростью. */
@@ -19,19 +18,20 @@ class CaloriesTest {
         gapSeconds: Long = 0,
     ): FitParser.Ride {
         var t = start
-        val points = (0 until seconds).map { i ->
-            if (gapAfter != null && i == gapAfter) t = t.plusSeconds(gapSeconds)
-            FitParser.Point(
-                time = t.also { t = t.plusSeconds(1) },
-                lat = null,
-                lon = null,
-                altitude = null,
-                speed = speed,
-                heartRate = heartRate,
-                cadence = null,
-                distance = null,
-            )
-        }
+        val points =
+            (0 until seconds).map { i ->
+                if (gapAfter != null && i == gapAfter) t = t.plusSeconds(gapSeconds)
+                FitParser.Point(
+                    time = t.also { t = t.plusSeconds(1) },
+                    lat = null,
+                    lon = null,
+                    altitude = null,
+                    speed = speed,
+                    heartRate = heartRate,
+                    cadence = null,
+                    distance = null,
+                )
+            }
         return FitParser.Ride(
             fileName = "test.fit",
             start = points.first().time,
@@ -85,10 +85,13 @@ class CaloriesTest {
     fun `a pause is not paid for`() {
         // Полчаса стоянки между точками не должны превратиться в калории.
         val moving = Calories.estimate(ride(1200, heartRate = 140), 80.0, 38, Calories.Sex.MALE)!!
-        val withPause = Calories.estimate(
-            ride(1200, heartRate = 140, gapAfter = 600, gapSeconds = 1800),
-            80.0, 38, Calories.Sex.MALE,
-        )!!
+        val withPause =
+            Calories.estimate(
+                ride(1200, heartRate = 140, gapAfter = 600, gapSeconds = 1800),
+                80.0,
+                38,
+                Calories.Sex.MALE,
+            )!!
         assertEquals(moving.toDouble(), withPause.toDouble(), 15.0)
     }
 
@@ -100,12 +103,12 @@ class CaloriesTest {
 }
 
 class ProfileFromFhirTest {
-
     @Test
     fun `reads year of birth and sex from a Patient resource`() {
-        val profile = Calories.profileFromFhir(
-            """{"resourceType":"Patient","id":"1","birthDate":"1992-05-17","gender":"male"}"""
-        )
+        val profile =
+            Calories.profileFromFhir(
+                """{"resourceType":"Patient","id":"1","birthDate":"1992-05-17","gender":"male"}""",
+            )
         assertEquals(1992, profile?.birthYear)
         assertEquals(Calories.Sex.MALE, profile?.sex)
         assertTrue(profile!!.usable)
@@ -121,9 +124,10 @@ class ProfileFromFhirTest {
 
     @Test
     fun `unknown gender is not guessed`() {
-        val profile = Calories.profileFromFhir(
-            """{"resourceType":"Patient","birthDate":"1992-05-17","gender":"other"}"""
-        )
+        val profile =
+            Calories.profileFromFhir(
+                """{"resourceType":"Patient","birthDate":"1992-05-17","gender":"other"}""",
+            )
         assertEquals(1992, profile?.birthYear)
         assertNull(profile?.sex)
     }

@@ -1,0 +1,80 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:Calories.kt$Calories$hr != null &amp;&amp; hr &gt; 0 &amp;&amp; age != null &amp;&amp; sex != null</ID>
+    <ID>ComplexCondition:FlyScene.kt$maxX &lt; 0 || minX &gt; size.width || maxY &lt; horizon - 4f || minY &gt; size.height</ID>
+    <ID>ComplexCondition:M2Client.kt$M2Client$rsp != null &amp;&amp; (rsp.contentEquals(CMD_IDLE) || (rsp.size == 1 &amp;&amp; rsp[0] == EOT))</ID>
+    <ID>ComplexCondition:MapTiles.kt$TileSource$x &lt; 0 || y &lt; 0 || x &gt;= span || y &gt;= span</ID>
+    <ID>CyclomaticComplexMethod:Calories.kt$Calories$fun estimate( ride: FitParser.Ride, weightKg: Double?, age: Int?, sex: Sex?, ): Int?</ID>
+    <ID>CyclomaticComplexMethod:FitParser.kt$FitParser$fun parse(file: File): Ride</ID>
+    <ID>CyclomaticComplexMethod:FlyScene.kt$private fun DrawScope.drapeTiles( track: RideTrack, camera: FlyCamera, tiles: TileSource, groundZ: Double, horizon: Float, paint: Paint, layer: MapLayer, ): Int</ID>
+    <ID>CyclomaticComplexMethod:FlyScene.kt$private fun DrawScope.drawRibbon( track: RideTrack, camera: FlyCamera, meters: Double, groundZ: Double, palette: FlyPalette, )</ID>
+    <ID>CyclomaticComplexMethod:FlyView.kt$@OptIn(ExperimentalMaterial3ExpressiveApi::class) @Composable fun FlyView( track: RideTrack, tiles: TileSource, onClose: () -&gt; Unit, )</ID>
+    <ID>CyclomaticComplexMethod:RideCharts.kt$@OptIn(ExperimentalLayoutApi::class) @Composable fun RideChartCard( track: RideTrack, metric: TrackMetric, onMetric: (TrackMetric) -&gt; Unit, highlight: Int?, onHighlight: (Int?) -&gt; Unit, modifier: Modifier = Modifier, )</ID>
+    <ID>CyclomaticComplexMethod:RideDetail.kt$@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class, ExperimentalLayoutApi::class) @Composable fun RideDetailScreen( ride: RideSummary, onBack: () -&gt; Unit, )</ID>
+    <ID>CyclomaticComplexMethod:RideTrack.kt$RideTrack.Companion$fun build( summary: RideSummary, ride: FitParser.Ride, ): RideTrack</ID>
+    <ID>CyclomaticComplexMethod:SyncService.kt$SyncService$override fun onStartCommand( intent: Intent?, flags: Int, startId: Int, ): Int</ID>
+    <ID>CyclomaticComplexMethod:Ui.kt$@OptIn(ExperimentalMaterial3ExpressiveApi::class) @Composable fun DeviceCard( device: DeviceSnapshot?, busy: Boolean, action: String?, modifier: Modifier = Modifier, )</ID>
+    <ID>ImplicitDefaultLocale:ScaleClient.kt$ScaleClient.&lt;no name provided&gt;$String.format("%.2f", reading.kilograms)</ID>
+    <ID>LongMethod:FitParser.kt$FitParser$fun parse(file: File): Ride</ID>
+    <ID>LongMethod:FlyScene.kt$private fun DrawScope.drapeTiles( track: RideTrack, camera: FlyCamera, tiles: TileSource, groundZ: Double, horizon: Float, paint: Paint, layer: MapLayer, ): Int</ID>
+    <ID>LongMethod:FlyScene.kt$private fun DrawScope.drawRibbon( track: RideTrack, camera: FlyCamera, meters: Double, groundZ: Double, palette: FlyPalette, )</ID>
+    <ID>LongMethod:FlyView.kt$@OptIn(ExperimentalMaterial3ExpressiveApi::class) @Composable fun FlyView( track: RideTrack, tiles: TileSource, onClose: () -&gt; Unit, )</ID>
+    <ID>LongMethod:HealthWriter.kt$HealthWriter$suspend fun write( ctx: Context, ride: FitParser.Ride, weightKg: Double? = null, profile: Calories.Profile = Calories.Profile.EMPTY, ): Int</ID>
+    <ID>LongMethod:MainActivity.kt$@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class) @Composable private fun Screen( onSync: () -&gt; Unit, onInfo: () -&gt; Unit, onVerify: () -&gt; Unit, onWeigh: () -&gt; Unit, onPermissions: () -&gt; Unit, )</ID>
+    <ID>LongMethod:RideCharts.kt$@OptIn(ExperimentalLayoutApi::class) @Composable fun RideChartCard( track: RideTrack, metric: TrackMetric, onMetric: (TrackMetric) -&gt; Unit, highlight: Int?, onHighlight: (Int?) -&gt; Unit, modifier: Modifier = Modifier, )</ID>
+    <ID>LongMethod:RideDetail.kt$@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class, ExperimentalLayoutApi::class) @Composable fun RideDetailScreen( ride: RideSummary, onBack: () -&gt; Unit, )</ID>
+    <ID>LongMethod:RouteMap.kt$@Composable fun RouteMap( track: RideTrack, tiles: TileSource, modifier: Modifier = Modifier, highlight: Int? = null, )</ID>
+    <ID>LongMethod:Ui.kt$@Composable fun DeviceArt( battery: Int?, modifier: Modifier = Modifier, )</ID>
+    <ID>LongMethod:Ui.kt$@OptIn(ExperimentalFoundationApi::class, ExperimentalLayoutApi::class) @Composable fun RideCard( ride: RideSummary, selected: Boolean, selectionMode: Boolean, onClick: () -&gt; Unit, onLongClick: () -&gt; Unit, onShare: () -&gt; Unit, modifier: Modifier = Modifier, )</ID>
+    <ID>LongMethod:Ui.kt$@OptIn(ExperimentalMaterial3ExpressiveApi::class) @Composable fun ActionsRow( onSync: () -&gt; Unit, onInfo: () -&gt; Unit, onVerify: () -&gt; Unit, enabled: Boolean, modifier: Modifier = Modifier, )</ID>
+    <ID>LongMethod:Ui.kt$@OptIn(ExperimentalMaterial3ExpressiveApi::class) @Composable fun DeviceCard( device: DeviceSnapshot?, busy: Boolean, action: String?, modifier: Modifier = Modifier, )</ID>
+    <ID>LongMethod:Ui.kt$@OptIn(ExperimentalMaterial3ExpressiveApi::class) @Composable fun ProfileDialog(onDismiss: () -&gt; Unit)</ID>
+    <ID>LongParameterList:FlyScene.kt$( tile: MapTile, verts: FloatArray, visible: BooleanArray, matrix: android.graphics.Matrix, clip: android.graphics.Path, src: FloatArray, dst: FloatArray, paint: Paint, )</ID>
+    <ID>LongParameterList:FlyScene.kt$( track: RideTrack, camera: FlyCamera, meters: Double, tiles: TileSource, palette: FlyPalette, paint: Paint, layer: MapLayer, )</ID>
+    <ID>LongParameterList:FlyScene.kt$( track: RideTrack, camera: FlyCamera, tiles: TileSource, groundZ: Double, horizon: Float, paint: Paint, layer: MapLayer, )</ID>
+    <ID>LongParameterList:FlyScene.kt$( track: RideTrack, meters: Double, width: Float, height: Float, yaw: Float = 0f, heightScale: Float = 1f, distanceScale: Float = 1f, )</ID>
+    <ID>LongParameterList:MapTiles.kt$( z: Int, minTileX: Double, maxTileX: Double, minTileY: Double, maxTileY: Double, body: @DisallowComposableCalls (x: Int, y: Int) -&gt; Unit, )</ID>
+    <ID>LongParameterList:RideCharts.kt$( track: RideTrack, metric: TrackMetric, onMetric: (TrackMetric) -&gt; Unit, highlight: Int?, onHighlight: (Int?) -&gt; Unit, modifier: Modifier = Modifier, )</ID>
+    <ID>LongParameterList:RideTrack.kt$RideTrack$( val summary: RideSummary, val points: List&lt;TrackPoint&gt;, val bounds: GeoBounds?, val totalDistance: Double, val duration: Duration, val start: Instant, val ascent: Int?, val calories: Int?, )</ID>
+    <ID>LongParameterList:Ui.kt$( ride: RideSummary, selected: Boolean, selectionMode: Boolean, onClick: () -&gt; Unit, onLongClick: () -&gt; Unit, onShare: () -&gt; Unit, modifier: Modifier = Modifier, )</ID>
+    <ID>LongParameterList:Ui.kt$( rides: List&lt;RideSummary&gt;, selection: Set&lt;String&gt;, onToggle: (RideSummary) -&gt; Unit, onLongClick: (RideSummary) -&gt; Unit, onShare: (RideSummary) -&gt; Unit, header: @Composable () -&gt; Unit, modifier: Modifier = Modifier, bottomInset: Dp = 0.dp, )</ID>
+    <ID>LongParameterList:UiTest.kt$UiTest$( file: String = "20260725102049.fit", distanceM: Double = 7350.0, elapsedMin: Long = 65, movingMin: Long = 33, avgHeartRate: Int? = 128, avgCadence: Int? = 52, ascent: Int? = 13, points: Int = 2023, hasRoute: Boolean = true, imported: Boolean = true, kcal: Int? = 232, )</ID>
+    <ID>LoopWithTooManyJumpStatements:FlyScene.kt$for</ID>
+    <ID>LoopWithTooManyJumpStatements:FlyScene.kt$while</ID>
+    <ID>LoopWithTooManyJumpStatements:M2Client.kt$M2Client$while</ID>
+    <ID>LoopWithTooManyJumpStatements:RideTrack.kt$RideTrack.Companion$for</ID>
+    <ID>LoopWithTooManyJumpStatements:UpdateChecker.kt$UpdateChecker$for</ID>
+    <ID>MatchingDeclarationName:FlyScene.kt$FlyPalette</ID>
+    <ID>MaxLineLength:M2Client.kt$M2Client.&lt;no name provided&gt;$if (!onConnected.isCompleted) onConnected.completeExceptionally(M2Error("connection lost, status $status"))</ID>
+    <ID>MaxLineLength:SyncService.kt$SyncService$private fun importedNames(): Set&lt;String&gt;</ID>
+    <ID>NestedBlockDepth:FlyScene.kt$private fun DrawScope.drawCells( tile: MapTile, verts: FloatArray, visible: BooleanArray, matrix: android.graphics.Matrix, clip: android.graphics.Path, src: FloatArray, dst: FloatArray, paint: Paint, )</ID>
+    <ID>NestedBlockDepth:MapTiles.kt$fun routeTiles( track: RideTrack, zoom: Int, ring: Int = 1, ): List&lt;Long&gt;</ID>
+    <ID>NestedBlockDepth:UpdateChecker.kt$UpdateChecker$fun assets(list: org.json.JSONArray?): Pair&lt;String?, String?&gt;</ID>
+    <ID>ReturnCount:Calories.kt$Calories$fun estimate( ride: FitParser.Ride, weightKg: Double?, age: Int?, sex: Sex?, ): Int?</ID>
+    <ID>ReturnCount:FlyCamera.kt$FlyCamera$fun segment( a: Vec3, b: Vec3, ): Pair&lt;Offset, Offset&gt;?</ID>
+    <ID>ReturnCount:FlyCamera.kt$fun RideTrack.poseAt(meters: Double): Vec3</ID>
+    <ID>ReturnCount:FlyScene.kt$private fun DrawScope.drapeTiles( track: RideTrack, camera: FlyCamera, tiles: TileSource, groundZ: Double, horizon: Float, paint: Paint, layer: MapLayer, ): Int</ID>
+    <ID>ReturnCount:Geo.kt$GeoBounds$fun fitZoom( widthPx: Float, heightPx: Float, padding: Float = 0.12f, ): Int</ID>
+    <ID>ReturnCount:HealthWriter.kt$HealthWriter$@OptIn(ExperimentalPersonalHealthRecordApi::class) suspend fun readPersonalDetails(ctx: Context): Calories.Profile?</ID>
+    <ID>ReturnCount:M2Client.kt$M2Client$suspend fun diskSpace(): String?</ID>
+    <ID>ReturnCount:MapTiles.kt$TileSource$fun tile( layer: MapLayer, z: Int, x: Int, y: Int, ): MapTile?</ID>
+    <ID>ReturnCount:RideTrack.kt$RideTrack$fun headingAt(index: Int): Double</ID>
+    <ID>ReturnCount:ScaleClient.kt$ScaleClient.&lt;no name provided&gt;$override fun onScanResult( callbackType: Int, result: ScanResult, )</ID>
+    <ID>ReturnCount:ScaleClient.kt$ScaleClient.Companion$fun parse(data: ByteArray): ScaleReading?</ID>
+    <ID>ReturnCount:Updater.kt$Updater$fun start( ctx: Context, update: UpdateChecker.Update, )</ID>
+    <ID>ThrowsCount:M2Client.kt$M2Client$private suspend fun enableNotify(uuid: UUID)</ID>
+    <ID>ThrowsCount:M2Client.kt$M2Client$suspend fun fetchFile(name: String): ByteArray</ID>
+    <ID>TooGenericExceptionCaught:SyncService.kt$SyncService$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:UpdateChecker.kt$UpdateChecker$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:Updater.kt$Updater$e: Exception</ID>
+    <ID>TooManyFunctions:HealthWriter.kt$HealthWriter</ID>
+    <ID>TooManyFunctions:M2Client.kt$M2Client</ID>
+    <ID>TooManyFunctions:SyncService.kt$SyncService : Service</ID>
+    <ID>TooManyFunctions:Ui.kt$dev.komkov.m2sync.Ui.kt</ID>
+    <ID>UnusedParameter:UpdateChecker.kt$UpdateChecker$ctx: Context</ID>
+    <ID>UnusedPrivateProperty:M2Client.kt$M2Client.Companion$private const val CAN: Byte = 0x18</ID>
+    <ID>UnusedPrivateProperty:M2Client.kt$M2Client.Companion$private const val SOH: Byte = 0x01 // блок на 128 байт данных</ID>
+  </CurrentIssues>
+</SmellBaseline>

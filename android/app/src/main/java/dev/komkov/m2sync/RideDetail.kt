@@ -36,8 +36,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LoadingIndicator
@@ -79,7 +79,10 @@ import kotlin.math.roundToInt
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class, ExperimentalLayoutApi::class)
 @Composable
-fun RideDetailScreen(ride: RideSummary, onBack: () -> Unit) {
+fun RideDetailScreen(
+    ride: RideSummary,
+    onBack: () -> Unit,
+) {
     val ctx = LocalContext.current
     val locale = LocalConfiguration.current.locales[0]
     val tiles = rememberTileSource()
@@ -121,9 +124,10 @@ fun RideDetailScreen(ride: RideSummary, onBack: () -> Unit) {
     }
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    val dayFormat = remember(locale) {
-        DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT).withLocale(locale)
-    }
+    val dayFormat =
+        remember(locale) {
+            DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT).withLocale(locale)
+        }
 
     Scaffold(
         modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -140,7 +144,7 @@ fun RideDetailScreen(ride: RideSummary, onBack: () -> Unit) {
                         stringResource(
                             R.string.ride_distance,
                             String.format(locale, "%.2f", ride.distanceM / 1000),
-                        )
+                        ),
                     )
                 },
                 subtitle = { Text(dayFormat.format(ride.start.atZone(ZoneId.systemDefault()))) },
@@ -149,9 +153,10 @@ fun RideDetailScreen(ride: RideSummary, onBack: () -> Unit) {
                         Icon(Icons.Rounded.Share, stringResource(R.string.cd_share))
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                ),
+                colors =
+                    TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                    ),
             )
         },
     ) { inner ->
@@ -186,10 +191,11 @@ fun RideDetailScreen(ride: RideSummary, onBack: () -> Unit) {
                             track = loaded,
                             tiles = tiles,
                             highlight = highlight,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(260.dp)
-                                .clip(RoundedCornerShape(28.dp)),
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .height(260.dp)
+                                    .clip(RoundedCornerShape(28.dp)),
                         )
                         FilledTonalIconButton(
                             onClick = { Settings.setMapLayer(ctx, mapLayer.next()) },
@@ -206,10 +212,11 @@ fun RideDetailScreen(ride: RideSummary, onBack: () -> Unit) {
                     onClick = { flying = true },
                     modifier = Modifier.fillMaxWidth().height(64.dp),
                     shape = RoundedCornerShape(22.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                    ),
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                        ),
                 ) {
                     Icon(Icons.Rounded.ViewInAr, null, Modifier.size(24.dp))
                     Spacer(Modifier.width(10.dp))
@@ -315,7 +322,10 @@ fun RideDetailScreen(ride: RideSummary, onBack: () -> Unit) {
                         RideChartCard(
                             track = loaded,
                             metric = metric,
-                            onMetric = { metric = it; highlight = null },
+                            onMetric = {
+                                metric = it
+                                highlight = null
+                            },
                             highlight = highlight,
                             onHighlight = { highlight = it },
                         )

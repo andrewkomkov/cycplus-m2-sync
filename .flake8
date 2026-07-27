@@ -1,0 +1,4 @@
+[flake8]
+max-line-length = 88
+# E203 конфликтует с тем, как black расставляет пробелы в срезах (buf[3 : n - 2]).
+extend-ignore = E203

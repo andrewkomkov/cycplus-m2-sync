@@ -35,7 +35,10 @@ data class FlyPalette(
     val fogSpan: Float = 0.30f,
 ) {
     /** Цвет ленты по скорости: медленно — один конец палитры, быстро — другой. */
-    fun speedColor(kmh: Double, maxKmh: Double): Color {
+    fun speedColor(
+        kmh: Double,
+        maxKmh: Double,
+    ): Color {
         val t = if (maxKmh <= 1.0) 0.5f else (kmh / maxKmh).coerceIn(0.0, 1.0).toFloat()
         return if (t < 0.5f) lerp(slow, mid, t * 2) else lerp(mid, fast, (t - 0.5f) * 2)
     }
@@ -106,11 +109,12 @@ fun flyCamera(
     val look = track.poseAt(meters + CAMERA_LOOK_AHEAD * blend)
 
     return FlyCamera(
-        eye = Vec3(
-            rider.x + kotlin.math.cos(angle) * distance,
-            rider.y + kotlin.math.sin(angle) * distance,
-            rider.z + CAMERA_HEIGHT * heightScale * distanceScale,
-        ),
+        eye =
+            Vec3(
+                rider.x + kotlin.math.cos(angle) * distance,
+                rider.y + kotlin.math.sin(angle) * distance,
+                rider.z + CAMERA_HEIGHT * heightScale * distanceScale,
+            ),
         target = Vec3(look.x, look.y, look.z + 4.0),
         widthPx = width,
         heightPx = height,
@@ -118,30 +122,58 @@ fun flyCamera(
 }
 
 /** Фильтр для тайлов земли: приглушаем, чтобы лента трека оставалась главной. */
-fun groundPaint(dark: Boolean, layer: MapLayer) = Paint().apply {
+fun groundPaint(
+    dark: Boolean,
+    layer: MapLayer,
+) = Paint().apply {
     isAntiAlias = true
     isFilterBitmap = true
     isDither = true
-    colorFilter = ColorMatrixColorFilter(
-        ColorMatrix().apply {
-            // Приглушаем умеренно: сильнее — и карта под лентой превращается
-            // в однотонное пятно, на котором не видно ни улиц, ни реки. Снимку
-            // приглушение почти не нужно — он и так не спорит с палитрой.
-            val satellite = layer == MapLayer.SATELLITE
-            setSaturation(if (satellite) 0.95f else if (dark) 0.55f else 0.78f)
-            val k = if (dark) (if (satellite) 0.75f else 0.55f) else (if (satellite) 1f else 0.97f)
-            postConcat(
-                ColorMatrix(
-                    floatArrayOf(
-                        k, 0f, 0f, 0f, 0f,
-                        0f, k, 0f, 0f, 0f,
-                        0f, 0f, k, 0f, 0f,
-                        0f, 0f, 0f, 1f, 0f,
-                    )
+    colorFilter =
+        ColorMatrixColorFilter(
+            ColorMatrix().apply {
+                // Приглушаем умеренно: сильнее — и карта под лентой превращается
+                // в однотонное пятно, на котором не видно ни улиц, ни реки. Снимку
+                // приглушение почти не нужно — он и так не спорит с палитрой.
+                val satellite = layer == MapLayer.SATELLITE
+                setSaturation(
+                    if (satellite) {
+                        0.95f
+                    } else if (dark) {
+                        0.55f
+                    } else {
+                        0.78f
+                    },
                 )
-            )
-        }
-    )
+                val k = if (dark) (if (satellite) 0.75f else 0.55f) else (if (satellite) 1f else 0.97f)
+                postConcat(
+                    ColorMatrix(
+                        floatArrayOf(
+                            k,
+                            0f,
+                            0f,
+                            0f,
+                            0f,
+                            0f,
+                            k,
+                            0f,
+                            0f,
+                            0f,
+                            0f,
+                            0f,
+                            k,
+                            0f,
+                            0f,
+                            0f,
+                            0f,
+                            0f,
+                            1f,
+                            0f,
+                        ),
+                    ),
+                )
+            },
+        )
 }
 
 /**
@@ -164,12 +196,13 @@ fun DrawScope.drawFlyScene(
     val groundZ = track.minAltitude - 2.0
 
     drawRect(
-        brush = Brush.verticalGradient(
-            0f to palette.skyTop,
-            1f to palette.skyHorizon,
-            startY = 0f,
-            endY = max(horizon, 1f),
-        ),
+        brush =
+            Brush.verticalGradient(
+                0f to palette.skyTop,
+                1f to palette.skyHorizon,
+                startY = 0f,
+                endY = max(horizon, 1f),
+            ),
         size = Size(size.width, max(horizon, 0f)),
     )
     if (horizon < size.height) {
@@ -189,12 +222,13 @@ fun DrawScope.drawFlyScene(
     if (horizon < size.height) {
         val fogTo = min(size.height, horizon + size.height * palette.fogSpan)
         drawRect(
-            brush = Brush.verticalGradient(
-                0f to palette.skyHorizon.copy(alpha = palette.fogAlpha),
-                1f to palette.skyHorizon.copy(alpha = 0f),
-                startY = horizon,
-                endY = fogTo,
-            ),
+            brush =
+                Brush.verticalGradient(
+                    0f to palette.skyHorizon.copy(alpha = palette.fogAlpha),
+                    1f to palette.skyHorizon.copy(alpha = 0f),
+                    startY = horizon,
+                    endY = fogTo,
+                ),
             topLeft = Offset(0f, max(horizon, 0f)),
             size = Size(size.width, fogTo - max(horizon, 0f)),
         )
@@ -224,7 +258,9 @@ private fun DrawScope.drapeTiles(
     val half = FAR * 0.62
 
     val metersPerLon = Geo.metersPerDegLon(origin.lat)
+
     fun lonOf(x: Double) = origin.lon + x / metersPerLon
+
     fun latOf(y: Double) = origin.lat + y / 111_320.0
 
     val minLon = lonOf(center.x - half)
@@ -250,8 +286,9 @@ private fun DrawScope.drapeTiles(
         maxTileY = Geo.tileY(minLat, FLY_GROUND_ZOOM),
     ) { tx, ty ->
         if (count >= MAX_TILES_PER_FRAME) return@forEachTile
-        val tile = tiles.tile(layer, FLY_GROUND_ZOOM, wrapTileX(tx, FLY_GROUND_ZOOM), ty)
-            ?: return@forEachTile
+        val tile =
+            tiles.tile(layer, FLY_GROUND_ZOOM, wrapTileX(tx, FLY_GROUND_ZOOM), ty)
+                ?: return@forEachTile
 
         var whole = true
         var any = false
@@ -263,11 +300,12 @@ private fun DrawScope.drapeTiles(
             for (i in 0..MESH) {
                 val lon = Geo.lonOfTileX(tx + i.toDouble() / MESH, FLY_GROUND_ZOOM)
                 val lat = Geo.latOfTileY(ty + j.toDouble() / MESH, FLY_GROUND_ZOOM)
-                val world = Vec3(
-                    Geo.toLocalX(lon, origin.lon, origin.lat),
-                    Geo.toLocalY(lat, origin.lat),
-                    groundZ,
-                )
+                val world =
+                    Vec3(
+                        Geo.toLocalX(lon, origin.lon, origin.lat),
+                        Geo.toLocalY(lat, origin.lat),
+                        groundZ,
+                    )
                 // Порог чуть больше ближней плоскости: вплотную к камере земля
                 // растянулась бы на пол-экрана и рисовалась бы медленно и криво.
                 val at = camera.project(world, near = 7.0)
@@ -279,8 +317,10 @@ private fun DrawScope.drapeTiles(
                     any = true
                     verts[node * 2] = at.x
                     verts[node * 2 + 1] = at.y
-                    minX = min(minX, at.x); maxX = max(maxX, at.x)
-                    minY = min(minY, at.y); maxY = max(maxY, at.y)
+                    minX = min(minX, at.x)
+                    maxX = max(maxX, at.x)
+                    minY = min(minY, at.y)
+                    maxY = max(maxY, at.y)
                 }
             }
         }
@@ -322,12 +362,13 @@ private fun DrawScope.drawCells(
 
     for (j in 0 until MESH) {
         for (i in 0 until MESH) {
-            val nodes = intArrayOf(
-                j * side + i,
-                j * side + i + 1,
-                (j + 1) * side + i + 1,
-                (j + 1) * side + i,
-            )
+            val nodes =
+                intArrayOf(
+                    j * side + i,
+                    j * side + i + 1,
+                    (j + 1) * side + i + 1,
+                    (j + 1) * side + i,
+                )
             if (nodes.any { !visible[it] }) continue
 
             var cx = 0f
@@ -338,12 +379,17 @@ private fun DrawScope.drawCells(
                 cx += dst[k * 2]
                 cy += dst[k * 2 + 1]
             }
-            cx /= 4; cy /= 4
+            cx /= 4
+            cy /= 4
 
-            src[0] = i * step; src[1] = j * stepV
-            src[2] = (i + 1) * step; src[3] = j * stepV
-            src[4] = (i + 1) * step; src[5] = (j + 1) * stepV
-            src[6] = i * step; src[7] = (j + 1) * stepV
+            src[0] = i * step
+            src[1] = j * stepV
+            src[2] = (i + 1) * step
+            src[3] = j * stepV
+            src[4] = (i + 1) * step
+            src[5] = (j + 1) * stepV
+            src[6] = i * step
+            src[7] = (j + 1) * stepV
 
             if (!matrix.setPolyToPoly(src, 0, dst, 0, 4)) continue
 
@@ -352,8 +398,9 @@ private fun DrawScope.drawCells(
             clip.rewind()
             for (k in 0..3) {
                 val x = dst[k * 2] + (dst[k * 2] - cx) * 0.004f + if (dst[k * 2] > cx) 0.7f else -0.7f
-                val y = dst[k * 2 + 1] + (dst[k * 2 + 1] - cy) * 0.004f +
-                    if (dst[k * 2 + 1] > cy) 0.7f else -0.7f
+                val y =
+                    dst[k * 2 + 1] + (dst[k * 2 + 1] - cy) * 0.004f +
+                        if (dst[k * 2 + 1] > cy) 0.7f else -0.7f
                 if (k == 0) clip.moveTo(x, y) else clip.lineTo(x, y)
             }
             clip.close()
@@ -371,7 +418,11 @@ private fun DrawScope.drawCells(
 }
 
 /** Запасная земля, когда подложки нет: сетка по сто метров. */
-private fun DrawScope.drawGroundGrid(camera: FlyCamera, groundZ: Double, palette: FlyPalette) {
+private fun DrawScope.drawGroundGrid(
+    camera: FlyCamera,
+    groundZ: Double,
+    palette: FlyPalette,
+) {
     val step = 100.0
     val ex = floor(camera.eye.x / step) * step
     val ey = floor(camera.eye.y / step) * step
@@ -430,7 +481,14 @@ private fun DrawScope.drawRibbon(
         val b = points[i]
         // Дальний план рисуем реже: там разница между соседними точками меньше
         // пикселя, а сегментов набегают сотни.
-        val stride = if (b.distance - meters > 400) 6 else if (b.distance - meters > 150) 3 else 1
+        val stride =
+            if (b.distance - meters > 400) {
+                6
+            } else if (b.distance - meters > 150) {
+                3
+            } else {
+                1
+            }
         val j = (i - stride).coerceAtLeast(fromIdx)
         val a = points[j]
         i = j
@@ -460,15 +518,25 @@ private fun DrawScope.drawRibbon(
             // читается как световой клин поперёк кадра — поэтому вблизи её
             // гасим, оставляя только там, где она и правда показывает рельеф.
             val near = ((b.distance - meters) / 150.0).coerceIn(0.0, 1.0).toFloat()
-            val curtain = Path().apply {
-                moveTo(ag.x, ag.y); lineTo(ac.x, ac.y); lineTo(bc.x, bc.y); lineTo(bg.x, bg.y); close()
-            }
+            val curtain =
+                Path().apply {
+                    moveTo(ag.x, ag.y)
+                    lineTo(ac.x, ac.y)
+                    lineTo(bc.x, bc.y)
+                    lineTo(bg.x, bg.y)
+                    close()
+                }
             drawPath(curtain, color.copy(alpha = (0.26f * fade + 0.06f) * near))
         }
 
-        val ribbon = Path().apply {
-            moveTo(al.x, al.y); lineTo(bl.x, bl.y); lineTo(br.x, br.y); lineTo(ar.x, ar.y); close()
-        }
+        val ribbon =
+            Path().apply {
+                moveTo(al.x, al.y)
+                lineTo(bl.x, bl.y)
+                lineTo(br.x, br.y)
+                lineTo(ar.x, ar.y)
+                close()
+            }
         drawPath(ribbon, color.copy(alpha = 0.35f + 0.55f * fade))
         drawLine(color, ac, bc, strokeWidth = 1.5.dp.toPx(), cap = StrokeCap.Round)
     }

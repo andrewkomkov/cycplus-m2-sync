@@ -10,7 +10,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -25,6 +24,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlin.math.roundToInt
 
 /**
@@ -51,26 +51,43 @@ fun RouteMap(
 
     // Подложку приглушаем: у стандартного стиля OSM свои яркие цвета, и трек на
     // нём теряется. Заодно карта перестаёт спорить с палитрой Material You.
-    val filter = remember(dark, layer) {
-        ColorFilter.colorMatrix(
-            ColorMatrix().apply {
-                // Снимок и без того натуральный, а схему приглушаем сильнее:
-                // её собственные цвета спорят с палитрой Material You.
-                setToSaturation(if (layer == MapLayer.SATELLITE) 0.85f else 0.4f)
-                val k = if (dark) 0.55f else 0.95f
-                timesAssign(
-                    ColorMatrix(
-                        floatArrayOf(
-                            k, 0f, 0f, 0f, 0f,
-                            0f, k, 0f, 0f, 0f,
-                            0f, 0f, k, 0f, 0f,
-                            0f, 0f, 0f, 1f, 0f,
-                        )
+    val filter =
+        remember(dark, layer) {
+            ColorFilter.colorMatrix(
+                ColorMatrix().apply {
+                    // Снимок и без того натуральный, а схему приглушаем сильнее:
+                    // её собственные цвета спорят с палитрой Material You.
+                    setToSaturation(if (layer == MapLayer.SATELLITE) 0.85f else 0.4f)
+                    val k = if (dark) 0.55f else 0.95f
+                    timesAssign(
+                        ColorMatrix(
+                            floatArrayOf(
+                                k,
+                                0f,
+                                0f,
+                                0f,
+                                0f,
+                                0f,
+                                k,
+                                0f,
+                                0f,
+                                0f,
+                                0f,
+                                0f,
+                                k,
+                                0f,
+                                0f,
+                                0f,
+                                0f,
+                                0f,
+                                1f,
+                                0f,
+                            ),
+                        ),
                     )
-                )
-            }
-        )
-    }
+                },
+            )
+        }
 
     Box(modifier) {
         Canvas(Modifier.fillMaxSize()) {
@@ -82,11 +99,9 @@ fun RouteMap(
             val centerX = Geo.tileX(bounds.centerLon, zoom)
             val centerY = Geo.tileY(bounds.centerLat, zoom)
 
-            fun screenX(lon: Double) =
-                ((Geo.tileX(lon, zoom) - centerX) * tilePx + size.width / 2).toFloat()
+            fun screenX(lon: Double) = ((Geo.tileX(lon, zoom) - centerX) * tilePx + size.width / 2).toFloat()
 
-            fun screenY(lat: Double) =
-                ((Geo.tileY(lat, zoom) - centerY) * tilePx + size.height / 2).toFloat()
+            fun screenY(lat: Double) = ((Geo.tileY(lat, zoom) - centerY) * tilePx + size.height / 2).toFloat()
 
             // Подписка на приезжающие тайлы: чтение состояния в draw-фазе
             // перерисует холст, когда картинка догрузится. Условие ложно всегда,
@@ -157,7 +172,12 @@ fun RouteMap(
     }
 }
 
-private fun DrawScope.marker(at: Offset, fill: Color, ring: Color, radius: Float = 6.dp.toPx()) {
+private fun DrawScope.marker(
+    at: Offset,
+    fill: Color,
+    ring: Color,
+    radius: Float = 6.dp.toPx(),
+) {
     drawCircle(ring, radius + 3.dp.toPx(), at)
     drawCircle(fill, radius, at)
 }

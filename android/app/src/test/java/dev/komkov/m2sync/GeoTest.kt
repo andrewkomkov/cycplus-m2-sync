@@ -5,7 +5,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class GeoTest {
-
     @Test
     fun `tile coordinates round-trip through longitude and latitude`() {
         for (z in intArrayOf(4, 12, 16, 18)) {

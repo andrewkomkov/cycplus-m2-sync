@@ -13,19 +13,23 @@ import android.content.Intent
  *   adb shell am broadcast -a dev.komkov.m2sync.STATUS
  */
 class CommandReceiver : BroadcastReceiver() {
-    override fun onReceive(context: Context, intent: Intent) {
+    override fun onReceive(
+        context: Context,
+        intent: Intent,
+    ) {
         val action = intent.action ?: return
         LogBus.init(context)
         LogBus.i(R.string.log_command, action)
-        val forward = Intent(context, SyncService::class.java).apply {
-            this.action = action
-            intent.getStringExtra(SyncService.EXTRA_NAME)?.let {
-                putExtra(SyncService.EXTRA_NAME, it)
+        val forward =
+            Intent(context, SyncService::class.java).apply {
+                this.action = action
+                intent.getStringExtra(SyncService.EXTRA_NAME)?.let {
+                    putExtra(SyncService.EXTRA_NAME, it)
+                }
+                intent.getStringExtra(SyncService.EXTRA_ADDRESS)?.let {
+                    putExtra(SyncService.EXTRA_ADDRESS, it)
+                }
             }
-            intent.getStringExtra(SyncService.EXTRA_ADDRESS)?.let {
-                putExtra(SyncService.EXTRA_ADDRESS, it)
-            }
-        }
         // Из фона система запускать foreground-сервис не даёт, и раньше это
         // роняло приложение прямо в приёмнике. Команда из терминала — не повод
         // падать: сообщаем в журнал и ждём, когда экран будет открыт.

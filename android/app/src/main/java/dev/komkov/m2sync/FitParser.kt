@@ -13,7 +13,6 @@ import java.time.Instant
  * координаты, скорость, высота, каденс, пульс. Калорий и мощности в файле нет.
  */
 object FitParser {
-
     private const val SEMICIRCLES_TO_DEGREES = 180.0 / 2147483648.0
 
     data class Point(
@@ -21,10 +20,10 @@ object FitParser {
         val lat: Double?,
         val lon: Double?,
         val altitude: Double?,
-        val speed: Double?,       // м/с
+        val speed: Double?, // м/с
         val heartRate: Int?,
         val cadence: Int?,
-        val distance: Double?,    // м от старта
+        val distance: Double?, // м от старта
     )
 
     data class Ride(
@@ -32,8 +31,8 @@ object FitParser {
         val start: Instant,
         val end: Instant,
         val sport: String?,
-        val totalDistance: Double?,   // м
-        val totalTimerTime: Double?,  // с в движении
+        val totalDistance: Double?, // м
+        val totalTimerTime: Double?, // с в движении
         val totalAscent: Int?,
         val totalCalories: Int?,
         val avgHeartRate: Int?,
@@ -44,7 +43,12 @@ object FitParser {
         val hasRoute: Boolean get() = points.any { it.lat != null && it.lon != null }
 
         val movingSeconds: Long
-            get() = activeSpans.sumOf { java.time.Duration.between(it.first, it.second).seconds }
+            get() =
+                activeSpans.sumOf {
+                    java.time.Duration
+                        .between(it.first, it.second)
+                        .seconds
+                }
     }
 
     /** Пауза = разрыв в записи больше этого числа секунд. */
@@ -56,7 +60,10 @@ object FitParser {
         var spanStart = points.first().time
         var prev = points.first().time
         for (p in points.drop(1)) {
-            if (java.time.Duration.between(prev, p.time).seconds > PAUSE_GAP_SECONDS) {
+            if (java.time.Duration
+                    .between(prev, p.time)
+                    .seconds > PAUSE_GAP_SECONDS
+            ) {
                 spans += spanStart to prev.plusSeconds(1)
                 spanStart = p.time
             }
@@ -80,32 +87,36 @@ object FitParser {
         val decode = Decode()
         val broadcaster = MesgBroadcaster(decode)
 
-        broadcaster.addListener(SessionMesgListener { mesg ->
-            mesg.startTime?.let { start = Instant.ofEpochMilli(it.date.time) }
-            mesg.totalDistance?.let { totalDistance = it.toDouble() }
-            mesg.totalTimerTime?.let { totalTimer = it.toDouble() }
-            mesg.totalElapsedTime?.let { elapsed = it.toDouble() }
-            mesg.totalAscent?.let { ascent = it.toInt() }
-            mesg.totalCalories?.let { calories = it.toInt() }
-            mesg.avgHeartRate?.let { avgHr = it.toInt() }
-            sport = mesg.sport?.name
-        })
+        broadcaster.addListener(
+            SessionMesgListener { mesg ->
+                mesg.startTime?.let { start = Instant.ofEpochMilli(it.date.time) }
+                mesg.totalDistance?.let { totalDistance = it.toDouble() }
+                mesg.totalTimerTime?.let { totalTimer = it.toDouble() }
+                mesg.totalElapsedTime?.let { elapsed = it.toDouble() }
+                mesg.totalAscent?.let { ascent = it.toInt() }
+                mesg.totalCalories?.let { calories = it.toInt() }
+                mesg.avgHeartRate?.let { avgHr = it.toInt() }
+                sport = mesg.sport?.name
+            },
+        )
 
-        broadcaster.addListener(RecordMesgListener { mesg ->
-            val ts = mesg.timestamp ?: return@RecordMesgListener
-            points.add(
-                Point(
-                    time = Instant.ofEpochMilli(ts.date.time),
-                    lat = mesg.positionLat?.let { it * SEMICIRCLES_TO_DEGREES },
-                    lon = mesg.positionLong?.let { it * SEMICIRCLES_TO_DEGREES },
-                    altitude = (mesg.enhancedAltitude ?: mesg.altitude)?.toDouble(),
-                    speed = (mesg.enhancedSpeed ?: mesg.speed)?.toDouble(),
-                    heartRate = mesg.heartRate?.toInt(),
-                    cadence = mesg.cadence?.toInt(),
-                    distance = mesg.distance?.toDouble(),
+        broadcaster.addListener(
+            RecordMesgListener { mesg ->
+                val ts = mesg.timestamp ?: return@RecordMesgListener
+                points.add(
+                    Point(
+                        time = Instant.ofEpochMilli(ts.date.time),
+                        lat = mesg.positionLat?.let { it * SEMICIRCLES_TO_DEGREES },
+                        lon = mesg.positionLong?.let { it * SEMICIRCLES_TO_DEGREES },
+                        altitude = (mesg.enhancedAltitude ?: mesg.altitude)?.toDouble(),
+                        speed = (mesg.enhancedSpeed ?: mesg.speed)?.toDouble(),
+                        heartRate = mesg.heartRate?.toInt(),
+                        cadence = mesg.cadence?.toInt(),
+                        distance = mesg.distance?.toDouble(),
+                    ),
                 )
-            )
-        })
+            },
+        )
 
         FileInputStream(file).use { broadcaster.run(it) }
 
@@ -114,8 +125,9 @@ object FitParser {
 
         val startTime = start ?: points.first().time
         // Конец считаем по последней точке, но не раньше старта плюс время в движении.
-        val endTime = maxOf(points.last().time, startTime.plusSeconds((elapsed ?: 0.0).toLong()))
-            .let { if (it.isAfter(points.last().time.plusSeconds(3600))) points.last().time else it }
+        val endTime =
+            maxOf(points.last().time, startTime.plusSeconds((elapsed ?: 0.0).toLong()))
+                .let { if (it.isAfter(points.last().time.plusSeconds(3600))) points.last().time else it }
 
         return Ride(
             fileName = file.name,

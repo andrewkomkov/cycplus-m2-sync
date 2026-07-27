@@ -10,6 +10,11 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,29 +28,24 @@ import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Switch
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.MediumFlexibleTopAppBar
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -58,34 +58,38 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
-
     companion object {
         /** Автосинк — один раз на запуск процесса, а не на каждый поворот экрана. */
         private var autoSyncDone = false
     }
 
-    private val healthPermissions = registerForActivityResult(
-        PermissionController.createRequestPermissionResultContract()
-    ) { granted ->
-        // Медкарта необязательна — её отсутствие не считаем недостачей.
-        val missing = (HealthWriter.permissions + HealthWriter.readPermissions) - granted
-        if (missing.isEmpty()) LogBus.i(R.string.log_perm_count, granted.size, granted.size)
-        else LogBus.e(R.string.log_missing_perms, missing.joinToString())
-    }
-
-    private val blePermissions = registerForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { result ->
-        val denied = result.filterValues { !it }.keys
-        if (denied.isNotEmpty()) {
-            LogBus.e(R.string.log_missing_perms, denied.joinToString())
-        } else if (Settings.autoSync.value && !autoSyncDone) {
-            // Разрешения только что дали — синк, отложенный на старте, можно
-            // наконец выполнить, не заставляя жать кнопку вручную.
-            autoSyncDone = true
-            send(SyncService.ACTION_SYNC)
+    private val healthPermissions =
+        registerForActivityResult(
+            PermissionController.createRequestPermissionResultContract(),
+        ) { granted ->
+            // Медкарта необязательна — её отсутствие не считаем недостачей.
+            val missing = (HealthWriter.permissions + HealthWriter.readPermissions) - granted
+            if (missing.isEmpty()) {
+                LogBus.i(R.string.log_perm_count, granted.size, granted.size)
+            } else {
+                LogBus.e(R.string.log_missing_perms, missing.joinToString())
+            }
         }
-    }
+
+    private val blePermissions =
+        registerForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions(),
+        ) { result ->
+            val denied = result.filterValues { !it }.keys
+            if (denied.isNotEmpty()) {
+                LogBus.e(R.string.log_missing_perms, denied.joinToString())
+            } else if (Settings.autoSync.value && !autoSyncDone) {
+                // Разрешения только что дали — синк, отложенный на старте, можно
+                // наконец выполнить, не заставляя жать кнопку вручную.
+                autoSyncDone = true
+                send(SyncService.ACTION_SYNC)
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -124,7 +128,7 @@ class MainActivity : ComponentActivity() {
                 Manifest.permission.BLUETOOTH_SCAN,
                 Manifest.permission.BLUETOOTH_CONNECT,
                 Manifest.permission.POST_NOTIFICATIONS,
-            )
+            ),
         )
     }
 
@@ -133,13 +137,14 @@ class MainActivity : ComponentActivity() {
         if (HealthWriter.available(this)) {
             // Медкарту просим только там, где она поддерживается: на остальных
             // устройствах такое разрешение неизвестно системе.
-            val medical = if (HealthWriter.personalRecordsAvailable(this)) {
-                HealthWriter.medicalPermissions
-            } else {
-                emptySet()
-            }
+            val medical =
+                if (HealthWriter.personalRecordsAvailable(this)) {
+                    HealthWriter.medicalPermissions
+                } else {
+                    emptySet()
+                }
             healthPermissions.launch(
-                HealthWriter.permissions + HealthWriter.readPermissions + medical
+                HealthWriter.permissions + HealthWriter.readPermissions + medical,
             )
         } else {
             LogBus.e(R.string.log_hc_unavailable)
@@ -201,9 +206,10 @@ private fun Screen(
     BackHandler(enabled = selecting) { selection = emptySet() }
 
     Scaffold(
-        modifier = Modifier
-            .fillMaxSize()
-            .nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             MediumFlexibleTopAppBar(
                 scrollBehavior = scrollBehavior,
@@ -213,8 +219,11 @@ private fun Screen(
                 },
                 title = {
                     Text(
-                        if (selecting) stringResource(R.string.selected_count, selection.size)
-                        else stringResource(R.string.title_rides)
+                        if (selecting) {
+                            stringResource(R.string.selected_count, selection.size)
+                        } else {
+                            stringResource(R.string.title_rides)
+                        },
                     )
                 },
                 actions = {
@@ -283,9 +292,10 @@ private fun Screen(
                         }
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                ),
+                colors =
+                    TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                    ),
             )
         },
         floatingActionButtonPosition = FabPosition.Center,
@@ -318,8 +328,12 @@ private fun Screen(
             selection = selection,
             onToggle = { ride ->
                 if (selecting) {
-                    selection = if (ride.file in selection) selection - ride.file
-                    else selection + ride.file
+                    selection =
+                        if (ride.file in selection) {
+                            selection - ride.file
+                        } else {
+                            selection + ride.file
+                        }
                 } else {
                     openRide = ride.file
                 }

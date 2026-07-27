@@ -27,25 +27,43 @@ object LogBus {
         appContext = ctx.applicationContext
     }
 
-    fun string(@StringRes id: Int, vararg args: Any?): String =
-        appContext?.getString(id, *args) ?: args.joinToString(" ")
+    fun string(
+        @StringRes id: Int,
+        vararg args: Any?,
+    ): String = appContext?.getString(id, *args) ?: args.joinToString(" ")
 
-    fun i(@StringRes id: Int, vararg args: Any?) = add(string(id, *args), false)
+    fun i(
+        @StringRes id: Int,
+        vararg args: Any?,
+    ) = add(string(id, *args), false)
 
     fun i(msg: String) = add(msg, false)
 
-    fun e(@StringRes id: Int, vararg args: Any?) = add(string(id, *args), true)
+    fun e(
+        @StringRes id: Int,
+        vararg args: Any?,
+    ) = add(string(id, *args), true)
 
-    fun e(msg: String, t: Throwable? = null) {
+    fun e(
+        msg: String,
+        t: Throwable? = null,
+    ) {
         add(if (t == null) msg else "$msg: ${t.javaClass.simpleName}: ${t.message}", true)
     }
 
-    fun e(@StringRes id: Int, t: Throwable?, vararg args: Any?) {
+    fun e(
+        @StringRes id: Int,
+        t: Throwable?,
+        vararg args: Any?,
+    ) {
         val base = string(id, *args)
         add(if (t == null) base else "$base: ${t.javaClass.simpleName}: ${t.message}", true)
     }
 
-    private fun add(msg: String, isError: Boolean) {
+    private fun add(
+        msg: String,
+        isError: Boolean,
+    ) {
         if (isError) Log.e(TAG, msg) else Log.i(TAG, msg)
         val line = "${clock.format(Date())} $msg"
         lines.value = (lines.value + line).takeLast(MAX_LINES)

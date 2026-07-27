@@ -9,7 +9,6 @@ import org.junit.Test
 import java.time.Instant
 
 class RideTrackTest {
-
     private val start: Instant = Instant.parse("2026-07-24T08:30:00Z")
 
     /** Прямой отрезок на север по 10 м в секунду, с плавным подъёмом. */
@@ -20,18 +19,19 @@ class RideTrackTest {
         cadence: Int? = 80,
         altitudeNoise: Double = 0.0,
     ): FitParser.Ride {
-        val points = (0 until count).map { i ->
-            FitParser.Point(
-                time = start.plusSeconds(i.toLong()),
-                lat = if (withCoords) 60.0 + i * 0.0001 else null,
-                lon = if (withCoords) 30.0 else null,
-                altitude = 100.0 + i * 0.5 + if (i % 2 == 0) altitudeNoise else -altitudeNoise,
-                speed = 10.0,
-                heartRate = heartRate,
-                cadence = cadence,
-                distance = i * 11.132,
-            )
-        }
+        val points =
+            (0 until count).map { i ->
+                FitParser.Point(
+                    time = start.plusSeconds(i.toLong()),
+                    lat = if (withCoords) 60.0 + i * 0.0001 else null,
+                    lon = if (withCoords) 30.0 else null,
+                    altitude = 100.0 + i * 0.5 + if (i % 2 == 0) altitudeNoise else -altitudeNoise,
+                    speed = 10.0,
+                    heartRate = heartRate,
+                    cadence = cadence,
+                    distance = i * 11.132,
+                )
+            }
         return FitParser.Ride(
             fileName = "t.fit",
             start = points.first().time,
@@ -47,20 +47,21 @@ class RideTrackTest {
         )
     }
 
-    private fun summary() = RideSummary(
-        file = "t.fit",
-        start = start,
-        distanceM = 657.0,
-        elapsedMin = 1,
-        movingMin = 1,
-        avgHeartRate = 140,
-        avgCadence = 80,
-        ascent = 30,
-        points = 60,
-        hasRoute = true,
-        imported = false,
-        kcal = 42,
-    )
+    private fun summary() =
+        RideSummary(
+            file = "t.fit",
+            start = start,
+            distanceM = 657.0,
+            elapsedMin = 1,
+            movingMin = 1,
+            avgHeartRate = 140,
+            avgCadence = 80,
+            ascent = 30,
+            points = 60,
+            hasRoute = true,
+            imported = false,
+            kcal = 42,
+        )
 
     private fun track(vararg args: FitParser.Ride) = RideTrack.build(summary(), args.first())
 

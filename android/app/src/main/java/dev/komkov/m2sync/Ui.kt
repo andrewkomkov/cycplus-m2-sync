@@ -7,6 +7,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,6 +25,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Bluetooth
@@ -44,24 +46,22 @@ import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.Sync
 import androidx.compose.material.icons.rounded.Terrain
 import androidx.compose.material.icons.rounded.Timer
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonGroup
 import androidx.compose.material3.ButtonGroupDefaults
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -81,15 +81,15 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -121,7 +121,10 @@ private fun timeFormat(): DateTimeFormatter {
 
 /** Рисунок велокомпьютера: корпус, экран с зарядом и кольцо батареи вокруг. */
 @Composable
-fun DeviceArt(battery: Int?, modifier: Modifier = Modifier) {
+fun DeviceArt(
+    battery: Int?,
+    modifier: Modifier = Modifier,
+) {
     val scheme = MaterialTheme.colorScheme
     Box(modifier.size(118.dp), contentAlignment = Alignment.Center) {
         Canvas(Modifier.size(118.dp)) {
@@ -283,7 +286,7 @@ fun DeviceCard(
                             "WEIGH" -> R.string.busy_weigh
                             "SCAN" -> R.string.busy_scan
                             else -> R.string.busy_other
-                        }
+                        },
                     ),
                     style = MaterialTheme.typography.labelMedium,
                 )
@@ -293,7 +296,10 @@ fun DeviceCard(
 }
 
 @Composable
-fun TotalsRow(rides: List<RideSummary>, modifier: Modifier = Modifier) {
+fun TotalsRow(
+    rides: List<RideSummary>,
+    modifier: Modifier = Modifier,
+) {
     val km = rides.sumOf { it.distanceM } / 1000
     val hours = rides.sumOf { it.movingMin } / 60.0
     val locale = currentLocale()
@@ -318,7 +324,11 @@ fun TotalsRow(rides: List<RideSummary>, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun StatTile(label: String, value: String, modifier: Modifier = Modifier) {
+private fun StatTile(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+) {
     Surface(
         modifier,
         shape = RoundedCornerShape(18.dp),
@@ -383,9 +393,10 @@ fun ActionsRow(
                         enabled = enabled,
                         interactionSource = pollInteraction,
                         shape = ButtonGroupDefaults.connectedLeadingButtonShape,
-                        modifier = Modifier
-                            .weight(1f)
-                            .animateWidth(pollInteraction),
+                        modifier =
+                            Modifier
+                                .weight(1f)
+                                .animateWidth(pollInteraction),
                     ) {
                         Icon(Icons.Rounded.Bluetooth, null, Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
@@ -401,9 +412,10 @@ fun ActionsRow(
                         enabled = enabled,
                         interactionSource = verifyInteraction,
                         shape = ButtonGroupDefaults.connectedTrailingButtonShape,
-                        modifier = Modifier
-                            .weight(1f)
-                            .animateWidth(verifyInteraction),
+                        modifier =
+                            Modifier
+                                .weight(1f)
+                                .animateWidth(verifyInteraction),
                     ) {
                         Icon(Icons.Rounded.CheckCircle, null, Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
@@ -447,10 +459,15 @@ fun RideCard(
                 },
             ),
         shape = RoundedCornerShape(corner),
-        colors = CardDefaults.cardColors(
-            containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer
-            else MaterialTheme.colorScheme.surfaceContainerHigh
-        ),
+        colors =
+            CardDefaults.cardColors(
+                containerColor =
+                    if (selected) {
+                        MaterialTheme.colorScheme.primaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.surfaceContainerHigh
+                    },
+            ),
     ) {
         Column(Modifier.padding(start = 18.dp, end = 6.dp, top = 14.dp, bottom = 14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -516,7 +533,10 @@ fun RideCard(
 
 /** Компактная метрика: иконка и подпись, без контейнера чипа. */
 @Composable
-private fun Metric(icon: ImageVector, label: String) {
+private fun Metric(
+    icon: ImageVector,
+    label: String,
+) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(
             icon,
@@ -534,7 +554,10 @@ private fun Metric(icon: ImageVector, label: String) {
 }
 
 @Composable
-fun LogCard(lines: List<String>, modifier: Modifier = Modifier) {
+fun LogCard(
+    lines: List<String>,
+    modifier: Modifier = Modifier,
+) {
     var expanded by remember { mutableStateOf(false) }
     Card(modifier.fillMaxWidth()) {
         Row(
@@ -560,7 +583,7 @@ fun LogCard(lines: List<String>, modifier: Modifier = Modifier) {
                     .height(260.dp)
                     .background(MaterialTheme.colorScheme.surfaceContainerLowest)
                     .verticalScroll(rememberScrollState())
-                    .padding(12.dp)
+                    .padding(12.dp),
             ) {
                 Text(
                     lines.takeLast(120).joinToString("\n"),
@@ -637,9 +660,10 @@ fun UpdateCard(
 ) {
     Card(
         modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.tertiaryContainer
-        ),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+            ),
     ) {
         Row(
             Modifier.padding(16.dp).fillMaxWidth(),
@@ -709,7 +733,11 @@ fun ProfileDialog(onDismiss: () -> Unit) {
     var sex by remember { mutableStateOf(savedSex) }
 
     val parsedYear = year.toIntOrNull()
-    val yearValid = year.isEmpty() || (parsedYear != null && parsedYear in 1900..java.time.Year.now().value)
+    val currentYear =
+        java.time.Year
+            .now()
+            .value
+    val yearValid = year.isEmpty() || (parsedYear != null && parsedYear in 1900..currentYear)
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -769,14 +797,19 @@ fun ProfileDialog(onDismiss: () -> Unit) {
 
 /** Последний вес: его же берёт расчёт калорий, поэтому он на виду. */
 @Composable
-fun WeightCard(weight: WeightReading?, onWeigh: () -> Unit, enabled: Boolean) {
+fun WeightCard(
+    weight: WeightReading?,
+    onWeigh: () -> Unit,
+    enabled: Boolean,
+) {
     val locale = currentLocale()
     Card(
         Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondaryContainer
-        ),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+            ),
     ) {
         Row(
             Modifier.fillMaxWidth().padding(start = 18.dp, end = 10.dp, top = 12.dp, bottom = 12.dp),
@@ -791,11 +824,14 @@ fun WeightCard(weight: WeightReading?, onWeigh: () -> Unit, enabled: Boolean) {
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(
-                    if (weight == null) stringResource(R.string.weight_unknown)
-                    else stringResource(
-                        R.string.weight_value,
-                        String.format(locale, "%.2f", weight.kilograms),
-                    ),
+                    if (weight == null) {
+                        stringResource(R.string.weight_unknown)
+                    } else {
+                        stringResource(
+                            R.string.weight_value,
+                            String.format(locale, "%.2f", weight.kilograms),
+                        )
+                    },
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSecondaryContainer,

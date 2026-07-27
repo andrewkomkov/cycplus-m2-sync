@@ -18,31 +18,36 @@ data class DeviceSnapshot(
 ) {
     val usedKb: Int? get() = if (freeKb != null && totalKb != null) totalKb - freeKb else null
 
-    fun toJson(): JSONObject = JSONObject().apply {
-        put("name", name)
-        put("address", address)
-        put("firmware", firmware ?: JSONObject.NULL)
-        put("battery", battery ?: JSONObject.NULL)
-        put("freeKb", freeKb ?: JSONObject.NULL)
-        put("totalKb", totalKb ?: JSONObject.NULL)
-        put("seenAt", seenAt.toEpochMilli())
-    }
+    fun toJson(): JSONObject =
+        JSONObject().apply {
+            put("name", name)
+            put("address", address)
+            put("firmware", firmware ?: JSONObject.NULL)
+            put("battery", battery ?: JSONObject.NULL)
+            put("freeKb", freeKb ?: JSONObject.NULL)
+            put("totalKb", totalKb ?: JSONObject.NULL)
+            put("seenAt", seenAt.toEpochMilli())
+        }
 
     companion object {
-        fun fromJson(o: JSONObject) = DeviceSnapshot(
-            name = o.getString("name"),
-            address = o.getString("address"),
-            firmware = o.optString("firmware").takeIf { it.isNotEmpty() && it != "null" },
-            battery = o.opt("battery")?.takeIf { it != JSONObject.NULL }?.let { (it as Number).toInt() },
-            freeKb = o.opt("freeKb")?.takeIf { it != JSONObject.NULL }?.let { (it as Number).toInt() },
-            totalKb = o.opt("totalKb")?.takeIf { it != JSONObject.NULL }?.let { (it as Number).toInt() },
-            seenAt = Instant.ofEpochMilli(o.optLong("seenAt")),
-        )
+        fun fromJson(o: JSONObject) =
+            DeviceSnapshot(
+                name = o.getString("name"),
+                address = o.getString("address"),
+                firmware = o.optString("firmware").takeIf { it.isNotEmpty() && it != "null" },
+                battery = o.opt("battery")?.takeIf { it != JSONObject.NULL }?.let { (it as Number).toInt() },
+                freeKb = o.opt("freeKb")?.takeIf { it != JSONObject.NULL }?.let { (it as Number).toInt() },
+                totalKb = o.opt("totalKb")?.takeIf { it != JSONObject.NULL }?.let { (it as Number).toInt() },
+                seenAt = Instant.ofEpochMilli(o.optLong("seenAt")),
+            )
     }
 }
 
 /** Последний вес: показываем на экране и считаем по нему калории. */
-data class WeightReading(val kilograms: Double, val at: Instant)
+data class WeightReading(
+    val kilograms: Double,
+    val at: Instant,
+)
 
 /** Разобранный заезд для списка на экране. */
 data class RideSummary(
@@ -62,38 +67,40 @@ data class RideSummary(
     /** Вес и профиль, на которых посчитан [kcal]; сменились — пересчитываем. */
     val kcalKey: String? = null,
 ) {
-    fun toJson(): JSONObject = JSONObject().apply {
-        put("file", file)
-        put("start", start.toEpochMilli())
-        put("distanceM", distanceM)
-        put("elapsedMin", elapsedMin)
-        put("movingMin", movingMin)
-        put("avgHeartRate", avgHeartRate ?: JSONObject.NULL)
-        put("avgCadence", avgCadence ?: JSONObject.NULL)
-        put("ascent", ascent ?: JSONObject.NULL)
-        put("points", points)
-        put("hasRoute", hasRoute)
-        put("imported", imported)
-        put("kcal", kcal ?: JSONObject.NULL)
-        put("kcalKey", kcalKey ?: JSONObject.NULL)
-    }
+    fun toJson(): JSONObject =
+        JSONObject().apply {
+            put("file", file)
+            put("start", start.toEpochMilli())
+            put("distanceM", distanceM)
+            put("elapsedMin", elapsedMin)
+            put("movingMin", movingMin)
+            put("avgHeartRate", avgHeartRate ?: JSONObject.NULL)
+            put("avgCadence", avgCadence ?: JSONObject.NULL)
+            put("ascent", ascent ?: JSONObject.NULL)
+            put("points", points)
+            put("hasRoute", hasRoute)
+            put("imported", imported)
+            put("kcal", kcal ?: JSONObject.NULL)
+            put("kcalKey", kcalKey ?: JSONObject.NULL)
+        }
 
     companion object {
-        fun fromJson(o: JSONObject) = RideSummary(
-            file = o.getString("file"),
-            start = Instant.ofEpochMilli(o.getLong("start")),
-            distanceM = o.getDouble("distanceM"),
-            elapsedMin = o.getLong("elapsedMin"),
-            movingMin = o.getLong("movingMin"),
-            avgHeartRate = o.opt("avgHeartRate")?.takeIf { it != JSONObject.NULL }?.let { (it as Number).toInt() },
-            avgCadence = o.opt("avgCadence")?.takeIf { it != JSONObject.NULL }?.let { (it as Number).toInt() },
-            ascent = o.opt("ascent")?.takeIf { it != JSONObject.NULL }?.let { (it as Number).toInt() },
-            points = o.getInt("points"),
-            hasRoute = o.getBoolean("hasRoute"),
-            imported = o.getBoolean("imported"),
-            kcal = o.opt("kcal")?.takeIf { it != JSONObject.NULL }?.let { (it as Number).toInt() },
-            kcalKey = o.opt("kcalKey")?.takeIf { it != JSONObject.NULL }?.toString(),
-        )
+        fun fromJson(o: JSONObject) =
+            RideSummary(
+                file = o.getString("file"),
+                start = Instant.ofEpochMilli(o.getLong("start")),
+                distanceM = o.getDouble("distanceM"),
+                elapsedMin = o.getLong("elapsedMin"),
+                movingMin = o.getLong("movingMin"),
+                avgHeartRate = o.opt("avgHeartRate")?.takeIf { it != JSONObject.NULL }?.let { (it as Number).toInt() },
+                avgCadence = o.opt("avgCadence")?.takeIf { it != JSONObject.NULL }?.let { (it as Number).toInt() },
+                ascent = o.opt("ascent")?.takeIf { it != JSONObject.NULL }?.let { (it as Number).toInt() },
+                points = o.getInt("points"),
+                hasRoute = o.getBoolean("hasRoute"),
+                imported = o.getBoolean("imported"),
+                kcal = o.opt("kcal")?.takeIf { it != JSONObject.NULL }?.let { (it as Number).toInt() },
+                kcalKey = o.opt("kcalKey")?.takeIf { it != JSONObject.NULL }?.toString(),
+            )
     }
 }
 
@@ -111,6 +118,7 @@ object AppState {
     val action = MutableStateFlow<String?>(null)
     val device = MutableStateFlow<DeviceSnapshot?>(null)
     val rides = MutableStateFlow<List<RideSummary>>(emptyList())
+
     /** Прогресс скачивания: имя файла, сколько уже байт, сколько всего. */
     val transfer = MutableStateFlow<Triple<String, Int, Int>?>(null)
 
@@ -141,25 +149,48 @@ object AppState {
         }
     }
 
-    fun saveDevice(ctx: Context, snapshot: DeviceSnapshot) {
+    fun saveDevice(
+        ctx: Context,
+        snapshot: DeviceSnapshot,
+    ) {
         device.value = snapshot
-        ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-            .putString(KEY_DEVICE, snapshot.toJson().toString()).apply()
+        ctx
+            .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit()
+            .putString(KEY_DEVICE, snapshot.toJson().toString())
+            .apply()
     }
 
-    fun saveWeight(ctx: Context, reading: WeightReading?) {
+    fun saveWeight(
+        ctx: Context,
+        reading: WeightReading?,
+    ) {
         weight.value = reading
-        val json = reading?.let {
-            JSONObject().apply { put("kg", it.kilograms); put("at", it.at.toEpochMilli()) }.toString()
-        }
-        ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-            .putString(KEY_WEIGHT, json).apply()
+        val json =
+            reading?.let {
+                JSONObject()
+                    .apply {
+                        put("kg", it.kilograms)
+                        put("at", it.at.toEpochMilli())
+                    }.toString()
+            }
+        ctx
+            .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit()
+            .putString(KEY_WEIGHT, json)
+            .apply()
     }
 
-    fun saveRides(ctx: Context, list: List<RideSummary>) {
+    fun saveRides(
+        ctx: Context,
+        list: List<RideSummary>,
+    ) {
         rides.value = list
         val arr = JSONArray().apply { list.forEach { put(it.toJson()) } }
-        ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-            .putString(KEY_RIDES, arr.toString()).apply()
+        ctx
+            .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit()
+            .putString(KEY_RIDES, arr.toString())
+            .apply()
     }
 }

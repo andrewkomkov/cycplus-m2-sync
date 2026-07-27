@@ -97,7 +97,10 @@ private fun RationaleScreen(onClose: () -> Unit) {
 }
 
 @Composable
-private fun DataRow(icon: ImageVector, label: String) {
+private fun DataRow(
+    icon: ImageVector,
+    label: String,
+) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Icon(icon, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
         Spacer(Modifier.width(12.dp))

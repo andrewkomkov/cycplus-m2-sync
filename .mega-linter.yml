@@ -1,0 +1,68 @@
+# Полная раскладка линтеров MegaLinter: Kotlin, Python, YAML/JSON/XML, Markdown,
+# GitHub Actions, secrets и SCA. Список включённых линтеров не сужаем — что
+# сработало лишним, глушим точечно ниже.
+
+APPLY_FIXES: none
+VALIDATE_ALL_CODEBASE: true
+SHOW_ELAPSED_TIME: true
+
+# Клоны чужих репозиториев (см. .gitignore), сборочные артефакты, вендорный
+# gradle-враппер и генерируемый release-please changelog — не наш код.
+FILTER_REGEX_EXCLUDE: '(^|/)(cycsync|xoss_sync|\.venv|__pycache__)/|/build/|^android/gradlew|^CHANGELOG\.md$'
+
+DISABLE:
+  # README и docs двуязычные, словарь пришлось бы вести под русский текст и
+  # велосипедные термины вроде FIT, XOSS, CycPlus — сплошные ложные срабатывания.
+  - SPELL
+
+DISABLE_LINTERS:
+  # Ходит по внешним ссылкам на каждом прогоне — падения от чужого downtime.
+  - MARKDOWN_MARKDOWN_LINK_CHECK
+
+# Без токена zizmor не может резолвить ref'ы экшенов через GitHub API и падает
+# на самом первом `uses:`, так и не выполнив ни одной проверки.
+ACTION_ZIZMOR_UNSECURED_ENV_VARIABLES:
+  - GITHUB_TOKEN
+
+# DS137138 «Insecure URL» ловит http://schemas.android.com/apk/res/android в
+# каждом ресурсном XML. Это XML-namespace, а не адрес, по которому куда-то ходят.
+REPOSITORY_DEVSKIM_ARGUMENTS:
+  - --ignore-rule-ids
+  - DS137138
+
+# detekt по умолчанию заменяет всю конфигурацию файлом из --config, поэтому без
+# --build-upon-default-config от набора правил осталось бы два переопределения.
+# Baseline замораживает накопленную сложность: старое не мешает, новое ловится.
+KOTLIN_DETEKT_ARGUMENTS:
+  - --build-upon-default-config
+  - --baseline
+  - detekt-baseline.xml
+
+# На пороге в 50 токенов jscpd считает клонами блоки импортов Compose в начале
+# файлов. Поднимаем до объёма, на котором дублирование действительно значимо.
+COPYPASTE_JSCPD_ARGUMENTS:
+  - --min-tokens
+  - '100'
+  # Тесты из поиска копипасты исключены намеренно: одинаковая шапка импортов и
+  # своя подготовка данных в каждом тест-классе — это читаемость, а не дубль.
+  # README.ru.md — перевод README.md, блоки команд в них совпадают по определению.
+  - --ignore
+  - '**/src/test/**,README.ru.md'
+
+# В образе линтера нет bleak и fitdecode, без них pyright сыплет import-error
+# на каждый импорт tools/ вместо настоящих замечаний.
+PRE_COMMANDS:
+  - command: pip install --break-system-packages -r tools/requirements.txt
+    cwd: workspace
+    run_before_linters: true
+
+# pylint живёт в отдельном venv, куда пакеты проекта так просто не поставить:
+# MegaLinter уводит команду в cd /venvs/pylint, и относительный путь до
+# requirements.txt там уже не резолвится. Разрешимость импортов и без того
+# проверяют pyright и job tools в build.yml, так что снимаем только это правило.
+PYTHON_PYLINT_ARGUMENTS:
+  - --disable=import-error
+
+# Отчёты складываем артефактом workflow, сводку — комментарием в PR.
+SARIF_REPORTER: true
+TEXT_REPORTER: true

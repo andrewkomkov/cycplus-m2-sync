@@ -15,26 +15,36 @@ import kotlin.math.tan
  * математика лежит отдельно от обоих экранов.
  */
 object Geo {
-
     /** Сторона растрового тайла OSM в пикселях. */
     const val TILE_PX = 256
 
     /** Дробная координата тайла по долготе на зуме [z]. */
-    fun tileX(lon: Double, z: Int): Double = (lon + 180.0) / 360.0 * (1 shl z)
+    fun tileX(
+        lon: Double,
+        z: Int,
+    ): Double = (lon + 180.0) / 360.0 * (1 shl z)
 
     /**
      * Дробная координата тайла по широте. Полюса в меркаторе уходят в
      * бесконечность, поэтому широту режем по стандартной границе ±85.0511°.
      */
-    fun tileY(lat: Double, z: Int): Double {
+    fun tileY(
+        lat: Double,
+        z: Int,
+    ): Double {
         val r = Math.toRadians(lat.coerceIn(-85.05112878, 85.05112878))
         return (1.0 - asinh(tan(r)) / PI) / 2.0 * (1 shl z)
     }
 
-    fun lonOfTileX(x: Double, z: Int): Double = x / (1 shl z) * 360.0 - 180.0
+    fun lonOfTileX(
+        x: Double,
+        z: Int,
+    ): Double = x / (1 shl z) * 360.0 - 180.0
 
-    fun latOfTileY(y: Double, z: Int): Double =
-        Math.toDegrees(atan(sinh(PI * (1.0 - 2.0 * y / (1 shl z)))))
+    fun latOfTileY(
+        y: Double,
+        z: Int,
+    ): Double = Math.toDegrees(atan(sinh(PI * (1.0 - 2.0 * y / (1 shl z)))))
 
     private const val METERS_PER_DEG_LAT = 111_320.0
 
@@ -45,10 +55,16 @@ object Geo {
      * (десятки километров) равнопромежуточной проекции достаточно: искажение
      * меньше, чем точность самого GPS велокомпьютера.
      */
-    fun toLocalX(lon: Double, originLon: Double, originLat: Double): Double =
-        (lon - originLon) * metersPerDegLon(originLat)
+    fun toLocalX(
+        lon: Double,
+        originLon: Double,
+        originLat: Double,
+    ): Double = (lon - originLon) * metersPerDegLon(originLat)
 
-    fun toLocalY(lat: Double, originLat: Double): Double = (lat - originLat) * METERS_PER_DEG_LAT
+    fun toLocalY(
+        lat: Double,
+        originLat: Double,
+    ): Double = (lat - originLat) * METERS_PER_DEG_LAT
 }
 
 /** Охватывающий прямоугольник маршрута. */
@@ -65,7 +81,11 @@ data class GeoBounds(
      * Максимальный зум, на котором маршрут целиком влезает в [widthPx]×[heightPx].
      * [padding] — доля кадра, оставленная по краям, чтобы трек не лип к рамке.
      */
-    fun fitZoom(widthPx: Float, heightPx: Float, padding: Float = 0.12f): Int {
+    fun fitZoom(
+        widthPx: Float,
+        heightPx: Float,
+        padding: Float = 0.12f,
+    ): Int {
         if (widthPx <= 0 || heightPx <= 0) return MIN_ZOOM
         val usableW = widthPx * (1 - padding * 2)
         val usableH = heightPx * (1 - padding * 2)
