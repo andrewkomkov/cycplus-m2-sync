@@ -51,6 +51,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -63,6 +64,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -74,6 +76,9 @@ import kotlin.math.roundToInt
 private const val FLIGHT_SECONDS = 75.0
 
 private val SPEEDS = listOf(1f, 2f, 4f)
+
+/** Делений отклика на всю длину заезда, когда его перематывают пальцем. */
+private const val SCRUB_TICKS = 40
 
 /**
  * Полёт над заездом: камера идёт по треку, земля — тайлы OpenStreetMap,
@@ -91,6 +96,7 @@ fun FlyView(
     onClose: () -> Unit,
 ) {
     val ctx = LocalContext.current
+    val haptics = LocalHapticFeedback.current
     val scheme = MaterialTheme.colorScheme
     val dark = isSystemInDarkTheme()
     val locale = LocalConfiguration.current.locales[0]
@@ -107,6 +113,32 @@ fun FlyView(
     val moved = yaw != 0f || heightScale != 1f || distanceScale != 1f
 
     val total = track.totalDistance.toFloat().coerceAtLeast(1f)
+
+    // Перемотка отзывается делениями, а не каждым событием протяжки: иначе это
+    // не шкала под пальцем, а сплошная вибрация.
+    var lastTick by remember(track) { mutableIntStateOf(-1) }
+
+    fun seek(
+        x: Float,
+        widthPx: Int,
+    ) {
+        if (widthPx <= 0) return
+        val at = (x / widthPx * total).coerceIn(0f, total)
+        val step = (at / total * SCRUB_TICKS).toInt()
+        if (step != lastTick) {
+            lastTick = step
+            haptics.scrubTick()
+        }
+        meters = at
+    }
+
+    /** Камера возвращается в исходное положение — с земли, из-за спины райдера. */
+    fun resetCamera() {
+        haptics.gestureEnd()
+        yaw = 0f
+        heightScale = 1f
+        distanceScale = 1f
+    }
 
     val palette =
         remember(scheme, dark, layer) {
@@ -162,7 +194,12 @@ fun FlyView(
                     if (next >= total) {
                         meters = total
                         playing = false
+                        // Прилетели: то же «готово», что и в конце синка.
+                        haptics.done()
                     } else {
+                        // Круглый километр отзывается тиком — вроде столбика на
+                        // обочине: видно, что заезд идёт, не глядя на цифры.
+                        if ((next / 1000).toInt() != (meters / 1000).toInt()) haptics.tick()
                         meters = next
                     }
                 }
@@ -199,13 +236,7 @@ fun FlyView(
                                 .coerceIn(FLY_DISTANCE_MIN, FLY_DISTANCE_MAX)
                     }
                 }.pointerInput(track) {
-                    detectTapGestures(
-                        onDoubleTap = {
-                            yaw = 0f
-                            heightScale = 1f
-                            distanceScale = 1f
-                        },
-                    )
+                    detectTapGestures(onDoubleTap = { resetCamera() })
                 },
         ) {
             if (size.width < 1f || size.height < 1f) return@Canvas
@@ -242,17 +273,16 @@ fun FlyView(
                 // «вернуть как было» — лишний орган управления.
                 AnimatedVisibility(moved, enter = fadeIn() + scaleIn(), exit = fadeOut() + scaleOut()) {
                     FilledTonalIconButton(
-                        onClick = {
-                            yaw = 0f
-                            heightScale = 1f
-                            distanceScale = 1f
-                        },
+                        onClick = { resetCamera() },
                         modifier = Modifier.padding(end = 8.dp),
                     ) {
                         Icon(Icons.Rounded.CenterFocusStrong, stringResource(R.string.cd_reset_view))
                     }
                 }
-                FilledTonalIconButton(onClick = { Settings.setMapLayer(ctx, layer.next()) }) {
+                FilledTonalIconButton(onClick = {
+                    haptics.tick()
+                    Settings.setMapLayer(ctx, layer.next())
+                }) {
                     Icon(layerIcon(layer), stringResource(R.string.cd_basemap))
                 }
             }
@@ -310,15 +340,18 @@ fun FlyView(
                                 detectHorizontalDragGestures(
                                     onDragStart = {
                                         playing = false
-                                        meters = (it.x / size.width * total).coerceIn(0f, total)
+                                        seek(it.x, size.width)
                                     },
+                                    onDragEnd = {
+                                        haptics.gestureEnd()
+                                        lastTick = -1
+                                    },
+                                    onDragCancel = { lastTick = -1 },
                                 ) { change, _ ->
-                                    meters = (change.position.x / size.width * total).coerceIn(0f, total)
+                                    seek(change.position.x, size.width)
                                 }
                             }.pointerInput(track) {
-                                detectTapGestures {
-                                    meters = (it.x / size.width * total).coerceIn(0f, total)
-                                }
+                                detectTapGestures { seek(it.x, size.width) }
                             },
                         contentAlignment = Alignment.Center,
                     ) {
@@ -356,6 +389,7 @@ fun FlyView(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         IconButton(onClick = {
+                            haptics.tick()
                             meters = 0f
                             playing = true
                         }) {
@@ -363,6 +397,7 @@ fun FlyView(
                         }
                         FilledIconButton(
                             onClick = {
+                                haptics.toggle(!playing)
                                 if (meters >= total) meters = 0f
                                 playing = !playing
                             },
@@ -379,7 +414,10 @@ fun FlyView(
                         SPEEDS.forEach { value ->
                             FilterChip(
                                 selected = rate == value,
-                                onClick = { rate = value },
+                                onClick = {
+                                    haptics.tick()
+                                    rate = value
+                                },
                                 label = {
                                     Text(
                                         stringResource(R.string.fly_rate, value.roundToInt()),

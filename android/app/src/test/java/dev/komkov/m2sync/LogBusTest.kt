@@ -134,6 +134,21 @@ class LogBusTest {
         )
     }
 
+    // --- счётчик ошибок ---
+
+    /** По нему экран отличает удачный конец длинной работы от неудачного. */
+    @Test
+    fun `only errors move the failure counter`() {
+        val before = LogBus.failures.value
+
+        LogBus.i("all good")
+        assertEquals(before, LogBus.failures.value)
+
+        LogBus.e("trouble")
+        LogBus.e(R.string.log_missing_perms, "READ_WEIGHT")
+        assertEquals(before + 2, LogBus.failures.value)
+    }
+
     // --- размер буфера ---
 
     /** Экран журнала держит последние 500 строк: длинный импорт не должен съесть память. */
