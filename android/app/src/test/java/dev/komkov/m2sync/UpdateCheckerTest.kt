@@ -35,15 +35,16 @@ class UpdateCheckerTest {
     private val prefs get() = ctx.getSharedPreferences("m2sync_updates", android.content.Context.MODE_PRIVATE)
 
     private var saved: ProxySelector? = null
-    private var deadPort = 0
+    private lateinit var dead: Proxy
 
     @Before
     fun cutTheWire() {
-        deadPort = ServerSocket(0).use { it.localPort }
+        val deadPort = ServerSocket(0).use { it.localPort }
+        dead = Proxy(Proxy.Type.HTTP, InetSocketAddress("127.0.0.1", deadPort))
         saved = ProxySelector.getDefault()
         ProxySelector.setDefault(
             object : ProxySelector() {
-                override fun select(uri: URI): List<Proxy> = listOf(Proxy(Proxy.Type.HTTP, InetSocketAddress("127.0.0.1", deadPort)))
+                override fun select(uri: URI): List<Proxy> = listOf(dead)
 
                 override fun connectFailed(
                     uri: URI,

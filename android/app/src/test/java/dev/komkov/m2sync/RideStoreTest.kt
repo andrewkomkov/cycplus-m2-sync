@@ -32,6 +32,9 @@ class RideStoreTest {
 
     private val begin: Instant = Instant.parse("2026-07-25T10:20:49Z")
 
+    /** Отпечаток расчёта калорий, когда ни веса, ни профиля ещё нет. */
+    private val noProfileKey: String = Calories.profileKey(null, Calories.Profile.EMPTY)
+
     /** Каталог общий на весь прогон, а каждый тест хочет видеть только своё. */
     @Before
     fun clean() {
@@ -49,7 +52,6 @@ class RideStoreTest {
         count: Int = 120,
         heartRate: Short? = 128,
         cadence: Short? = 52,
-        ascent: Int = 13,
     ): File {
         val file = File(dir, name)
         val encoder = FileEncoder(file, com.garmin.fit.Fit.ProtocolVersion.V2_0)
@@ -87,7 +89,7 @@ class RideStoreTest {
                 totalDistance = (count - 1) * 8.0f
                 totalTimerTime = 100f
                 totalElapsedTime = (count - 1).toFloat()
-                totalAscent = ascent
+                totalAscent = ASCENT
                 heartRate?.let { avgHeartRate = it }
             },
         )
@@ -149,7 +151,7 @@ class RideStoreTest {
         assertEquals(2, ride.movingMin)
         assertEquals(128, ride.avgHeartRate)
         assertEquals(52, ride.avgCadence)
-        assertEquals(13, ride.ascent)
+        assertEquals(ASCENT, ride.ascent)
         assertEquals(120, ride.points)
         assertTrue(ride.hasRoute)
         assertFalse(ride.imported)
@@ -216,7 +218,7 @@ class RideStoreTest {
         val ride = RideStore.refresh(ctx, emptySet()).single()
 
         assertNull(ride.kcal)
-        assertEquals(Calories.profileKey(null, Calories.Profile.EMPTY), ride.kcalKey)
+        assertEquals(noProfileKey, ride.kcalKey)
     }
 
     @Test
@@ -237,7 +239,7 @@ class RideStoreTest {
     @Test
     fun `a ride counted before is taken from the cache`() {
         writeRide("20260725102049.fit")
-        val cached = summary("20260725102049.fit", distanceM = 12_345.0, kcalKey = Calories.profileKey(null, Calories.Profile.EMPTY))
+        val cached = summary("20260725102049.fit", distanceM = 12_345.0, kcalKey = noProfileKey)
         AppState.rides.value = listOf(cached)
 
         val ride = RideStore.refresh(ctx, emptySet()).single()
@@ -250,7 +252,7 @@ class RideStoreTest {
     @Test
     fun `a new weight throws the cached ride away`() {
         writeRide("20260725102049.fit")
-        val cached = summary("20260725102049.fit", distanceM = 12_345.0, kcalKey = Calories.profileKey(null, Calories.Profile.EMPTY))
+        val cached = summary("20260725102049.fit", distanceM = 12_345.0, kcalKey = noProfileKey)
         AppState.rides.value = listOf(cached)
 
         val ride = RideStore.refresh(ctx, emptySet(), weightKg = 72.8).single()
@@ -263,8 +265,7 @@ class RideStoreTest {
     @Test
     fun `a ride that reached health connect is re read`() {
         writeRide("20260725102049.fit")
-        val key = Calories.profileKey(null, Calories.Profile.EMPTY)
-        AppState.rides.value = listOf(summary("20260725102049.fit", distanceM = 12_345.0, kcalKey = key))
+        AppState.rides.value = listOf(summary("20260725102049.fit", distanceM = 12_345.0, kcalKey = noProfileKey))
 
         val ride = RideStore.refresh(ctx, setOf("20260725102049.fit")).single()
 
@@ -277,7 +278,7 @@ class RideStoreTest {
     fun `a cached ride whose file is gone disappears too`() {
         AppState.rides.value =
             listOf(
-                summary("gone.fit", distanceM = 12_345.0, kcalKey = Calories.profileKey(null, Calories.Profile.EMPTY)),
+                summary("gone.fit", distanceM = 12_345.0, kcalKey = noProfileKey),
             )
 
         assertTrue(RideStore.refresh(ctx, emptySet()).isEmpty())
@@ -286,5 +287,8 @@ class RideStoreTest {
     private companion object {
         /** Полуокружности FIT в градусы — и обратно. */
         const val SEMICIRCLE = 180.0 / 2147483648.0
+
+        /** Набор высоты в собранном .fit: одинаковый для всех заездов теста. */
+        const val ASCENT = 13
     }
 }

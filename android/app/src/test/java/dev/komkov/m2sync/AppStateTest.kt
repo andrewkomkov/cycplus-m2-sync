@@ -43,9 +43,6 @@ class AppStateTest {
     private fun ride(
         file: String = "20260725102049.fit",
         start: Instant = Instant.ofEpochMilli(1_784_000_000_000),
-        avgHeartRate: Int? = 128,
-        avgCadence: Int? = 52,
-        ascent: Int? = 13,
         kcal: Int? = 232,
         kcalKey: String? = "72.8/1992/MALE",
     ) = RideSummary(
@@ -54,15 +51,20 @@ class AppStateTest {
         distanceM = 7350.5,
         elapsedMin = 65,
         movingMin = 33,
-        avgHeartRate = avgHeartRate,
-        avgCadence = avgCadence,
-        ascent = ascent,
+        avgHeartRate = 128,
+        avgCadence = 52,
+        ascent = 13,
         points = 2023,
         hasRoute = true,
         imported = true,
         kcal = kcal,
         kcalKey = kcalKey,
     )
+
+    /** Тот же заезд, но снятый велокомпом без датчиков и без набора высоты. */
+    private fun bareRide() =
+        ride(kcal = null, kcalKey = null)
+            .copy(avgHeartRate = null, avgCadence = null, ascent = null)
 
     /** Состояние — синглтон и живёт дольше теста, поэтому обнуляем его руками. */
     @Before
@@ -132,7 +134,7 @@ class AppStateTest {
 
     @Test
     fun `ride summary keeps unknown metrics empty through json`() {
-        val original = ride(avgHeartRate = null, avgCadence = null, ascent = null, kcal = null, kcalKey = null)
+        val original = bareRide()
         val back = RideSummary.fromJson(JSONObject(original.toJson().toString()))
         assertEquals(original, back)
         assertNull(back.avgHeartRate)

@@ -96,7 +96,18 @@ class UpdaterCoverageTest {
         sha256Url = shaPath?.let { "http://127.0.0.1:$port$it" },
     )
 
-    private fun logged(id: Int): Boolean = LogBus.lines.value.any { it.contains(app.getString(id)) }
+    /**
+     * Журнал складывается из ресурсов с подстановками, поэтому и здесь строку
+     * собираем ресурсом: без аргументов в ней остались бы `%1$s`, и совпадения
+     * не было бы никогда — ни в ту, ни в другую сторону.
+     */
+    private fun logged(
+        id: Int,
+        vararg args: Any,
+    ): Boolean = LogBus.lines.value.any { it.contains(app.getString(id, *args)) }
+
+    /** Версия из [update]: с ней склеивается строка о начале скачивания. */
+    private fun loggedDownloadStart(): Boolean = logged(R.string.log_update_downloading, "9.9.9")
 
     /**
      * Установка идёт своим потоком. Кончиться она может тремя способами: сумма
@@ -154,10 +165,23 @@ class UpdaterCoverageTest {
 
         assertNull(shadowOf(app).nextStartedActivity)
         assertEquals(10L, AppState.updateProgress.value!!.bytes)
-        assertFalse(logged(R.string.log_update_downloading))
+        assertFalse(loggedDownloadStart())
     }
 
     // --- скачивание ---
+
+    @Test
+    fun `the package is downloaded whole and its sum checked`() {
+        Updater.start(app, update())
+        awaitDone()
+
+        assertTrue(loggedDownloadStart())
+        assertTrue(logged(R.string.log_update_verified))
+        val file = downloaded()!!
+        assertEquals("m2sync-9.9.9.apk", file.name)
+        assertEquals(apk.size.toLong(), file.length())
+        assertEquals(apkSha, Updater.sha256(file))
+    }
 
     /** Сумма не сошлась — ставить нечего, и скачанное надо убрать за собой. */
     @Test
