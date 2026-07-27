@@ -363,7 +363,7 @@ class M2Client(
 
         rx(C)
         val header = readBlock() as? Block.Data ?: throw M2Error("no file header")
-        val headerText = String(header.payload).trimEnd(' ').trim()
+        val headerText = String(header.payload).trimEnd('\u0000').trim()
         val expected =
             headerText.split(" ").getOrNull(1)?.toIntOrNull()
                 ?: throw M2Error("could not parse header: $headerText")
