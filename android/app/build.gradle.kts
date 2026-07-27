@@ -107,7 +107,7 @@ dependencies {
 
     testImplementation("junit:junit:4.13.2")
     // Настоящий org.json: в unit-тестах андроидный — заглушка.
-    testImplementation("org.json:json:20250517")
+    testImplementation("org.json:json:20260719")
     testImplementation("org.robolectric:robolectric:4.15.1")
     testImplementation("androidx.compose.ui:ui-test-junit4")
     // Манифест с пустой ComponentActivity — только он даёт правилу что запускать,
