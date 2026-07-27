@@ -9,6 +9,10 @@ on:
     # Раз в неделю — чтобы ловить новые правила, а не только новый код.
     - cron: '32 4 * * 1'
 
+# Job поднимает права до security-events сам, остальному workflow нужно чтение.
+permissions:
+  contents: read
+
 jobs:
   analyze:
     name: Analyze ${{ matrix.language }}

@@ -19,6 +19,28 @@ DISABLE_LINTERS:
   # Ходит по внешним ссылкам на каждом прогоне — падения от чужого downtime.
   - MARKDOWN_MARKDOWN_LINK_CHECK
 
+# Без токена zizmor не может резолвить ref'ы экшенов через GitHub API и падает
+# на самом первом `uses:`, так и не выполнив ни одной проверки.
+ACTION_ZIZMOR_UNSECURED_ENV_VARIABLES:
+  - GITHUB_TOKEN
+
+# DS137138 «Insecure URL» ловит http://schemas.android.com/apk/res/android в
+# каждом ресурсном XML. Это XML-namespace, а не адрес, по которому куда-то ходят.
+REPOSITORY_DEVSKIM_ARGUMENTS:
+  - --ignore-rule-ids
+  - DS137138
+
+# В образе линтера нет bleak и fitdecode, без них pylint и pyright сыпят
+# import-error на каждый импорт tools/ вместо настоящих замечаний.
+PRE_COMMANDS:
+  - command: pip install --break-system-packages -r tools/requirements.txt
+    cwd: workspace
+    run_before_linters: true
+  - command: pip install -r tools/requirements.txt
+    cwd: workspace
+    venv: pylint
+    run_before_linters: true
+
 # Отчёты складываем артефактом workflow, сводку — комментарием в PR.
 SARIF_REPORTER: true
 TEXT_REPORTER: true

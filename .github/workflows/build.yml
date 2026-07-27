@@ -7,6 +7,10 @@ on:
   pull_request:
   workflow_dispatch:
 
+# Без явного блока токен job'а получает write-доступ по умолчанию настроек репозитория.
+permissions:
+  contents: read
+
 jobs:
   android:
     name: Android debug APK
