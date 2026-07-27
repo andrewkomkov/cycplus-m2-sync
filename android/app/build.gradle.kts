@@ -125,7 +125,8 @@ tasks.register<JacocoReport>("jacocoTestReport") {
     // лежат в intermediates/built_in_kotlinc, и этот путь уже дважды переезжал.
     classDirectories.setFrom(
         tasks.named("compileDebugKotlin").map {
-            it.outputs.files.asFileTree.matching { exclude(generated) }
+            it.outputs.files.asFileTree
+                .matching { exclude(generated) }
         },
     )
     sourceDirectories.setFrom(files("src/main/java"))
