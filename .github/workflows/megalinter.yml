@@ -23,18 +23,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Полная история: без неё линтер не разложит замечания по базе сравнения.
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       # Образ по умолчанию, без flavor: в репозитории и Kotlin, и Python —
       # ни один узкий flavor их вместе не покрывает.
-      - uses: oxsecurity/megalinter@v9
+      - uses: oxsecurity/megalinter@ef3e84b8b836d76db562d0f3ed7da61e8fd538bc # v9.6.0
         id: megalinter
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
           name: megalinter-reports
@@ -42,7 +43,7 @@ jobs:
             megalinter-reports
             mega-linter.log
 
-      - uses: github/codeql-action/upload-sarif@v4
+      - uses: github/codeql-action/upload-sarif@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4.37.3
         if: always()
         continue-on-error: true
         with:
