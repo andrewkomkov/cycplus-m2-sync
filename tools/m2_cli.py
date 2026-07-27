@@ -20,14 +20,15 @@ import sys
 
 from bleak import BleakClient
 from bleak.uuids import normalize_uuid_str, uuidstr_to_str
-
 from m2 import M2, M2Error, find_device, scan
 
 
 async def connected(args):
     device = await find_device(args.name, args.timeout)
     if not device:
-        print(f"No device with a name starting with {args.name!r} found.", file=sys.stderr)
+        print(
+            f"No device with a name starting with {args.name!r} found.", file=sys.stderr
+        )
         raise SystemExit(1)
     print(f"Found {device.name} — {device.address}")
     return device
@@ -35,7 +36,11 @@ async def connected(args):
 
 async def cmd_scan(args):
     for name, address, rssi in sorted(await scan(args.timeout), key=lambda x: -x[2]):
-        mark = "  <- bike computer?" if name.startswith(("M2_", "M1_", "M3_")) or "XOSS" in name.upper() else ""
+        mark = (
+            "  <- bike computer?"
+            if name.startswith(("M2_", "M1_", "M3_")) or "XOSS" in name.upper()
+            else ""
+        )
         print(f"{name or '(unnamed)':<28} {address}  rssi={rssi}{mark}")
 
 
@@ -102,7 +107,8 @@ async def cmd_services(args):
     async with BleakClient(device.address, timeout=60.0) as client:
         print(f"MTU {client.mtu_size}\n")
         for service in client.services:
-            print(f"SERVICE {service.uuid}  {uuidstr_to_str(normalize_uuid_str(service.uuid)) or ''}")
+            title = uuidstr_to_str(normalize_uuid_str(service.uuid)) or ""
+            print(f"SERVICE {service.uuid}  {title}")
             for ch in service.characteristics:
                 value = ""
                 if "read" in ch.properties:
@@ -115,14 +121,22 @@ async def cmd_services(args):
                     except Exception:
                         value = "(read failed)"
                 known = uuidstr_to_str(normalize_uuid_str(ch.uuid)) or ""
-                print(f"   CHAR {ch.uuid}  [{','.join(ch.properties)}]  {known} {value}")
+                print(
+                    f"   CHAR {ch.uuid}  [{','.join(ch.properties)}]  {known} {value}"
+                )
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("--name", default="M2_", help="BLE name prefix (default: M2_)")
-    parser.add_argument("--timeout", type=float, default=30.0, help="scan timeout, seconds")
-    parser.add_argument("--out", default="fit", help="output directory (default: ./fit)")
+    parser.add_argument(
+        "--timeout", type=float, default=30.0, help="scan timeout, seconds"
+    )
+    parser.add_argument(
+        "--out", default="fit", help="output directory (default: ./fit)"
+    )
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("scan")
     sub.add_parser("info")

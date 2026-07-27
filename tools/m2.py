@@ -9,6 +9,7 @@ Protocol notes live in docs/PROTOCOL.md.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 from dataclasses import dataclass
 
 from bleak import BleakClient, BleakScanner
@@ -68,7 +69,8 @@ def command(code: int, name: str) -> bytes:
 async def find_device(prefix: str = "M2_", timeout: float = 30.0):
     """Find the first advertising bike computer whose name starts with `prefix`."""
     return await BleakScanner.find_device_by_filter(
-        lambda d, ad: (d.name or ad.local_name or "").startswith(prefix), timeout=timeout
+        lambda d, ad: (d.name or ad.local_name or "").startswith(prefix),
+        timeout=timeout,
     )
 
 
@@ -100,15 +102,18 @@ class M2:
             print(message, flush=True)
 
     async def start(self) -> None:
-        await self.client.start_notify(CTL, lambda _, data: self._ctl.put_nowait(bytes(data)))
-        await self.client.start_notify(TX, lambda _, data: self._tx.put_nowait(bytes(data)))
+        await self.client.start_notify(
+            CTL, lambda _, data: self._ctl.put_nowait(bytes(data))
+        )
+        await self.client.start_notify(
+            TX, lambda _, data: self._tx.put_nowait(bytes(data))
+        )
 
     async def stop(self) -> None:
         for uuid in (CTL, TX):
-            try:
+            # На закрытии устройство уже могло отвалиться — отписка best-effort.
+            with contextlib.suppress(Exception):
                 await self.client.stop_notify(uuid)
-            except Exception:
-                pass
 
     async def _write(self, uuid: str, value: bytes) -> None:
         await self.client.write_gatt_char(uuid, value, False)
@@ -175,7 +180,7 @@ class M2:
                 block_size = 3 + (1024 if buf[0] == STX else 128) + 2
             if len(buf) >= block_size:
                 break
-        payload = bytes(buf[3:block_size - 2])
+        payload = bytes(buf[3 : block_size - 2])
         crc = (buf[block_size - 2] << 8) | buf[block_size - 1]
         if crc != crc16_arc(payload):
             raise M2Error("bad block: CRC mismatch")

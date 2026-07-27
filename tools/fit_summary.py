@@ -4,6 +4,7 @@
 Печатает session/lap-сводку и наличие потоков (HR, каденс, мощность, GPS),
 чтобы понять, какие Health Connect Record'ы имеет смысл писать.
 """
+
 import glob
 import os
 import sys
@@ -22,7 +23,9 @@ def summarize(path):
 
     with fitdecode.FitReader(path) as fit:
         for frame in fit:
-            if frame.frame_type != fitdecode.FIT_FRAME_DATA:
+            # isinstance вместо сравнения frame_type: то же условие, но из него
+            # виден тип кадра — иначе .name и .fields читаются у любого кадра.
+            if not isinstance(frame, fitdecode.FitDataMessage):
                 continue
             msg_counts[frame.name] += 1
             if frame.name == "session":
@@ -37,10 +40,23 @@ def summarize(path):
     print("Сообщения:", dict(msg_counts))
 
     for s in sessions:
-        keys = ("sport", "sub_sport", "start_time", "total_elapsed_time", "total_timer_time",
-                "total_distance", "total_calories", "avg_speed", "max_speed",
-                "avg_heart_rate", "max_heart_rate", "avg_cadence", "avg_power",
-                "total_ascent", "total_descent")
+        keys = (
+            "sport",
+            "sub_sport",
+            "start_time",
+            "total_elapsed_time",
+            "total_timer_time",
+            "total_distance",
+            "total_calories",
+            "avg_speed",
+            "max_speed",
+            "avg_heart_rate",
+            "max_heart_rate",
+            "avg_cadence",
+            "avg_power",
+            "total_ascent",
+            "total_descent",
+        )
         print("\n-- session")
         for k in keys:
             if s.get(k) is not None:
@@ -48,7 +64,10 @@ def summarize(path):
 
     if records:
         print(f"\n-- record: {len(records)} точек")
-        print("   поля с данными:", ", ".join(f"{k}({v})" for k, v in record_fields.most_common()))
+        print(
+            "   поля с данными:",
+            ", ".join(f"{k}({v})" for k, v in record_fields.most_common()),
+        )
         first, last = records[0], records[-1]
         print(f"   первая точка: {first.get('timestamp')}")
         print(f"   последняя:    {last.get('timestamp')}")
