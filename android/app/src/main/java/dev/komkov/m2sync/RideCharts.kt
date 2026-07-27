@@ -53,14 +53,20 @@ private const val BUCKETS = 220
  * Ряд для графика: значения по бакетам и точка трека, представляющая бакет.
  * [values] содержит NaN там, где датчик молчал, — разрыв так и рисуется дырой.
  */
-private class Series(val values: FloatArray, val indices: IntArray) {
+private class Series(
+    val values: FloatArray,
+    val indices: IntArray,
+) {
     val min: Float = values.filter { !it.isNaN() }.minOrNull() ?: 0f
     val max: Float = values.filter { !it.isNaN() }.maxOrNull() ?: 0f
     val avg: Float = values.filter { !it.isNaN() }.let { if (it.isEmpty()) 0f else it.average().toFloat() }
     val any: Boolean = values.any { !it.isNaN() }
 }
 
-private fun seriesOf(track: RideTrack, metric: TrackMetric): Series {
+private fun seriesOf(
+    track: RideTrack,
+    metric: TrackMetric,
+): Series {
     val n = track.points.size
     val buckets = minOf(BUCKETS, n).coerceAtLeast(1)
     val values = FloatArray(buckets)
@@ -70,7 +76,12 @@ private fun seriesOf(track: RideTrack, metric: TrackMetric): Series {
         val to = (((b + 1).toLong() * n / buckets).toInt()).coerceAtLeast(from + 1).coerceAtMost(n)
         var sum = 0.0
         var count = 0
-        for (i in from until to) track.valueAt(i, metric)?.let { sum += it; count++ }
+        for (i in from until to) {
+            track.valueAt(i, metric)?.let {
+                sum += it
+                count++
+            }
+        }
         values[b] = if (count == 0) Float.NaN else (sum / count).toFloat()
         indices[b] = (from + to - 1) / 2
     }
@@ -78,31 +89,34 @@ private fun seriesOf(track: RideTrack, metric: TrackMetric): Series {
 }
 
 @Composable
-private fun labelOf(metric: TrackMetric): String = stringResource(
-    when (metric) {
-        TrackMetric.ELEVATION -> R.string.chart_elevation
-        TrackMetric.SPEED -> R.string.chart_speed
-        TrackMetric.HEART_RATE -> R.string.chart_heart_rate
-        TrackMetric.CADENCE -> R.string.chart_cadence
-    }
-)
+private fun labelOf(metric: TrackMetric): String =
+    stringResource(
+        when (metric) {
+            TrackMetric.ELEVATION -> R.string.chart_elevation
+            TrackMetric.SPEED -> R.string.chart_speed
+            TrackMetric.HEART_RATE -> R.string.chart_heart_rate
+            TrackMetric.CADENCE -> R.string.chart_cadence
+        },
+    )
 
 @Composable
-private fun unitOf(metric: TrackMetric): String = stringResource(
-    when (metric) {
-        TrackMetric.ELEVATION -> R.string.unit_m
-        TrackMetric.SPEED -> R.string.unit_kmh
-        TrackMetric.HEART_RATE -> R.string.unit_bpm
-        TrackMetric.CADENCE -> R.string.unit_rpm
-    }
-)
+private fun unitOf(metric: TrackMetric): String =
+    stringResource(
+        when (metric) {
+            TrackMetric.ELEVATION -> R.string.unit_m
+            TrackMetric.SPEED -> R.string.unit_kmh
+            TrackMetric.HEART_RATE -> R.string.unit_bpm
+            TrackMetric.CADENCE -> R.string.unit_rpm
+        },
+    )
 
-private fun iconOf(metric: TrackMetric) = when (metric) {
-    TrackMetric.ELEVATION -> Icons.Rounded.Terrain
-    TrackMetric.SPEED -> Icons.Rounded.Speed
-    TrackMetric.HEART_RATE -> Icons.Rounded.Favorite
-    TrackMetric.CADENCE -> Icons.Rounded.Refresh
-}
+private fun iconOf(metric: TrackMetric) =
+    when (metric) {
+        TrackMetric.ELEVATION -> Icons.Rounded.Terrain
+        TrackMetric.SPEED -> Icons.Rounded.Speed
+        TrackMetric.HEART_RATE -> Icons.Rounded.Favorite
+        TrackMetric.CADENCE -> Icons.Rounded.Refresh
+    }
 
 /**
  * График величины вдоль заезда с переключателем и протяжкой пальцем.
@@ -183,10 +197,9 @@ fun RideChartCard(
                     ) { change, _ ->
                         onHighlight(indexAt(change.position.x, size.width, series))
                     }
-                }
-                .pointerInput(track, metric) {
+                }.pointerInput(track, metric) {
                     detectTapGestures { onHighlight(indexAt(it.x, size.width, series)) }
-                }
+                },
         ) {
             Canvas(Modifier.fillMaxWidth().height(168.dp)) {
                 if (!series.any) return@Canvas
@@ -200,6 +213,7 @@ fun RideChartCard(
                 val stepX = size.width / (series.values.size - 1).coerceAtLeast(1)
 
                 fun px(i: Int) = i * stepX
+
                 fun py(v: Float) = bottom - (v - lo) / (hi - lo) * (bottom - top) * reveal
 
                 repeat(3) { i ->
@@ -238,21 +252,23 @@ fun RideChartCard(
 
                 drawPath(
                     area,
-                    brush = Brush.verticalGradient(
-                        0f to scheme.primary.copy(alpha = 0.38f),
-                        1f to scheme.primary.copy(alpha = 0.02f),
-                        startY = top,
-                        endY = bottom,
-                    ),
+                    brush =
+                        Brush.verticalGradient(
+                            0f to scheme.primary.copy(alpha = 0.38f),
+                            1f to scheme.primary.copy(alpha = 0.02f),
+                            startY = top,
+                            endY = bottom,
+                        ),
                 )
                 drawPath(
                     line,
                     color = scheme.primary,
-                    style = Stroke(
-                        width = 3.dp.toPx(),
-                        cap = StrokeCap.Round,
-                        join = StrokeJoin.Round,
-                    ),
+                    style =
+                        Stroke(
+                            width = 3.dp.toPx(),
+                            cap = StrokeCap.Round,
+                            join = StrokeJoin.Round,
+                        ),
                 )
 
                 val at = highlight?.let { h -> series.indices.indexOfFirst { it >= h }.takeIf { it >= 0 } }
@@ -269,7 +285,6 @@ fun RideChartCard(
                     drawCircle(scheme.primary, 5.dp.toPx(), Offset(x, y))
                 }
             }
-
         }
 
         Spacer(Modifier.height(8.dp))
@@ -282,7 +297,7 @@ fun RideChartCard(
                 stringResource(
                     R.string.chart_axis_km,
                     String.format(locale, "%.1f", track.totalDistance / 1000),
-                )
+                ),
             )
         }
     }
@@ -297,9 +312,15 @@ private fun AxisLabel(text: String) {
     )
 }
 
-private fun indexAt(x: Float, widthPx: Int, series: Series): Int {
+private fun indexAt(
+    x: Float,
+    widthPx: Int,
+    series: Series,
+): Int {
     if (widthPx <= 0 || series.indices.isEmpty()) return 0
-    val bucket = (x / widthPx * (series.indices.size - 1)).roundToInt()
-        .coerceIn(0, series.indices.lastIndex)
+    val bucket =
+        (x / widthPx * (series.indices.size - 1))
+            .roundToInt()
+            .coerceIn(0, series.indices.lastIndex)
     return series.indices[bucket]
 }

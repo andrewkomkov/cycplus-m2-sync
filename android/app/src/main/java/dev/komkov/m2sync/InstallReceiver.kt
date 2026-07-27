@@ -13,12 +13,14 @@ import android.content.pm.PackageInstaller
  * остаётся только показать.
  */
 class InstallReceiver : BroadcastReceiver() {
-
     companion object {
         const val ACTION = "dev.komkov.m2sync.INSTALL_RESULT"
     }
 
-    override fun onReceive(ctx: Context, intent: Intent) {
+    override fun onReceive(
+        ctx: Context,
+        intent: Intent,
+    ) {
         LogBus.init(ctx)
         when (val status = intent.getIntExtra(PackageInstaller.EXTRA_STATUS, Int.MIN_VALUE)) {
             PackageInstaller.STATUS_PENDING_USER_ACTION -> {

@@ -53,22 +53,27 @@ class RideTrack(
     val hasRoute: Boolean get() = points.size >= 2 && bounds != null
 
     val maxSpeed: Double = points.maxOfOrNull { it.speedKmh } ?: 0.0
-    val avgSpeed: Double = run {
-        val moving = points.filter { it.speedKmh > 1.0 }
-        if (moving.isEmpty()) 0.0 else moving.sumOf { it.speedKmh } / moving.size
-    }
+    val avgSpeed: Double =
+        run {
+            val moving = points.filter { it.speedKmh > 1.0 }
+            if (moving.isEmpty()) 0.0 else moving.sumOf { it.speedKmh } / moving.size
+        }
     val maxHeartRate: Int? = points.mapNotNull { it.heartRate }.filter { it > 0 }.maxOrNull()
     val minAltitude: Double = points.minOfOrNull { it.altitude } ?: 0.0
     val maxAltitude: Double = points.maxOfOrNull { it.altitude } ?: 0.0
 
-    fun has(metric: TrackMetric): Boolean = when (metric) {
-        TrackMetric.ELEVATION -> maxAltitude - minAltitude > 1.0
-        TrackMetric.SPEED -> maxSpeed > 0.5
-        TrackMetric.HEART_RATE -> points.any { (it.heartRate ?: 0) > 0 }
-        TrackMetric.CADENCE -> points.any { (it.cadence ?: 0) > 0 }
-    }
+    fun has(metric: TrackMetric): Boolean =
+        when (metric) {
+            TrackMetric.ELEVATION -> maxAltitude - minAltitude > 1.0
+            TrackMetric.SPEED -> maxSpeed > 0.5
+            TrackMetric.HEART_RATE -> points.any { (it.heartRate ?: 0) > 0 }
+            TrackMetric.CADENCE -> points.any { (it.cadence ?: 0) > 0 }
+        }
 
-    fun valueAt(index: Int, metric: TrackMetric): Double? {
+    fun valueAt(
+        index: Int,
+        metric: TrackMetric,
+    ): Double? {
         val p = points.getOrNull(index) ?: return null
         return when (metric) {
             TrackMetric.ELEVATION -> p.altitude
@@ -111,7 +116,10 @@ class RideTrack(
         @Volatile
         private var cached: RideTrack? = null
 
-        suspend fun load(ctx: Context, summary: RideSummary): RideTrack? {
+        suspend fun load(
+            ctx: Context,
+            summary: RideSummary,
+        ): RideTrack? {
             cached?.takeIf { it.summary.file == summary.file }?.let { return it }
             return withContext(Dispatchers.Default) {
                 runCatching { build(summary, FitParser.parse(File(SyncService.fitDir(ctx), summary.file))) }
@@ -121,7 +129,10 @@ class RideTrack(
             }
         }
 
-        fun build(summary: RideSummary, ride: FitParser.Ride): RideTrack {
+        fun build(
+            summary: RideSummary,
+            ride: FitParser.Ride,
+        ): RideTrack {
             val raw = ride.points
             val origin = raw.firstOrNull { it.lat != null && it.lon != null }
             val points = ArrayList<TrackPoint>(raw.size)
@@ -141,18 +152,19 @@ class RideTrack(
                     // Дистанцию предпочитаем ту, что посчитал велокомпьютер: у
                     // него колесо, а у нас дрожащий GPS.
                     distance = p.distance ?: (distance + step)
-                    points += TrackPoint(
-                        lat = lat,
-                        lon = lon,
-                        x = x,
-                        y = y,
-                        altitude = p.altitude ?: prev?.altitude ?: 0.0,
-                        distance = distance,
-                        speedKmh = (p.speed ?: 0.0) * 3.6,
-                        heartRate = p.heartRate,
-                        cadence = p.cadence,
-                        elapsed = Duration.between(ride.start, p.time).seconds.coerceAtLeast(0),
-                    ).also { prev = it }
+                    points +=
+                        TrackPoint(
+                            lat = lat,
+                            lon = lon,
+                            x = x,
+                            y = y,
+                            altitude = p.altitude ?: prev?.altitude ?: 0.0,
+                            distance = distance,
+                            speedKmh = (p.speed ?: 0.0) * 3.6,
+                            heartRate = p.heartRate,
+                            cadence = p.cadence,
+                            elapsed = Duration.between(ride.start, p.time).seconds.coerceAtLeast(0),
+                        ).also { prev = it }
                 }
             }
 
@@ -182,7 +194,10 @@ class RideTrack(
                 var sum = 0.0
                 var n = 0
                 for (j in (i - half)..(i + half)) {
-                    points.getOrNull(j)?.let { sum += it.altitude; n++ }
+                    points.getOrNull(j)?.let {
+                        sum += it.altitude
+                        n++
+                    }
                 }
                 if (n == 0 || abs(sum / n - p.altitude) < 0.01) p else p.copy(altitude = sum / n)
             }

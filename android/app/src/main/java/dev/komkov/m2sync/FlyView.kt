@@ -9,8 +9,8 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,13 +28,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CenterFocusStrong
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Favorite
-import androidx.compose.material.icons.rounded.Map
 import androidx.compose.material.icons.rounded.LayersClear
+import androidx.compose.material.icons.rounded.Map
 import androidx.compose.material.icons.rounded.Pause
-import androidx.compose.material.icons.rounded.SatelliteAlt
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Replay
+import androidx.compose.material.icons.rounded.SatelliteAlt
 import androidx.compose.material.icons.rounded.Terrain
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
@@ -85,7 +85,11 @@ private val SPEEDS = listOf(1f, 2f, 4f)
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun FlyView(track: RideTrack, tiles: TileSource, onClose: () -> Unit) {
+fun FlyView(
+    track: RideTrack,
+    tiles: TileSource,
+    onClose: () -> Unit,
+) {
     val ctx = LocalContext.current
     val scheme = MaterialTheme.colorScheme
     val dark = isSystemInDarkTheme()
@@ -104,35 +108,45 @@ fun FlyView(track: RideTrack, tiles: TileSource, onClose: () -> Unit) {
 
     val total = track.totalDistance.toFloat().coerceAtLeast(1f)
 
-    val palette = remember(scheme, dark, layer) {
-        val satellite = layer == MapLayer.SATELLITE
-        // Над снимком тема уступает натуре: воздушная дымка в жизни голубовато-
-        // белая, и зелёный от Material You превращал бы Дунай в болото. Оттенок
-        // темы при этом остаётся — просто уведённый к нейтральному.
-        val haze = lerp(scheme.surface, scheme.primaryContainer, if (dark) 0.5f else 0.8f)
-            .let { if (satellite) lerp(it, Color(0xFFC6D8E8), 0.62f) else it }
+    val palette =
+        remember(scheme, dark, layer) {
+            val satellite = layer == MapLayer.SATELLITE
+            // Над снимком тема уступает натуре: воздушная дымка в жизни голубовато-
+            // белая, и зелёный от Material You превращал бы Дунай в болото. Оттенок
+            // темы при этом остаётся — просто уведённый к нейтральному.
+            val haze =
+                lerp(scheme.surface, scheme.primaryContainer, if (dark) 0.5f else 0.8f)
+                    .let { if (satellite) lerp(it, Color(0xFFC6D8E8), 0.62f) else it }
 
-        FlyPalette(
-            skyTop = if (dark) lerp(scheme.surfaceContainerLowest, Color.Black, 0.55f)
-            else lerp(scheme.surfaceContainerHighest, scheme.primary, 0.10f)
-                .let { if (satellite) lerp(it, Color(0xFF9FC0DC), 0.5f) else it },
-            skyHorizon = haze,
-            // Земля заметно темнее неба: иначе горизонт не читается, а дыра под
-            // камерой, где тайл выброшен, выглядит проплешиной.
-            ground = if (dark) lerp(scheme.surfaceContainerLowest, Color.Black, 0.45f)
-            else lerp(scheme.surfaceContainerHighest, scheme.onSurfaceVariant, 0.28f),
-            grid = scheme.primary.copy(alpha = if (dark) 0.24f else 0.32f),
-            slow = scheme.tertiary,
-            mid = scheme.secondary,
-            fast = scheme.primary,
-            marker = scheme.primary,
-            milestone = scheme.tertiary,
-            // Снимок и без дымки читается объёмным, а вот схема без неё
-            // выглядит наклеенной, поэтому туда её кладём щедрее.
-            fogAlpha = if (satellite) 0.42f else 0.7f,
-            fogSpan = if (satellite) 0.20f else 0.30f,
-        )
-    }
+            FlyPalette(
+                skyTop =
+                    if (dark) {
+                        lerp(scheme.surfaceContainerLowest, Color.Black, 0.55f)
+                    } else {
+                        lerp(scheme.surfaceContainerHighest, scheme.primary, 0.10f)
+                            .let { if (satellite) lerp(it, Color(0xFF9FC0DC), 0.5f) else it }
+                    },
+                skyHorizon = haze,
+                // Земля заметно темнее неба: иначе горизонт не читается, а дыра под
+                // камерой, где тайл выброшен, выглядит проплешиной.
+                ground =
+                    if (dark) {
+                        lerp(scheme.surfaceContainerLowest, Color.Black, 0.45f)
+                    } else {
+                        lerp(scheme.surfaceContainerHighest, scheme.onSurfaceVariant, 0.28f)
+                    },
+                grid = scheme.primary.copy(alpha = if (dark) 0.24f else 0.32f),
+                slow = scheme.tertiary,
+                mid = scheme.secondary,
+                fast = scheme.primary,
+                marker = scheme.primary,
+                milestone = scheme.tertiary,
+                // Снимок и без дымки читается объёмным, а вот схема без неё
+                // выглядит наклеенной, поэтому туда её кладём щедрее.
+                fogAlpha = if (satellite) 0.42f else 0.7f,
+                fogSpan = if (satellite) 0.20f else 0.30f,
+            )
+        }
     val paint = remember(dark, layer) { groundPaint(dark, layer) }
 
     LaunchedEffect(playing, rate, track) {
@@ -177,34 +191,36 @@ fun FlyView(track: RideTrack, tiles: TileSource, onClose: () -> Unit) {
                     // щипок и разворот двумя — приближают и облетают.
                     detectTransformGestures(panZoomLock = false) { _, pan, zoom, rotation ->
                         yaw -= pan.x * 0.004f + rotation * (Math.PI.toFloat() / 180f)
-                        heightScale = (heightScale - pan.y * 0.003f)
-                            .coerceIn(FLY_HEIGHT_MIN, FLY_HEIGHT_MAX)
-                        distanceScale = (distanceScale / zoom)
-                            .coerceIn(FLY_DISTANCE_MIN, FLY_DISTANCE_MAX)
+                        heightScale =
+                            (heightScale - pan.y * 0.003f)
+                                .coerceIn(FLY_HEIGHT_MIN, FLY_HEIGHT_MAX)
+                        distanceScale =
+                            (distanceScale / zoom)
+                                .coerceIn(FLY_DISTANCE_MIN, FLY_DISTANCE_MAX)
                     }
-                }
-                .pointerInput(track) {
+                }.pointerInput(track) {
                     detectTapGestures(
                         onDoubleTap = {
                             yaw = 0f
                             heightScale = 1f
                             distanceScale = 1f
-                        }
+                        },
                     )
-                }
+                },
         ) {
             if (size.width < 1f || size.height < 1f) return@Canvas
             drawFlyScene(
                 track = track,
-                camera = flyCamera(
-                    track = track,
-                    meters = meters.toDouble(),
-                    width = size.width,
-                    height = size.height,
-                    yaw = yaw,
-                    heightScale = heightScale,
-                    distanceScale = distanceScale,
-                ),
+                camera =
+                    flyCamera(
+                        track = track,
+                        meters = meters.toDouble(),
+                        width = size.width,
+                        height = size.height,
+                        yaw = yaw,
+                        heightScale = heightScale,
+                        distanceScale = distanceScale,
+                    ),
                 meters = meters.toDouble(),
                 tiles = tiles,
                 palette = palette,
@@ -226,7 +242,11 @@ fun FlyView(track: RideTrack, tiles: TileSource, onClose: () -> Unit) {
                 // «вернуть как было» — лишний орган управления.
                 AnimatedVisibility(moved, enter = fadeIn() + scaleIn(), exit = fadeOut() + scaleOut()) {
                     FilledTonalIconButton(
-                        onClick = { yaw = 0f; heightScale = 1f; distanceScale = 1f },
+                        onClick = {
+                            yaw = 0f
+                            heightScale = 1f
+                            distanceScale = 1f
+                        },
                         modifier = Modifier.padding(end = 8.dp),
                     ) {
                         Icon(Icons.Rounded.CenterFocusStrong, stringResource(R.string.cd_reset_view))
@@ -295,8 +315,7 @@ fun FlyView(track: RideTrack, tiles: TileSource, onClose: () -> Unit) {
                                 ) { change, _ ->
                                     meters = (change.position.x / size.width * total).coerceIn(0f, total)
                                 }
-                            }
-                            .pointerInput(track) {
+                            }.pointerInput(track) {
                                 detectTapGestures {
                                     meters = (it.x / size.width * total).coerceIn(0f, total)
                                 }
@@ -336,7 +355,10 @@ fun FlyView(track: RideTrack, tiles: TileSource, onClose: () -> Unit) {
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        IconButton(onClick = { meters = 0f; playing = true }) {
+                        IconButton(onClick = {
+                            meters = 0f
+                            playing = true
+                        }) {
                             Icon(Icons.Rounded.Replay, stringResource(R.string.cd_restart))
                         }
                         FilledIconButton(
@@ -375,14 +397,19 @@ fun FlyView(track: RideTrack, tiles: TileSource, onClose: () -> Unit) {
 
 /** Иконка кнопки подложки: она же показывает, что включено сейчас. */
 @Composable
-fun layerIcon(layer: MapLayer): ImageVector = when (layer) {
-    MapLayer.NONE -> Icons.Rounded.LayersClear
-    MapLayer.MAP -> Icons.Rounded.Map
-    MapLayer.SATELLITE -> Icons.Rounded.SatelliteAlt
-}
+fun layerIcon(layer: MapLayer): ImageVector =
+    when (layer) {
+        MapLayer.NONE -> Icons.Rounded.LayersClear
+        MapLayer.MAP -> Icons.Rounded.Map
+        MapLayer.SATELLITE -> Icons.Rounded.SatelliteAlt
+    }
 
 @Composable
-private fun FlyStat(icon: ImageVector, value: String, unit: String) {
+private fun FlyStat(
+    icon: ImageVector,
+    value: String,
+    unit: String,
+) {
     Row(verticalAlignment = Alignment.Bottom) {
         Icon(
             icon,
@@ -406,6 +433,9 @@ fun formatClock(seconds: Long): String {
     val h = seconds / 3600
     val m = (seconds % 3600) / 60
     val s = seconds % 60
-    return if (h > 0) String.format(Locale.US, "%d:%02d:%02d", h, m, s)
-    else String.format(Locale.US, "%d:%02d", m, s)
+    return if (h > 0) {
+        String.format(Locale.US, "%d:%02d:%02d", h, m, s)
+    } else {
+        String.format(Locale.US, "%d:%02d", m, s)
+    }
 }

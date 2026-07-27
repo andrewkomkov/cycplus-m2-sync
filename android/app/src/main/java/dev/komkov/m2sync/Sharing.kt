@@ -16,7 +16,6 @@ import java.util.Locale
  * копию вида 2026-07-24_10-30_40.99km_cycplus-m2.fit во временной папке.
  */
 object Sharing {
-
     private const val MIME = "application/vnd.ant.fit"
     private val stamp = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm", Locale.US)
 
@@ -28,7 +27,10 @@ object Sharing {
         return "${date}_${km}km_cycplus-m2.fit"
     }
 
-    private fun stageForSharing(ctx: Context, ride: RideSummary): Uri? {
+    private fun stageForSharing(
+        ctx: Context,
+        ride: RideSummary,
+    ): Uri? {
         val source = File(SyncService.fitDir(ctx), ride.file)
         if (!source.exists()) return null
         val outDir = File(ctx.cacheDir, "share").apply { mkdirs() }
@@ -39,31 +41,41 @@ object Sharing {
         return FileProvider.getUriForFile(ctx, authority(ctx), target)
     }
 
-    fun shareRide(ctx: Context, ride: RideSummary) {
+    fun shareRide(
+        ctx: Context,
+        ride: RideSummary,
+    ) {
         val uri = stageForSharing(ctx, ride) ?: return
-        val send = Intent(Intent.ACTION_SEND).apply {
-            type = MIME
-            putExtra(Intent.EXTRA_STREAM, uri)
-            putExtra(Intent.EXTRA_SUBJECT, prettyName(ride))
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
+        val send =
+            Intent(Intent.ACTION_SEND).apply {
+                type = MIME
+                putExtra(Intent.EXTRA_STREAM, uri)
+                putExtra(Intent.EXTRA_SUBJECT, prettyName(ride))
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
         ctx.startActivity(
-            Intent.createChooser(send, ctx.getString(R.string.share_ride))
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            Intent
+                .createChooser(send, ctx.getString(R.string.share_ride))
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
         )
     }
 
-    fun shareAll(ctx: Context, rides: List<RideSummary>) {
+    fun shareAll(
+        ctx: Context,
+        rides: List<RideSummary>,
+    ) {
         val uris = ArrayList<Uri>(rides.mapNotNull { stageForSharing(ctx, it) })
         if (uris.isEmpty()) return
-        val send = Intent(Intent.ACTION_SEND_MULTIPLE).apply {
-            type = MIME
-            putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
+        val send =
+            Intent(Intent.ACTION_SEND_MULTIPLE).apply {
+                type = MIME
+                putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
         ctx.startActivity(
-            Intent.createChooser(send, ctx.getString(R.string.share_all))
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            Intent
+                .createChooser(send, ctx.getString(R.string.share_all))
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
         )
     }
 }

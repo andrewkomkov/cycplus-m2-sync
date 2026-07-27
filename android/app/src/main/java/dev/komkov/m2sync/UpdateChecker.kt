@@ -14,7 +14,6 @@ import java.net.URL
  * и без отправки чего-либо о пользователе. Отключается в меню.
  */
 object UpdateChecker {
-
     const val REPO = "andrewkomkov/cycplus-m2-sync"
     private const val API = "https://api.github.com/repos/$REPO/releases/latest"
     const val RELEASES_URL = "https://github.com/$REPO/releases/latest"
@@ -43,41 +42,47 @@ object UpdateChecker {
     }
 
     /** Возвращает обновление, если на GitHub версия новее установленной. */
-    suspend fun check(ctx: Context, verbose: Boolean = true): Update? = withContext(Dispatchers.IO) {
-        try {
-            val json = fetch()
-            val tag = json.getString("tag_name").removePrefix("v")
-            val current = BuildConfig.VERSION_NAME
-            if (compareVersions(tag, current) <= 0) {
-                if (verbose) LogBus.i(R.string.log_update_none, current)
-                AppState.update.value = null
-                return@withContext null
+    suspend fun check(
+        ctx: Context,
+        verbose: Boolean = true,
+    ): Update? =
+        withContext(Dispatchers.IO) {
+            try {
+                val json = fetch()
+                val tag = json.getString("tag_name").removePrefix("v")
+                val current = BuildConfig.VERSION_NAME
+                if (compareVersions(tag, current) <= 0) {
+                    if (verbose) LogBus.i(R.string.log_update_none, current)
+                    AppState.update.value = null
+                    return@withContext null
+                }
+                val (apk, sha) = assets(json.optJSONArray("assets"))
+                val update =
+                    Update(
+                        version = tag,
+                        apkUrl = apk,
+                        pageUrl = json.optString("html_url", RELEASES_URL),
+                        notes = json.optString("body").takeIf { it.isNotBlank() },
+                        sha256Url = sha,
+                    )
+                LogBus.i(R.string.log_update_found, tag)
+                AppState.update.value = update
+                update
+            } catch (e: Exception) {
+                if (verbose) LogBus.e(R.string.log_update_failed, e)
+                null
             }
-            val (apk, sha) = assets(json.optJSONArray("assets"))
-            val update = Update(
-                version = tag,
-                apkUrl = apk,
-                pageUrl = json.optString("html_url", RELEASES_URL),
-                notes = json.optString("body").takeIf { it.isNotBlank() },
-                sha256Url = sha,
-            )
-            LogBus.i(R.string.log_update_found, tag)
-            AppState.update.value = update
-            update
-        } catch (e: Exception) {
-            if (verbose) LogBus.e(R.string.log_update_failed, e)
-            null
         }
-    }
 
     private fun fetch(): JSONObject {
-        val connection = (URL(API).openConnection() as HttpURLConnection).apply {
-            requestMethod = "GET"
-            connectTimeout = 10_000
-            readTimeout = 10_000
-            setRequestProperty("Accept", "application/vnd.github+json")
-            setRequestProperty("User-Agent", "m2sync/${BuildConfig.VERSION_NAME}")
-        }
+        val connection =
+            (URL(API).openConnection() as HttpURLConnection).apply {
+                requestMethod = "GET"
+                connectTimeout = 10_000
+                readTimeout = 10_000
+                setRequestProperty("Accept", "application/vnd.github+json")
+                setRequestProperty("User-Agent", "m2sync/${BuildConfig.VERSION_NAME}")
+            }
         try {
             val body = connection.inputStream.bufferedReader().use { it.readText() }
             return JSONObject(body)
@@ -111,7 +116,10 @@ object UpdateChecker {
     }
 
     /** Сравнение вида 1.10.0 против 1.9.3 по числам, а не по строкам. */
-    fun compareVersions(a: String, b: String): Int {
+    fun compareVersions(
+        a: String,
+        b: String,
+    ): Int {
         val left = a.split(".").map { it.takeWhile(Char::isDigit).toIntOrNull() ?: 0 }
         val right = b.split(".").map { it.takeWhile(Char::isDigit).toIntOrNull() ?: 0 }
         for (i in 0 until maxOf(left.size, right.size)) {

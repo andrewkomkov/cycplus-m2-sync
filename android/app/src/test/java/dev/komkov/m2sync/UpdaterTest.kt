@@ -8,21 +8,22 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
 class UpdaterTest {
-
     @get:Rule
     val folder = TemporaryFolder()
 
     // --- разбор файлов релиза ---
 
-    private fun assets(vararg names: String): JSONArray = JSONArray().apply {
-        names.forEach { name ->
-            put(
-                org.json.JSONObject()
-                    .put("name", name)
-                    .put("browser_download_url", "https://example.invalid/$name")
-            )
+    private fun assets(vararg names: String): JSONArray =
+        JSONArray().apply {
+            names.forEach { name ->
+                put(
+                    org.json
+                        .JSONObject()
+                        .put("name", name)
+                        .put("browser_download_url", "https://example.invalid/$name"),
+                )
+            }
         }
-    }
 
     @Test
     fun `apk and its checksum are picked out of the release`() {

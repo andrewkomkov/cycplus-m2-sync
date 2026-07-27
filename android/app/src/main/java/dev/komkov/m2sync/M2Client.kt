@@ -20,11 +20,20 @@ import kotlinx.coroutines.withTimeout
 import java.io.ByteArrayOutputStream
 import java.util.UUID
 
-class M2Error(message: String) : Exception(message)
+class M2Error(
+    message: String,
+) : Exception(message)
 
-data class FoundDevice(val name: String, val address: String, val rssi: Int)
+data class FoundDevice(
+    val name: String,
+    val address: String,
+    val rssi: Int,
+)
 
-data class DeviceFile(val name: String, val size: Int)
+data class DeviceFile(
+    val name: String,
+    val size: Int,
+)
 
 /**
  * Клиент велокомпьютера Cycplus M2 (и родственных XOSS) поверх Nordic UART Service.
@@ -34,8 +43,9 @@ data class DeviceFile(val name: String, val size: Int)
  * MTU 185, блок приходит одной нотификацией, на STATUS отвечает одним байтом 0x04.
  */
 @SuppressLint("MissingPermission")
-class M2Client(private val ctx: Context) {
-
+class M2Client(
+    private val ctx: Context,
+) {
     companion object {
         val SERVICE: UUID = UUID.fromString("6e400001-b5a3-f393-e0a9-e50e24dcca9e")
         val RX: UUID = UUID.fromString("6e400002-b5a3-f393-e0a9-e50e24dcca9e")
@@ -47,13 +57,13 @@ class M2Client(private val ctx: Context) {
         val FIRMWARE_REV: UUID = UUID.fromString("00002a26-0000-1000-8000-00805f9b34fb")
         private val CCCD: UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
 
-        private const val SOH: Byte = 0x01          // блок на 128 байт данных
-        private const val STX: Byte = 0x02          // блок на 1024 байта данных
+        private const val SOH: Byte = 0x01 // блок на 128 байт данных
+        private const val STX: Byte = 0x02 // блок на 1024 байта данных
         private const val ACK: Byte = 0x06
         private const val NAK: Byte = 0x15
         private const val EOT: Byte = 0x04
         private const val CAN: Byte = 0x18
-        private const val C: Byte = 0x43            // запрос начала передачи
+        private const val C: Byte = 0x43 // запрос начала передачи
 
         private val CMD_STATUS = byteArrayOf(0xFF.toByte(), 0x00, 0xFF.toByte())
         private val CMD_IDLE = byteArrayOf(0x04, 0x00, 0x04)
@@ -83,23 +93,32 @@ class M2Client(private val ctx: Context) {
 
     // ---------------------------------------------------------------- поиск
 
-    suspend fun scan(namePrefix: String, timeoutMs: Long = 15_000): List<FoundDevice> {
+    suspend fun scan(
+        namePrefix: String,
+        timeoutMs: Long = 15_000,
+    ): List<FoundDevice> {
         val scanner = adapter?.bluetoothLeScanner ?: throw M2Error("Bluetooth is off")
         val found = LinkedHashMap<String, FoundDevice>()
-        val cb = object : ScanCallback() {
-            override fun onScanResult(callbackType: Int, result: ScanResult) {
-                val name = result.device.name ?: result.scanRecord?.deviceName ?: return
-                if (!name.startsWith(namePrefix, ignoreCase = true)) return
-                if (found.put(name, FoundDevice(name, result.device.address, result.rssi)) == null) {
-                    LogBus.i(R.string.log_found, name, result.device.address, result.rssi)
+        val cb =
+            object : ScanCallback() {
+                override fun onScanResult(
+                    callbackType: Int,
+                    result: ScanResult,
+                ) {
+                    val name = result.device.name ?: result.scanRecord?.deviceName ?: return
+                    if (!name.startsWith(namePrefix, ignoreCase = true)) return
+                    if (found.put(name, FoundDevice(name, result.device.address, result.rssi)) == null) {
+                        LogBus.i(R.string.log_found, name, result.device.address, result.rssi)
+                    }
                 }
-            }
 
-            override fun onScanFailed(errorCode: Int) = LogBus.e(R.string.log_scan_failed, errorCode)
-        }
-        val settings = ScanSettings.Builder()
-            .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
-            .build()
+                override fun onScanFailed(errorCode: Int) = LogBus.e(R.string.log_scan_failed, errorCode)
+            }
+        val settings =
+            ScanSettings
+                .Builder()
+                .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+                .build()
         scanner.startScan(emptyList(), settings, cb)
         try {
             val deadline = System.currentTimeMillis() + timeoutMs
@@ -113,54 +132,83 @@ class M2Client(private val ctx: Context) {
 
     // ------------------------------------------------------------ соединение
 
-    private val callback = object : BluetoothGattCallback() {
-        override fun onConnectionStateChange(g: BluetoothGatt, status: Int, newState: Int) {
-            if (newState == BluetoothGatt.STATE_CONNECTED) {
-                if (!onConnected.isCompleted) onConnected.complete(Unit)
-            } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
-                if (!onConnected.isCompleted) onConnected.completeExceptionally(M2Error("connection lost, status $status"))
-                ctlIn.close(M2Error("device disconnected"))
-                txIn.close(M2Error("device disconnected"))
+    private val callback =
+        object : BluetoothGattCallback() {
+            override fun onConnectionStateChange(
+                g: BluetoothGatt,
+                status: Int,
+                newState: Int,
+            ) {
+                if (newState == BluetoothGatt.STATE_CONNECTED) {
+                    if (!onConnected.isCompleted) onConnected.complete(Unit)
+                } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
+                    if (!onConnected.isCompleted) onConnected.completeExceptionally(M2Error("connection lost, status $status"))
+                    ctlIn.close(M2Error("device disconnected"))
+                    txIn.close(M2Error("device disconnected"))
+                }
+            }
+
+            override fun onServicesDiscovered(
+                g: BluetoothGatt,
+                status: Int,
+            ) {
+                if (status == BluetoothGatt.GATT_SUCCESS) {
+                    onServices.complete(Unit)
+                } else {
+                    onServices.completeExceptionally(M2Error("service discovery failed, status $status"))
+                }
+            }
+
+            override fun onMtuChanged(
+                g: BluetoothGatt,
+                mtuValue: Int,
+                status: Int,
+            ) {
+                mtu = mtuValue
+                if (!onMtu.isCompleted) onMtu.complete(mtuValue)
+            }
+
+            override fun onCharacteristicWrite(
+                g: BluetoothGatt,
+                ch: BluetoothGattCharacteristic,
+                status: Int,
+            ) {
+                if (!onWrite.isCompleted) onWrite.complete(Unit)
+            }
+
+            override fun onDescriptorWrite(
+                g: BluetoothGatt,
+                d: BluetoothGattDescriptor,
+                status: Int,
+            ) {
+                if (!onDescriptor.isCompleted) onDescriptor.complete(Unit)
+            }
+
+            override fun onCharacteristicRead(
+                g: BluetoothGatt,
+                ch: BluetoothGattCharacteristic,
+                value: ByteArray,
+                status: Int,
+            ) {
+                if (!onRead.isCompleted) onRead.complete(value)
+            }
+
+            override fun onCharacteristicChanged(
+                g: BluetoothGatt,
+                ch: BluetoothGattCharacteristic,
+                value: ByteArray,
+            ) {
+                when (ch.uuid) {
+                    CTL -> ctlIn.trySend(value.copyOf())
+                    TX -> txIn.trySend(value.copyOf())
+                }
             }
         }
-
-        override fun onServicesDiscovered(g: BluetoothGatt, status: Int) {
-            if (status == BluetoothGatt.GATT_SUCCESS) onServices.complete(Unit)
-            else onServices.completeExceptionally(M2Error("service discovery failed, status $status"))
-        }
-
-        override fun onMtuChanged(g: BluetoothGatt, mtuValue: Int, status: Int) {
-            mtu = mtuValue
-            if (!onMtu.isCompleted) onMtu.complete(mtuValue)
-        }
-
-        override fun onCharacteristicWrite(g: BluetoothGatt, ch: BluetoothGattCharacteristic, status: Int) {
-            if (!onWrite.isCompleted) onWrite.complete(Unit)
-        }
-
-        override fun onDescriptorWrite(g: BluetoothGatt, d: BluetoothGattDescriptor, status: Int) {
-            if (!onDescriptor.isCompleted) onDescriptor.complete(Unit)
-        }
-
-        override fun onCharacteristicRead(
-            g: BluetoothGatt, ch: BluetoothGattCharacteristic, value: ByteArray, status: Int
-        ) {
-            if (!onRead.isCompleted) onRead.complete(value)
-        }
-
-        override fun onCharacteristicChanged(
-            g: BluetoothGatt, ch: BluetoothGattCharacteristic, value: ByteArray
-        ) {
-            when (ch.uuid) {
-                CTL -> ctlIn.trySend(value.copyOf())
-                TX -> txIn.trySend(value.copyOf())
-            }
-        }
-    }
 
     suspend fun connect(address: String) {
-        val device: BluetoothDevice = adapter?.getRemoteDevice(address)
-            ?: throw M2Error("no Bluetooth adapter")
+        val device: BluetoothDevice =
+            adapter?.getRemoteDevice(address)
+                ?: throw M2Error("no Bluetooth adapter")
         onConnected = CompletableDeferred()
         onServices = CompletableDeferred()
         onMtu = CompletableDeferred()
@@ -169,7 +217,10 @@ class M2Client(private val ctx: Context) {
         withTimeout(30_000) { onConnected.await() }
         LogBus.i(R.string.log_connected, address)
 
-        withTimeout(10_000) { gatt!!.requestMtu(247); onMtu.await() }
+        withTimeout(10_000) {
+            gatt!!.requestMtu(247)
+            onMtu.await()
+        }
         LogBus.i(R.string.log_mtu, mtu)
 
         gatt!!.discoverServices()
@@ -188,8 +239,9 @@ class M2Client(private val ctx: Context) {
 
     private suspend fun enableNotify(uuid: UUID) {
         val g = gatt ?: throw M2Error("not connected")
-        val ch = g.getService(SERVICE)?.getCharacteristic(uuid)
-            ?: throw M2Error("characteristic $uuid not found")
+        val ch =
+            g.getService(SERVICE)?.getCharacteristic(uuid)
+                ?: throw M2Error("characteristic $uuid not found")
         g.setCharacteristicNotification(ch, true)
         val cccd = ch.getDescriptor(CCCD) ?: throw M2Error("no CCCD on $uuid")
         onDescriptor = CompletableDeferred()
@@ -197,26 +249,32 @@ class M2Client(private val ctx: Context) {
         withTimeout(5_000) { onDescriptor.await() }
     }
 
-    suspend fun readBattery(): Int? = runCatching {
-        val ch = gatt?.getService(BATTERY_SERVICE)?.getCharacteristic(BATTERY_LEVEL) ?: return null
-        onRead = CompletableDeferred()
-        gatt!!.readCharacteristic(ch)
-        withTimeout(5_000) { onRead.await() }.first().toInt() and 0xFF
-    }.getOrNull()
+    suspend fun readBattery(): Int? =
+        runCatching {
+            val ch = gatt?.getService(BATTERY_SERVICE)?.getCharacteristic(BATTERY_LEVEL) ?: return null
+            onRead = CompletableDeferred()
+            gatt!!.readCharacteristic(ch)
+            withTimeout(5_000) { onRead.await() }.first().toInt() and 0xFF
+        }.getOrNull()
 
-    suspend fun readFirmware(): String? = runCatching {
-        val ch = gatt?.getService(DEVICE_INFO)?.getCharacteristic(FIRMWARE_REV) ?: return null
-        onRead = CompletableDeferred()
-        gatt!!.readCharacteristic(ch)
-        String(withTimeout(5_000) { onRead.await() }).trim()
-    }.getOrNull()
+    suspend fun readFirmware(): String? =
+        runCatching {
+            val ch = gatt?.getService(DEVICE_INFO)?.getCharacteristic(FIRMWARE_REV) ?: return null
+            onRead = CompletableDeferred()
+            gatt!!.readCharacteristic(ch)
+            String(withTimeout(5_000) { onRead.await() }).trim()
+        }.getOrNull()
 
     // -------------------------------------------------------------- команды
 
-    private suspend fun write(uuid: UUID, value: ByteArray) = opLock.withLock {
+    private suspend fun write(
+        uuid: UUID,
+        value: ByteArray,
+    ) = opLock.withLock {
         val g = gatt ?: throw M2Error("not connected")
-        val ch = g.getService(SERVICE)?.getCharacteristic(uuid)
-            ?: throw M2Error("characteristic $uuid not found")
+        val ch =
+            g.getService(SERVICE)?.getCharacteristic(uuid)
+                ?: throw M2Error("characteristic $uuid not found")
         onWrite = CompletableDeferred()
         val rc = g.writeCharacteristic(ch, value, BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE)
         if (rc != BluetoothGatt.GATT_SUCCESS) throw M2Error("write rejected, code $rc")
@@ -225,13 +283,16 @@ class M2Client(private val ctx: Context) {
     }
 
     private suspend fun ctl(value: ByteArray) = write(CTL, value)
+
     private suspend fun rx(b: Byte) = write(RX, byteArrayOf(b))
 
-    private suspend fun awaitCtl(timeoutMs: Long = 5_000): ByteArray =
-        withTimeout(timeoutMs) { ctlIn.receive() }
+    private suspend fun awaitCtl(timeoutMs: Long = 5_000): ByteArray = withTimeout(timeoutMs) { ctlIn.receive() }
 
     /** Команда вида [код][имя файла][crc8-xor]. */
-    private fun command(code: Byte, name: String): ByteArray {
+    private fun command(
+        code: Byte,
+        name: String,
+    ): ByteArray {
         val body = byteArrayOf(code) + name.toByteArray() + byteArrayOf(0)
         body[body.size - 1] = crc8Xor(body)
         return body
@@ -244,8 +305,9 @@ class M2Client(private val ctx: Context) {
         // M2 отвечает одним байтом 0x04, XOSS G+ — тремя (04 00 04)
         if (rsp != null && (rsp.contentEquals(CMD_IDLE) || (rsp.size == 1 && rsp[0] == EOT))) return
         ctl(CMD_IDLE)
-        val again = runCatching { awaitCtl(3_000) }.getOrNull()
-            ?: throw M2Error("no answer to STATUS")
+        val again =
+            runCatching { awaitCtl(3_000) }.getOrNull()
+                ?: throw M2Error("no answer to STATUS")
         if (!(again.contentEquals(CMD_IDLE) || (again.size == 1 && again[0] == EOT))) {
             throw M2Error("device not idle: ${again.toHex()}")
         }
@@ -262,7 +324,11 @@ class M2Client(private val ctx: Context) {
     // --------------------------------------------------------- приём файлов
 
     private sealed interface Block {
-        data class Data(val num: Int, val payload: ByteArray) : Block
+        data class Data(
+            val num: Int,
+            val payload: ByteArray,
+        ) : Block
+
         data object End : Block
     }
 
@@ -298,23 +364,28 @@ class M2Client(private val ctx: Context) {
         rx(C)
         val header = readBlock() as? Block.Data ?: throw M2Error("no file header")
         val headerText = String(header.payload).trimEnd(' ').trim()
-        val expected = headerText.split(" ").getOrNull(1)?.toIntOrNull()
-            ?: throw M2Error("could not parse header: $headerText")
+        val expected =
+            headerText.split(" ").getOrNull(1)?.toIntOrNull()
+                ?: throw M2Error("could not parse header: $headerText")
 
         rx(ACK)
         rx(C)
 
         val out = ByteArrayOutputStream(expected)
         while (true) {
-            val block = try {
-                readBlock()
-            } catch (e: M2Error) {
-                LogBus.e(R.string.log_block_retry, e)
-                rx(NAK)
-                continue
-            }
+            val block =
+                try {
+                    readBlock()
+                } catch (e: M2Error) {
+                    LogBus.e(R.string.log_block_retry, e)
+                    rx(NAK)
+                    continue
+                }
             when (block) {
-                is Block.End -> break
+                is Block.End -> {
+                    break
+                }
+
                 is Block.Data -> {
                     out.write(block.payload)
                     rx(ACK)
@@ -335,12 +406,14 @@ class M2Client(private val ctx: Context) {
 
     suspend fun listFiles(): List<DeviceFile> {
         val raw = String(fetchFile(FILELIST))
-        return raw.lineSequence().mapNotNull { line ->
-            val parts = line.trim().split(" ")
-            val name = parts.getOrNull(0) ?: return@mapNotNull null
-            if (!name.endsWith(".fit")) return@mapNotNull null
-            DeviceFile(name, parts.getOrNull(1)?.toIntOrNull() ?: 0)
-        }.toList()
+        return raw
+            .lineSequence()
+            .mapNotNull { line ->
+                val parts = line.trim().split(" ")
+                val name = parts.getOrNull(0) ?: return@mapNotNull null
+                if (!name.endsWith(".fit")) return@mapNotNull null
+                DeviceFile(name, parts.getOrNull(1)?.toIntOrNull() ?: 0)
+            }.toList()
     }
 
     // ----------------------------------------------------------------- CRC

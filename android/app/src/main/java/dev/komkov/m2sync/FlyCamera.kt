@@ -7,11 +7,19 @@ import kotlin.math.sqrt
 import kotlin.math.tan
 
 /** Точка в локальных метрах: восток, север, высота. */
-data class Vec3(val x: Double, val y: Double, val z: Double) {
+data class Vec3(
+    val x: Double,
+    val y: Double,
+    val z: Double,
+) {
     operator fun minus(o: Vec3) = Vec3(x - o.x, y - o.y, z - o.z)
+
     operator fun plus(o: Vec3) = Vec3(x + o.x, y + o.y, z + o.z)
+
     operator fun times(k: Double) = Vec3(x * k, y * k, z * k)
+
     fun dot(o: Vec3) = x * o.x + y * o.y + z * o.z
+
     fun cross(o: Vec3) = Vec3(y * o.z - z * o.y, z * o.x - x * o.z, x * o.y - y * o.x)
 
     fun normalized(): Vec3 {
@@ -47,14 +55,18 @@ class FlyCamera(
     private val focal: Double = (widthPx / 2.0) / tan(Math.toRadians(fovDegrees / 2))
 
     /** Экранный Y бесконечно далёкой земли. Ниже него — земля, выше — небо. */
-    val horizonY: Float = run {
-        val ahead = Vec3(forward.x, forward.y, 0.0).normalized()
-        val vz = ahead.dot(forward)
-        if (vz <= 1e-6) -heightPx else (heightPx / 2 - focal * ahead.dot(up) / vz).toFloat()
-    }
+    val horizonY: Float =
+        run {
+            val ahead = Vec3(forward.x, forward.y, 0.0).normalized()
+            val vz = ahead.dot(forward)
+            if (vz <= 1e-6) -heightPx else (heightPx / 2 - focal * ahead.dot(up) / vz).toFloat()
+        }
 
     /** null, если точка за ближней плоскостью и рисовать её нельзя. */
-    fun project(p: Vec3, near: Double = NEAR): Offset? {
+    fun project(
+        p: Vec3,
+        near: Double = NEAR,
+    ): Offset? {
         val d = p - eye
         val vz = d.dot(forward)
         if (vz < near) return null
@@ -65,7 +77,10 @@ class FlyCamera(
     }
 
     /** Сколько экранных пикселей занимает [meters] метров на глубине точки [p]. */
-    fun pixelsPerMeter(p: Vec3, meters: Double = 1.0): Float {
+    fun pixelsPerMeter(
+        p: Vec3,
+        meters: Double = 1.0,
+    ): Float {
         val vz = (p - eye).dot(forward)
         if (vz < NEAR) return 0f
         return (focal * meters / vz).toFloat()
@@ -75,7 +90,10 @@ class FlyCamera(
      * Отрезок, обрезанный по ближней плоскости. Нужен линиям сетки: они уходят
      * за спину, и без обрезки половина сетки просто пропадала бы.
      */
-    fun segment(a: Vec3, b: Vec3): Pair<Offset, Offset>? {
+    fun segment(
+        a: Vec3,
+        b: Vec3,
+    ): Pair<Offset, Offset>? {
         val za = (a - eye).dot(forward)
         val zb = (b - eye).dot(forward)
         if (za < NEAR && zb < NEAR) return null

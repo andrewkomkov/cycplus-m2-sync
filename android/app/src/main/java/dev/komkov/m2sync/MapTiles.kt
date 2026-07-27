@@ -28,7 +28,9 @@ import java.net.URL
  * Растровый тайл. Плоской карте нужен [image], полёту — [bitmap]: перспективу
  * землю натягивает `drawBitmapMesh`, а он работает только с андроидным Bitmap.
  */
-class MapTile(val bitmap: Bitmap) {
+class MapTile(
+    val bitmap: Bitmap,
+) {
     val image: ImageBitmap by lazy { bitmap.asImageBitmap() }
 }
 
@@ -58,17 +60,23 @@ enum class MapLayer(
         "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
         "Esri, Maxar, Earthstar Geographics",
         R.string.layer_satellite,
-    );
+    ),
+    ;
 
     val enabled: Boolean get() = url != null
 
     /** Следующая по кругу: одной кнопкой перебираем все три состояния. */
     fun next(): MapLayer = entries[(ordinal + 1) % entries.size]
 
-    fun urlOf(z: Int, x: Int, y: Int): String? = url
-        ?.replace("{z}", z.toString())
-        ?.replace("{x}", x.toString())
-        ?.replace("{y}", y.toString())
+    fun urlOf(
+        z: Int,
+        x: Int,
+        y: Int,
+    ): String? =
+        url
+            ?.replace("{z}", z.toString())
+            ?.replace("{x}", x.toString())
+            ?.replace("{y}", y.toString())
 }
 
 /**
@@ -97,14 +105,18 @@ class TileSource(
         /** Потолок прогрева: длинный заезд иначе утянет сотни мегабайт. */
         const val PREFETCH_LIMIT = 700
 
-        fun key(layer: MapLayer, z: Int, x: Int, y: Int): Long =
-            (layer.ordinal.toLong() shl 49) or (z.toLong() shl 44) or (x.toLong() shl 22) or y.toLong()
+        fun key(
+            layer: MapLayer,
+            z: Int,
+            x: Int,
+            y: Int,
+        ): Long = (layer.ordinal.toLong() shl 49) or (z.toLong() shl 44) or (x.toLong() shl 22) or y.toLong()
     }
 
-    private val memory = object : LinkedHashMap<Long, MapTile>(MEMORY_TILES, 0.75f, true) {
-        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Long, MapTile>) =
-            size > MEMORY_TILES
-    }
+    private val memory =
+        object : LinkedHashMap<Long, MapTile>(MEMORY_TILES, 0.75f, true) {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Long, MapTile>) = size > MEMORY_TILES
+        }
     private val pending = HashSet<Long>()
 
     /** Что не доехало — не просим повторно: без сети это был бы вечный цикл. */
@@ -119,7 +131,12 @@ class TileSource(
         private set
 
     /** Готовый тайл или null — тогда он поехал загружаться и придёт позже. */
-    fun tile(layer: MapLayer, z: Int, x: Int, y: Int): MapTile? {
+    fun tile(
+        layer: MapLayer,
+        z: Int,
+        x: Int,
+        y: Int,
+    ): MapTile? {
         if (!layer.enabled) return null
         val span = 1 shl z
         if (z < GeoBounds.MIN_ZOOM || z > GeoBounds.MAX_ZOOM) return null
@@ -137,7 +154,11 @@ class TileSource(
      * успевает: впереди зияют дыры. Прогрев идёт в порядке движения, так что
      * начало заезда готово раньше, чем до него долетели.
      */
-    fun prefetch(layer: MapLayer, z: Int, tiles: List<Long>) {
+    fun prefetch(
+        layer: MapLayer,
+        z: Int,
+        tiles: List<Long>,
+    ) {
         if (!layer.enabled) return
         scope.launch {
             for (packed in tiles.take(PREFETCH_LIMIT)) {
@@ -150,16 +171,24 @@ class TileSource(
         }
     }
 
-    private suspend fun load(layer: MapLayer, key: Long, z: Int, x: Int, y: Int) {
-        val bitmap = withContext(Dispatchers.IO) {
-            val file = File(ctx.cacheDir, "tiles/${layer.name.lowercase()}/$z/$x/$y.png")
-            val bytes = if (file.isFile) {
-                runCatching { file.readBytes() }.getOrNull()
-            } else {
-                gate.withPermit { download(layer, z, x, y, file) }
+    private suspend fun load(
+        layer: MapLayer,
+        key: Long,
+        z: Int,
+        x: Int,
+        y: Int,
+    ) {
+        val bitmap =
+            withContext(Dispatchers.IO) {
+                val file = File(ctx.cacheDir, "tiles/${layer.name.lowercase()}/$z/$x/$y.png")
+                val bytes =
+                    if (file.isFile) {
+                        runCatching { file.readBytes() }.getOrNull()
+                    } else {
+                        gate.withPermit { download(layer, z, x, y, file) }
+                    }
+                bytes?.let { runCatching { BitmapFactory.decodeByteArray(it, 0, it.size) }.getOrNull() }
             }
-            bytes?.let { runCatching { BitmapFactory.decodeByteArray(it, 0, it.size) }.getOrNull() }
-        }
         pending.remove(key)
         if (bitmap == null) {
             failed += key
@@ -169,23 +198,31 @@ class TileSource(
         }
     }
 
-    private fun download(layer: MapLayer, z: Int, x: Int, y: Int, target: File): ByteArray? = runCatching {
-        val address = layer.urlOf(z, x, y) ?: return null
-        val connection = (URL(address).openConnection() as HttpURLConnection).apply {
-            requestMethod = "GET"
-            connectTimeout = 8_000
-            readTimeout = 8_000
-            setRequestProperty("User-Agent", USER_AGENT)
-        }
-        try {
-            val bytes = connection.inputStream.use { it.readBytes() }
-            target.parentFile?.mkdirs()
-            runCatching { target.writeBytes(bytes) }
-            bytes
-        } finally {
-            connection.disconnect()
-        }
-    }.getOrNull()
+    private fun download(
+        layer: MapLayer,
+        z: Int,
+        x: Int,
+        y: Int,
+        target: File,
+    ): ByteArray? =
+        runCatching {
+            val address = layer.urlOf(z, x, y) ?: return null
+            val connection =
+                (URL(address).openConnection() as HttpURLConnection).apply {
+                    requestMethod = "GET"
+                    connectTimeout = 8_000
+                    readTimeout = 8_000
+                    setRequestProperty("User-Agent", USER_AGENT)
+                }
+            try {
+                val bytes = connection.inputStream.use { it.readBytes() }
+                target.parentFile?.mkdirs()
+                runCatching { target.writeBytes(bytes) }
+                bytes
+            } finally {
+                connection.disconnect()
+            }
+        }.getOrNull()
 }
 
 @Composable
@@ -212,15 +249,26 @@ inline fun forEachTile(
     val span = 1 shl z
     val x0 = kotlin.math.floor(minTileX).toInt()
     val x1 = kotlin.math.floor(maxTileX).toInt()
-    val y0 = kotlin.math.floor(minTileY).toInt().coerceAtLeast(0)
-    val y1 = kotlin.math.floor(maxTileY).toInt().coerceAtMost(span - 1)
+    val y0 =
+        kotlin.math
+            .floor(minTileY)
+            .toInt()
+            .coerceAtLeast(0)
+    val y1 =
+        kotlin.math
+            .floor(maxTileY)
+            .toInt()
+            .coerceAtMost(span - 1)
     for (ty in y0..y1) {
         for (tx in x0..x1) body(tx, ty)
     }
 }
 
 /** По долготе мир заворачивается: тайл −1 на зуме 4 — это тайл 15. */
-fun wrapTileX(x: Int, z: Int): Int {
+fun wrapTileX(
+    x: Int,
+    z: Int,
+): Int {
     val span = 1 shl z
     return ((x % span) + span) % span
 }
@@ -232,7 +280,11 @@ fun wrapTileX(x: Int, z: Int): Int {
  * и одной ниткой вдоль трека кадр не закрыть. Номера пакуются в Long, чтобы
  * список из сотен пар не плодил объектов.
  */
-fun routeTiles(track: RideTrack, zoom: Int, ring: Int = 1): List<Long> {
+fun routeTiles(
+    track: RideTrack,
+    zoom: Int,
+    ring: Int = 1,
+): List<Long> {
     val seen = LinkedHashSet<Long>()
     for (p in track.points) {
         val tx = Geo.tileX(p.lon, zoom).toInt()

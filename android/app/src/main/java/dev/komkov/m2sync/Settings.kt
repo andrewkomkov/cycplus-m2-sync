@@ -41,7 +41,8 @@ object Settings {
         // До появления спутника подложка была простым тумблером — переносим
         // старое значение, чтобы выключенная карта не включилась сама.
         val legacy = if (p.getBoolean(KEY_MAP_TILES, true)) MapLayer.MAP else MapLayer.NONE
-        mapLayer.value = p.getString(KEY_MAP_LAYER, null)
+        mapLayer.value = p
+            .getString(KEY_MAP_LAYER, null)
             ?.let { name -> MapLayer.entries.firstOrNull { it.name == name } }
             ?: legacy
         birthYear.value = p.getInt(KEY_BIRTH_YEAR, 0).takeIf { it > 0 }
@@ -51,31 +52,55 @@ object Settings {
     /** Ручной ввод — запасной путь, когда в медкарте Health Connect пусто. */
     fun profile(): Calories.Profile = Calories.Profile(birthYear.value, sex.value)
 
-    fun setProfile(ctx: Context, year: Int?, value: Calories.Sex?) {
+    fun setProfile(
+        ctx: Context,
+        year: Int?,
+        value: Calories.Sex?,
+    ) {
         birthYear.value = year
         sex.value = value
-        ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+        ctx
+            .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit()
             .putInt(KEY_BIRTH_YEAR, year ?: 0)
             .putString(KEY_SEX, value?.name)
             .apply()
     }
 
-    fun setAutoSync(ctx: Context, enabled: Boolean) {
+    fun setAutoSync(
+        ctx: Context,
+        enabled: Boolean,
+    ) {
         autoSync.value = enabled
-        ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-            .putBoolean(KEY_AUTO_SYNC, enabled).apply()
+        ctx
+            .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit()
+            .putBoolean(KEY_AUTO_SYNC, enabled)
+            .apply()
     }
 
-    fun setMapLayer(ctx: Context, layer: MapLayer) {
+    fun setMapLayer(
+        ctx: Context,
+        layer: MapLayer,
+    ) {
         mapLayer.value = layer
-        ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-            .putString(KEY_MAP_LAYER, layer.name).apply()
+        ctx
+            .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit()
+            .putString(KEY_MAP_LAYER, layer.name)
+            .apply()
     }
 
-    fun setAutoUpdate(ctx: Context, enabled: Boolean) {
+    fun setAutoUpdate(
+        ctx: Context,
+        enabled: Boolean,
+    ) {
         autoUpdate.value = enabled
-        ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-            .putBoolean(KEY_AUTO_UPDATE, enabled).apply()
+        ctx
+            .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit()
+            .putBoolean(KEY_AUTO_UPDATE, enabled)
+            .apply()
         if (!enabled) AppState.update.value = null
     }
 }

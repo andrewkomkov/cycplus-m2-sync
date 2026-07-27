@@ -7,13 +7,14 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class FlyCameraTest {
-
     private val width = 1080f
     private val height = 2400f
 
     /** Камера в начале координат смотрит строго на восток. */
-    private fun camera(eye: Vec3 = Vec3(0.0, 0.0, 0.0), target: Vec3 = Vec3(100.0, 0.0, 0.0)) =
-        FlyCamera(eye, target, width, height)
+    private fun camera(
+        eye: Vec3 = Vec3(0.0, 0.0, 0.0),
+        target: Vec3 = Vec3(100.0, 0.0, 0.0),
+    ) = FlyCamera(eye, target, width, height)
 
     @Test
     fun `a point straight ahead lands in the centre of the frame`() {
@@ -98,20 +99,21 @@ class FlyCameraTest {
     // --- ход по треку ---
 
     private fun track(): RideTrack {
-        val points = (0..100).map { i ->
-            TrackPoint(
-                lat = 60.0 + i * 1e-4,
-                lon = 30.0,
-                x = 0.0,
-                y = i * 10.0,
-                altitude = 100.0 + i,
-                distance = i * 10.0,
-                speedKmh = 20.0,
-                heartRate = 130,
-                cadence = 70,
-                elapsed = i.toLong(),
-            )
-        }
+        val points =
+            (0..100).map { i ->
+                TrackPoint(
+                    lat = 60.0 + i * 1e-4,
+                    lon = 30.0,
+                    x = 0.0,
+                    y = i * 10.0,
+                    altitude = 100.0 + i,
+                    distance = i * 10.0,
+                    speedKmh = 20.0,
+                    heartRate = 130,
+                    cadence = 70,
+                    elapsed = i.toLong(),
+                )
+            }
         return RideTrack(
             summary = summary(),
             points = points,
@@ -124,19 +126,20 @@ class FlyCameraTest {
         )
     }
 
-    private fun summary() = RideSummary(
-        file = "t.fit",
-        start = java.time.Instant.parse("2026-07-25T10:00:00Z"),
-        distanceM = 1000.0,
-        elapsedMin = 2,
-        movingMin = 2,
-        avgHeartRate = 130,
-        avgCadence = 70,
-        ascent = 100,
-        points = 101,
-        hasRoute = true,
-        imported = false,
-    )
+    private fun summary() =
+        RideSummary(
+            file = "t.fit",
+            start = java.time.Instant.parse("2026-07-25T10:00:00Z"),
+            distanceM = 1000.0,
+            elapsedMin = 2,
+            movingMin = 2,
+            avgHeartRate = 130,
+            avgCadence = 70,
+            ascent = 100,
+            points = 101,
+            hasRoute = true,
+            imported = false,
+        )
 
     @Test
     fun `pose interpolates between recorded points`() {

@@ -29,15 +29,15 @@ import java.time.Instant
  */
 @RunWith(RobolectricTestRunner::class)
 class UiTest {
-
     @get:Rule
     val compose = createAndroidComposeRule<ComponentActivity>()
 
-    private fun string(id: Int, vararg args: Any): String =
-        compose.activity.getString(id, *args)
+    private fun string(
+        id: Int,
+        vararg args: Any,
+    ): String = compose.activity.getString(id, *args)
 
-    private fun setContent(content: @Composable () -> Unit) =
-        compose.setContent { M2Theme { content() } }
+    private fun setContent(content: @Composable () -> Unit) = compose.setContent { M2Theme { content() } }
 
     private fun ride(
         file: String = "20260725102049.fit",
@@ -195,10 +195,11 @@ class UiTest {
 
     @Test
     fun `rides list renders every ride and the header`() {
-        val rides = listOf(
-            ride(file = "a.fit", distanceM = 7350.0),
-            ride(file = "b.fit", distanceM = 40990.0),
-        )
+        val rides =
+            listOf(
+                ride(file = "a.fit", distanceM = 7350.0),
+                ride(file = "b.fit", distanceM = 40990.0),
+            )
         setContent {
             RidesList(
                 rides = rides,
@@ -237,17 +238,18 @@ class UiTest {
 
     @Test
     fun `totals row sums distance moving time and imported rides`() {
-        val rides = listOf(
-            ride(file = "a.fit", distanceM = 23_000.0, movingMin = 60, imported = true),
-            ride(file = "b.fit", distanceM = 40_990.0, movingMin = 120, imported = false),
-        )
+        val rides =
+            listOf(
+                ride(file = "a.fit", distanceM = 23_000.0, movingMin = 60, imported = true),
+                ride(file = "b.fit", distanceM = 40_990.0, movingMin = 120, imported = false),
+            )
         setContent { TotalsRow(rides) }
 
         compose.onNodeWithText(string(R.string.stat_rides)).assertExists()
-        compose.onNodeWithText("2").assertExists()   // заездов
-        compose.onNodeWithText("64").assertExists()  // километров, округление вниз до целого
+        compose.onNodeWithText("2").assertExists() // заездов
+        compose.onNodeWithText("64").assertExists() // километров, округление вниз до целого
         compose.onNodeWithText("3.0").assertExists() // часов в движении
-        compose.onNodeWithText("1").assertExists()   // доехало до Health Connect
+        compose.onNodeWithText("1").assertExists() // доехало до Health Connect
     }
 
     // --- вес ---
@@ -399,12 +401,13 @@ class UiTest {
         var downloaded = false
         setContent {
             UpdateCard(
-                update = UpdateChecker.Update(
-                    version = "0.9.9",
-                    apkUrl = "https://example.invalid/app.apk",
-                    pageUrl = "https://example.invalid/releases",
-                    notes = null,
-                ),
+                update =
+                    UpdateChecker.Update(
+                        version = "0.9.9",
+                        apkUrl = "https://example.invalid/app.apk",
+                        pageUrl = "https://example.invalid/releases",
+                        notes = null,
+                    ),
                 onDownload = { downloaded = true },
             )
         }
@@ -419,12 +422,13 @@ class UiTest {
     fun `update card swaps the button for progress while installing`() {
         setContent {
             UpdateCard(
-                update = UpdateChecker.Update(
-                    version = "0.9.9",
-                    apkUrl = "https://example.invalid/app.apk",
-                    pageUrl = "https://example.invalid/releases",
-                    notes = null,
-                ),
+                update =
+                    UpdateChecker.Update(
+                        version = "0.9.9",
+                        apkUrl = "https://example.invalid/app.apk",
+                        pageUrl = "https://example.invalid/releases",
+                        notes = null,
+                    ),
                 onDownload = {},
                 progress = UpdateProgress(UpdateProgress.Stage.DOWNLOAD, 5, 10),
             )
@@ -453,15 +457,16 @@ class UiTest {
     fun `device card shows what was read off the device`() {
         setContent {
             DeviceCard(
-                device = DeviceSnapshot(
-                    name = "Cycplus M2",
-                    address = "E3:E8:F7:E3:09:44",
-                    firmware = "V1.4.0",
-                    battery = 100,
-                    freeKb = 708,
-                    totalKb = 16384,
-                    seenAt = Instant.parse("2026-07-25T08:35:00Z"),
-                ),
+                device =
+                    DeviceSnapshot(
+                        name = "Cycplus M2",
+                        address = "E3:E8:F7:E3:09:44",
+                        firmware = "V1.4.0",
+                        battery = 100,
+                        freeKb = 708,
+                        totalKb = 16384,
+                        seenAt = Instant.parse("2026-07-25T08:35:00Z"),
+                    ),
                 busy = false,
                 action = null,
             )
@@ -480,31 +485,33 @@ class UiTest {
         cadence: Int? = 80,
     ): RideTrack {
         val begin = Instant.parse("2026-07-25T10:20:49Z")
-        val points = (0 until count).map { i ->
-            FitParser.Point(
-                time = begin.plusSeconds(i.toLong()),
-                lat = 60.0 + i * 0.0001,
-                lon = 30.0,
-                altitude = 100.0 + i * 0.5,
-                speed = 8.0,
-                heartRate = heartRate,
-                cadence = cadence,
-                distance = i * 11.132,
+        val points =
+            (0 until count).map { i ->
+                FitParser.Point(
+                    time = begin.plusSeconds(i.toLong()),
+                    lat = 60.0 + i * 0.0001,
+                    lon = 30.0,
+                    altitude = 100.0 + i * 0.5,
+                    speed = 8.0,
+                    heartRate = heartRate,
+                    cadence = cadence,
+                    distance = i * 11.132,
+                )
+            }
+        val parsed =
+            FitParser.Ride(
+                fileName = "20260725102049.fit",
+                start = points.first().time,
+                end = points.last().time,
+                sport = "cycling",
+                totalDistance = (count - 1) * 11.132,
+                totalTimerTime = count.toDouble(),
+                totalAscent = 59,
+                totalCalories = null,
+                avgHeartRate = heartRate,
+                points = points,
+                activeSpans = listOf(points.first().time to points.last().time),
             )
-        }
-        val parsed = FitParser.Ride(
-            fileName = "20260725102049.fit",
-            start = points.first().time,
-            end = points.last().time,
-            sport = "cycling",
-            totalDistance = (count - 1) * 11.132,
-            totalTimerTime = count.toDouble(),
-            totalAscent = 59,
-            totalCalories = null,
-            avgHeartRate = heartRate,
-            points = points,
-            activeSpans = listOf(points.first().time to points.last().time),
-        )
         return RideTrack.build(ride(), parsed)
     }
 
