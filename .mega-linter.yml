@@ -30,13 +30,28 @@ REPOSITORY_DEVSKIM_ARGUMENTS:
   - --ignore-rule-ids
   - DS137138
 
+# detekt по умолчанию заменяет всю конфигурацию файлом из --config, поэтому без
+# --build-upon-default-config от набора правил осталось бы два переопределения.
+# Baseline замораживает накопленную сложность: старое не мешает, новое ловится.
+KOTLIN_DETEKT_ARGUMENTS:
+  - --build-upon-default-config
+  - --baseline
+  - detekt-baseline.xml
+
+# На пороге в 50 токенов jscpd считает клонами блоки импортов Compose в начале
+# файлов. Поднимаем до объёма, на котором дублирование действительно значимо.
+COPYPASTE_JSCPD_ARGUMENTS:
+  - --min-tokens
+  - '100'
+
 # В образе линтера нет bleak и fitdecode, без них pylint и pyright сыпят
 # import-error на каждый импорт tools/ вместо настоящих замечаний.
+# Путь абсолютный: pylint ставится из своего venv, cwd там уже не workspace.
 PRE_COMMANDS:
   - command: pip install --break-system-packages -r tools/requirements.txt
     cwd: workspace
     run_before_linters: true
-  - command: pip install -r tools/requirements.txt
+  - command: pip install -r "$DEFAULT_WORKSPACE/tools/requirements.txt"
     cwd: workspace
     venv: pylint
     run_before_linters: true
