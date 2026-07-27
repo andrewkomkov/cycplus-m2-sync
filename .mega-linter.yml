@@ -1,0 +1,24 @@
+# Полная раскладка линтеров MegaLinter: Kotlin, Python, YAML/JSON/XML, Markdown,
+# GitHub Actions, secrets и SCA. Список включённых линтеров не сужаем — что
+# сработало лишним, глушим точечно ниже.
+
+APPLY_FIXES: none
+VALIDATE_ALL_CODEBASE: true
+SHOW_ELAPSED_TIME: true
+
+# Клоны чужих репозиториев (см. .gitignore), сборочные артефакты, вендорный
+# gradle-враппер и генерируемый release-please changelog — не наш код.
+FILTER_REGEX_EXCLUDE: '(^|/)(cycsync|xoss_sync|\.venv|__pycache__)/|/build/|^android/gradlew|^CHANGELOG\.md$'
+
+DISABLE:
+  # README и docs двуязычные, словарь пришлось бы вести под русский текст и
+  # велосипедные термины вроде FIT, XOSS, CycPlus — сплошные ложные срабатывания.
+  - SPELL
+
+DISABLE_LINTERS:
+  # Ходит по внешним ссылкам на каждом прогоне — падения от чужого downtime.
+  - MARKDOWN_MARKDOWN_LINK_CHECK
+
+# Отчёты складываем артефактом workflow, сводку — комментарием в PR.
+SARIF_REPORTER: true
+TEXT_REPORTER: true
