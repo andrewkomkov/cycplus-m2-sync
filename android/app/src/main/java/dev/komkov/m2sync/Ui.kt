@@ -81,7 +81,6 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -454,7 +453,7 @@ fun RideCard(
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = {
-                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    haptics.longPress()
                     onLongClick()
                 },
             ),
@@ -726,6 +725,7 @@ fun UpdateCard(
 @Composable
 fun ProfileDialog(onDismiss: () -> Unit) {
     val ctx = LocalContext.current
+    val haptics = LocalHapticFeedback.current
     val savedYear by Settings.birthYear.collectAsStateWithLifecycle()
     val savedSex by Settings.sex.collectAsStateWithLifecycle()
 
@@ -769,12 +769,18 @@ fun ProfileDialog(onDismiss: () -> Unit) {
                 ) {
                     toggleableItem(
                         checked = sex == Calories.Sex.MALE,
-                        onCheckedChange = { sex = Calories.Sex.MALE },
+                        onCheckedChange = {
+                            haptics.tick()
+                            sex = Calories.Sex.MALE
+                        },
                         label = maleLabel,
                     )
                     toggleableItem(
                         checked = sex == Calories.Sex.FEMALE,
-                        onCheckedChange = { sex = Calories.Sex.FEMALE },
+                        onCheckedChange = {
+                            haptics.tick()
+                            sex = Calories.Sex.FEMALE
+                        },
                         label = femaleLabel,
                     )
                 }

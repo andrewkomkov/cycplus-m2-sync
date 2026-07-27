@@ -43,6 +43,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -51,6 +52,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.health.connect.client.PermissionController
@@ -166,6 +168,7 @@ private fun Screen(
     onPermissions: () -> Unit,
 ) {
     val ctx: Context = LocalContext.current
+    val haptics = LocalHapticFeedback.current
     val device by AppState.device.collectAsStateWithLifecycle()
     val rides by AppState.rides.collectAsStateWithLifecycle()
     val busy by AppState.busy.collectAsStateWithLifecycle()
@@ -198,6 +201,21 @@ private fun Screen(
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     LaunchedEffect(Unit) { UpdateChecker.checkIfDue(ctx) }
+
+    // Синк идёт секундами, и телефон на это время обычно уже в кармане: короткий
+    // отклик на финише говорит, что можно доставать, и отличается от отклика на
+    // ошибке. Первое значение busy=false при запуске не считается концом работы.
+    var wasBusy by remember { mutableStateOf(false) }
+    var failuresBefore by remember { mutableIntStateOf(0) }
+    LaunchedEffect(busy) {
+        if (busy) {
+            wasBusy = true
+            failuresBefore = LogBus.failures.value
+        } else if (wasBusy) {
+            wasBusy = false
+            if (LogBus.failures.value > failuresBefore) haptics.failed() else haptics.done()
+        }
+    }
 
     if (profileOpen) ProfileDialog(onDismiss = { profileOpen = false })
 
@@ -246,20 +264,32 @@ private fun Screen(
                                 trailingIcon = {
                                     Switch(
                                         checked = autoSync,
-                                        onCheckedChange = { Settings.setAutoSync(ctx, it) },
+                                        onCheckedChange = {
+                                            haptics.toggle(it)
+                                            Settings.setAutoSync(ctx, it)
+                                        },
                                     )
                                 },
-                                onClick = { Settings.setAutoSync(ctx, !autoSync) },
+                                onClick = {
+                                    haptics.toggle(!autoSync)
+                                    Settings.setAutoSync(ctx, !autoSync)
+                                },
                             )
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.setting_auto_update)) },
                                 trailingIcon = {
                                     Switch(
                                         checked = autoUpdate,
-                                        onCheckedChange = { Settings.setAutoUpdate(ctx, it) },
+                                        onCheckedChange = {
+                                            haptics.toggle(it)
+                                            Settings.setAutoUpdate(ctx, it)
+                                        },
                                     )
                                 },
-                                onClick = { Settings.setAutoUpdate(ctx, !autoUpdate) },
+                                onClick = {
+                                    haptics.toggle(!autoUpdate)
+                                    Settings.setAutoUpdate(ctx, !autoUpdate)
+                                },
                             )
                             // Состояний три, поэтому не тумблер: пункт называет
                             // текущую подложку и по нажатию берёт следующую.
@@ -272,7 +302,10 @@ private fun Screen(
                                         color = MaterialTheme.colorScheme.primary,
                                     )
                                 },
-                                onClick = { Settings.setMapLayer(ctx, mapLayer.next()) },
+                                onClick = {
+                                    haptics.tick()
+                                    Settings.setMapLayer(ctx, mapLayer.next())
+                                },
                             )
                             HorizontalDivider()
                             DropdownMenuItem(
@@ -313,10 +346,16 @@ private fun Screen(
                     }) {
                         Icon(Icons.Rounded.Share, stringResource(R.string.cd_share))
                     }
-                    IconButton(onClick = { selection = rides.map { it.file }.toSet() }) {
+                    IconButton(onClick = {
+                        haptics.tick()
+                        selection = rides.map { it.file }.toSet()
+                    }) {
                         Icon(Icons.Rounded.SelectAll, stringResource(R.string.select_all))
                     }
-                    IconButton(onClick = { selection = emptySet() }) {
+                    IconButton(onClick = {
+                        haptics.toggle(false)
+                        selection = emptySet()
+                    }) {
                         Icon(Icons.Rounded.Close, stringResource(R.string.cd_clear_selection))
                     }
                 }
@@ -328,12 +367,9 @@ private fun Screen(
             selection = selection,
             onToggle = { ride ->
                 if (selecting) {
-                    selection =
-                        if (ride.file in selection) {
-                            selection - ride.file
-                        } else {
-                            selection + ride.file
-                        }
+                    val add = ride.file !in selection
+                    haptics.toggle(add)
+                    selection = if (add) selection + ride.file else selection - ride.file
                 } else {
                     openRide = ride.file
                 }

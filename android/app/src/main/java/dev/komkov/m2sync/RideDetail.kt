@@ -61,6 +61,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -85,6 +86,7 @@ fun RideDetailScreen(
 ) {
     val ctx = LocalContext.current
     val locale = LocalConfiguration.current.locales[0]
+    val haptics = LocalHapticFeedback.current
     val tiles = rememberTileSource()
     val mapLayer by Settings.mapLayer.collectAsStateWithLifecycle()
 
@@ -198,7 +200,10 @@ fun RideDetailScreen(
                                     .clip(RoundedCornerShape(28.dp)),
                         )
                         FilledTonalIconButton(
-                            onClick = { Settings.setMapLayer(ctx, mapLayer.next()) },
+                            onClick = {
+                                haptics.tick()
+                                Settings.setMapLayer(ctx, mapLayer.next())
+                            },
                             modifier = Modifier.align(Alignment.TopEnd).padding(8.dp),
                         ) {
                             Icon(layerIcon(mapLayer), stringResource(R.string.cd_basemap))
@@ -209,7 +214,12 @@ fun RideDetailScreen(
                 // Главное новое действие экрана, поэтому кнопка во всю ширину и
                 // высокая: её ищут глазами, а не по иконке в шапке.
                 Button(
-                    onClick = { flying = true },
+                    onClick = {
+                        // Взлёт меняет экран целиком, поэтому отклик здесь
+                        // весомее, чем у обычной кнопки.
+                        haptics.done()
+                        flying = true
+                    },
                     modifier = Modifier.fillMaxWidth().height(64.dp),
                     shape = RoundedCornerShape(22.dp),
                     colors =

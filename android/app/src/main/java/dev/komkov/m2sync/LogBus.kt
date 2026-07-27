@@ -18,6 +18,14 @@ object LogBus {
     private const val MAX_LINES = 500
 
     val lines = MutableStateFlow<List<String>>(emptyList())
+
+    /**
+     * Счётчик ошибок за сеанс. Растёт монотонно: экран запоминает значение на
+     * старте длинной операции и по её концу видит, случилось ли что-то плохое,
+     * не разбирая текст строк журнала.
+     */
+    val failures = MutableStateFlow(0)
+
     private val clock = SimpleDateFormat("HH:mm:ss", Locale.US)
 
     @Volatile
@@ -64,7 +72,12 @@ object LogBus {
         msg: String,
         isError: Boolean,
     ) {
-        if (isError) Log.e(TAG, msg) else Log.i(TAG, msg)
+        if (isError) {
+            Log.e(TAG, msg)
+            failures.value++
+        } else {
+            Log.i(TAG, msg)
+        }
         val line = "${clock.format(Date())} $msg"
         lines.value = (lines.value + line).takeLast(MAX_LINES)
     }

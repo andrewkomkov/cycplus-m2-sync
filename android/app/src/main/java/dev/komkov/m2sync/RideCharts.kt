@@ -26,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -40,6 +41,7 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -48,6 +50,13 @@ import kotlin.math.roundToInt
 
 /** Точек по горизонтали: больше на телефоне всё равно не различить. */
 private const val BUCKETS = 220
+
+/**
+ * Делений отклика на всю ширину графика. Бакетов больше двух сотен, и тик на
+ * каждом слился бы в дрожь; сорок — это шаг примерно в палец толщиной, кривая
+ * под ним ощущается шкалой.
+ */
+private const val SCRUB_TICKS = 40
 
 /**
  * Ряд для графика: значения по бакетам и точка трека, представляющая бакет.
@@ -136,8 +145,26 @@ fun RideChartCard(
 ) {
     val scheme = MaterialTheme.colorScheme
     val locale = LocalConfiguration.current.locales[0]
+    val haptics = LocalHapticFeedback.current
     val available = remember(track) { TrackMetric.entries.filter { track.has(it) } }
     val series = remember(track, metric) { seriesOf(track, metric) }
+
+    // Тикаем на смене деления, а не на каждом событии протяжки: палец за один
+    // проход выдаёт их сотни, и без загрубления это была бы сплошная вибрация.
+    val tickStep = remember(series) { (series.indices.size / SCRUB_TICKS).coerceAtLeast(1) }
+    var lastTick by remember(track, metric) { mutableIntStateOf(-1) }
+
+    fun scrub(
+        x: Float,
+        widthPx: Int,
+    ) {
+        val bucket = bucketAt(x, widthPx, series)
+        if (bucket / tickStep != lastTick) {
+            lastTick = bucket / tickStep
+            haptics.scrubTick()
+        }
+        onHighlight(series.indices.getOrNull(bucket) ?: 0)
+    }
 
     // Смена величины проявляет новую кривую снизу вверх — иначе подмена
     // происходит рывком и глазу не за что зацепиться.
@@ -152,7 +179,10 @@ fun RideChartCard(
             available.forEach { m ->
                 FilterChip(
                     selected = m == metric,
-                    onClick = { onMetric(m) },
+                    onClick = {
+                        haptics.tick()
+                        onMetric(m)
+                    },
                     label = { Text(labelOf(m), maxLines = 1) },
                     leadingIcon = { Icon(iconOf(m), null, Modifier.width(18.dp)) },
                 )
@@ -191,14 +221,21 @@ fun RideChartCard(
                 .height(168.dp)
                 .pointerInput(track, metric) {
                     detectHorizontalDragGestures(
-                        onDragStart = { onHighlight(indexAt(it.x, size.width, series)) },
-                        onDragEnd = { onHighlight(null) },
-                        onDragCancel = { onHighlight(null) },
+                        onDragStart = { scrub(it.x, size.width) },
+                        onDragEnd = {
+                            haptics.gestureEnd()
+                            lastTick = -1
+                            onHighlight(null)
+                        },
+                        onDragCancel = {
+                            lastTick = -1
+                            onHighlight(null)
+                        },
                     ) { change, _ ->
-                        onHighlight(indexAt(change.position.x, size.width, series))
+                        scrub(change.position.x, size.width)
                     }
                 }.pointerInput(track, metric) {
-                    detectTapGestures { onHighlight(indexAt(it.x, size.width, series)) }
+                    detectTapGestures { scrub(it.x, size.width) }
                 },
         ) {
             Canvas(Modifier.fillMaxWidth().height(168.dp)) {
@@ -312,15 +349,13 @@ private fun AxisLabel(text: String) {
     )
 }
 
-private fun indexAt(
+private fun bucketAt(
     x: Float,
     widthPx: Int,
     series: Series,
 ): Int {
     if (widthPx <= 0 || series.indices.isEmpty()) return 0
-    val bucket =
-        (x / widthPx * (series.indices.size - 1))
-            .roundToInt()
-            .coerceIn(0, series.indices.lastIndex)
-    return series.indices[bucket]
+    return (x / widthPx * (series.indices.size - 1))
+        .roundToInt()
+        .coerceIn(0, series.indices.lastIndex)
 }
