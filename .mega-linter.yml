@@ -44,17 +44,19 @@ COPYPASTE_JSCPD_ARGUMENTS:
   - --min-tokens
   - '100'
 
-# В образе линтера нет bleak и fitdecode, без них pylint и pyright сыпят
-# import-error на каждый импорт tools/ вместо настоящих замечаний.
-# Путь абсолютный: pylint ставится из своего venv, cwd там уже не workspace.
+# В образе линтера нет bleak и fitdecode, без них pyright сыплет import-error
+# на каждый импорт tools/ вместо настоящих замечаний.
 PRE_COMMANDS:
   - command: pip install --break-system-packages -r tools/requirements.txt
     cwd: workspace
     run_before_linters: true
-  - command: pip install -r "$DEFAULT_WORKSPACE/tools/requirements.txt"
-    cwd: workspace
-    venv: pylint
-    run_before_linters: true
+
+# pylint живёт в отдельном venv, куда пакеты проекта так просто не поставить:
+# MegaLinter уводит команду в cd /venvs/pylint, и относительный путь до
+# requirements.txt там уже не резолвится. Разрешимость импортов и без того
+# проверяют pyright и job tools в build.yml, так что снимаем только это правило.
+PYTHON_PYLINT_ARGUMENTS:
+  - --disable=import-error
 
 # Отчёты складываем артефактом workflow, сводку — комментарием в PR.
 SARIF_REPORTER: true
