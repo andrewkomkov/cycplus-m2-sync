@@ -3,7 +3,6 @@ package dev.komkov.m2sync
 import android.graphics.Bitmap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -25,8 +24,7 @@ import java.time.Instant
  * Подложка карты: имена и номера квадратов, кэш и обход сетки.
  *
  * Сеть тесты не трогают: всё, что должно доехать, заранее кладётся в дисковый
- * кэш, а на случай промаха прокси уводится в закрытый порт — тогда загрузка
- * падает сразу, а не висит восемь секунд на таймауте.
+ * кэш, а остальные запросы отсекаются проверками до всякой загрузки.
  */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -40,28 +38,10 @@ class MapTilesTest {
     }
 
     private val ctx get() = RuntimeEnvironment.getApplication()
-    private var proxyHost: String? = null
 
     @Before
-    fun cutTheNetwork() {
+    fun clearCache() {
         File(ctx.cacheDir, "tiles").deleteRecursively()
-        proxyHost = System.getProperty("http.proxyHost")
-        System.setProperty("http.proxyHost", "127.0.0.1")
-        System.setProperty("http.proxyPort", "1")
-        System.setProperty("https.proxyHost", "127.0.0.1")
-        System.setProperty("https.proxyPort", "1")
-    }
-
-    @After
-    fun restoreTheNetwork() {
-        if (proxyHost == null) {
-            System.clearProperty("http.proxyHost")
-            System.clearProperty("http.proxyPort")
-            System.clearProperty("https.proxyHost")
-            System.clearProperty("https.proxyPort")
-        } else {
-            System.setProperty("http.proxyHost", proxyHost!!)
-        }
     }
 
     private fun source() = TileSource(ctx, CoroutineScope(Dispatchers.IO))
@@ -82,14 +62,32 @@ class MapTilesTest {
         file.writeBytes(bytes.toByteArray())
     }
 
-    /** Загрузка идёт в своей корутине, поэтому кадр ждёт её результата. */
+    /**
+     * Ждёт, пока загрузчик доложит о доставке. Дёргать в это время сам тайл
+     * нельзя: запрос лезет в те же кэши, которые правит загрузчик, — поэтому
+     * ждём по счётчику, а спрашиваем уже потом.
+     */
     private fun awaitTiles(
         tiles: TileSource,
         count: Int,
     ) {
         val deadline = System.currentTimeMillis() + WAIT_MS
         while (tiles.revision < count && System.currentTimeMillis() < deadline) Thread.sleep(5)
-        assertTrue("тайлы не доехали с диска: ${tiles.revision} из $count", tiles.revision >= count)
+        assertEquals("тайлы не доехали с диска", count, tiles.revision)
+    }
+
+    private fun loaded(
+        tiles: TileSource,
+        layer: MapLayer,
+        x: Int,
+        y: Int,
+        arrived: Int,
+    ): MapTile {
+        tiles.tile(layer, FLY_GROUND_ZOOM, x, y)
+        awaitTiles(tiles, arrived)
+        val tile = tiles.tile(layer, FLY_GROUND_ZOOM, x, y)
+        assertNotNull("тайл $x/$y не доехал с диска", tile)
+        return tile!!
     }
 
     // --- слои ---
@@ -115,19 +113,16 @@ class MapTilesTest {
     /** Ключ кэша упаковывает слой, зум и номер в одно число — и не имеет права пересечься. */
     @Test
     fun `cache keys stay unique across layers, zooms and squares`() {
-        val keys = HashSet<Long>()
-        var count = 0
-        for (layer in MapLayer.entries) {
-            for (z in intArrayOf(2, 16, 18)) {
-                for (x in intArrayOf(0, 1, 4095, (1 shl z) - 1)) {
-                    for (y in intArrayOf(0, 1, 4095)) {
-                        keys += TileSource.key(layer, z, x, y)
-                        count++
+        val squares =
+            MapLayer.entries.flatMap { layer ->
+                listOf(2, 16, 18).flatMap { z ->
+                    listOf(0, 1, 4095, (1 shl z) - 1).flatMap { x ->
+                        listOf(0, 1, 4095).map { y -> TileSource.key(layer, z, x, y) }
                     }
                 }
             }
-        }
-        assertEquals(count, keys.size)
+
+        assertEquals(squares.size, squares.distinct().size)
     }
 
     // --- кэш ---
@@ -161,6 +156,29 @@ class MapTilesTest {
         assertEquals("память не считается новой доставкой", 1, tiles.revision)
     }
 
+    /**
+     * Что не доехало — не просим повторно: без сети это был бы вечный цикл.
+     * Битый файл в кэше выглядит для загрузчика ровно как несостоявшаяся
+     * загрузка, поэтому им и проверяем — даже подложив потом целую картинку,
+     * второго захода мы не дождёмся.
+     */
+    @Test
+    fun `a tile that failed once is not asked for again`() {
+        val file = File(ctx.cacheDir, "tiles/${MapLayer.MAP.name.lowercase()}/$FLY_GROUND_ZOOM/7/8.png")
+        file.parentFile?.mkdirs()
+        file.writeBytes(byteArrayOf(1, 2, 3))
+        val tiles = source()
+
+        assertNull(tiles.tile(MapLayer.MAP, FLY_GROUND_ZOOM, 7, 8))
+        Thread.sleep(300)
+        assertEquals("битый тайл доставкой не считается", 0, tiles.revision)
+
+        writeTile(MapLayer.MAP, FLY_GROUND_ZOOM, 7, 8, GREEN)
+        assertNull(tiles.tile(MapLayer.MAP, FLY_GROUND_ZOOM, 7, 8))
+        Thread.sleep(300)
+        assertEquals("повторной попытки быть не должно", 0, tiles.revision)
+    }
+
     /** Схема и снимок — разные картинки на один и тот же номер квадрата. */
     @Test
     fun `layers keep their own squares apart`() {
@@ -168,12 +186,9 @@ class MapTilesTest {
         writeTile(MapLayer.SATELLITE, FLY_GROUND_ZOOM, 5, 6, BLUE)
         val tiles = source()
 
-        tiles.tile(MapLayer.MAP, FLY_GROUND_ZOOM, 5, 6)
-        tiles.tile(MapLayer.SATELLITE, FLY_GROUND_ZOOM, 5, 6)
-        awaitTiles(tiles, 2)
-
-        assertEquals(GREEN, tiles.tile(MapLayer.MAP, FLY_GROUND_ZOOM, 5, 6)!!.bitmap.getPixel(1, 1))
-        assertEquals(BLUE, tiles.tile(MapLayer.SATELLITE, FLY_GROUND_ZOOM, 5, 6)!!.bitmap.getPixel(1, 1))
+        // По одному: два загрузчика разом правили бы один и тот же кэш.
+        assertEquals(GREEN, loaded(tiles, MapLayer.MAP, 5, 6, arrived = 1).bitmap.getPixel(1, 1))
+        assertEquals(BLUE, loaded(tiles, MapLayer.SATELLITE, 5, 6, arrived = 2).bitmap.getPixel(1, 1))
     }
 
     /** Прогрев кладёт коридор маршрута в память до того, как его попросит кадр. */
@@ -188,7 +203,7 @@ class MapTilesTest {
 
         assertNotNull(tiles.tile(MapLayer.MAP, FLY_GROUND_ZOOM, 10, 20))
         assertNotNull(tiles.tile(MapLayer.MAP, FLY_GROUND_ZOOM, 11, 20))
-        assertNotNull(tiles.tile(MapLayer.MAP, FLY_GROUND_ZOOM, 12, 20))
+        assertEquals(GREEN, tiles.tile(MapLayer.MAP, FLY_GROUND_ZOOM, 12, 20)!!.bitmap.getPixel(1, 1))
     }
 
     /** Выключенная подложка — это полностью офлайновый заезд, без единого запроса. */
