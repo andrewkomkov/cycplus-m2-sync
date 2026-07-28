@@ -59,6 +59,10 @@ jobs:
   sonarqube:
     name: SonarQube
     runs-on: ubuntu-latest
+    # Прогонам dependabot GitHub подставляет не секреты Actions, а отдельное
+    # хранилище Dependabot secrets: SONAR_TOKEN там пуст, и сканер падает на
+    # каждом бампе версии. Проверять в таком дифе всё равно нечего.
+    if: github.actor != 'dependabot[bot]'
     steps:
       # Полная история: по shallow-клону Sonar не разложит изменения по авторам
       # и не отделит новый код от старого.
