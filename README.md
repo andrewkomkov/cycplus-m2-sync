@@ -1,6 +1,8 @@
 # M2 Sync — Cycplus M2 / XOSS bike computer → Health Connect
 
 [![Build](https://github.com/andrewkomkov/cycplus-m2-sync/actions/workflows/build.yml/badge.svg)](https://github.com/andrewkomkov/cycplus-m2-sync/actions/workflows/build.yml)
+[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=andrewkomkov_cycplus-m2-sync&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=andrewkomkov_cycplus-m2-sync)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=andrewkomkov_cycplus-m2-sync&metric=coverage)](https://sonarcloud.io/component_measures?id=andrewkomkov_cycplus-m2-sync&metric=coverage)
 [![Release](https://img.shields.io/github/v/release/andrewkomkov/cycplus-m2-sync?sort=semver)](https://github.com/andrewkomkov/cycplus-m2-sync/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
