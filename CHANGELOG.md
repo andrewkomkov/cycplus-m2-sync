@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.2](https://github.com/andrewkomkov/cycplus-m2-sync/compare/v0.7.1...v0.7.2) (2026-07-28)
+
+
+### Documentation
+
+* show sonarqube quality gate and coverage in readme ([#44](https://github.com/andrewkomkov/cycplus-m2-sync/issues/44)) ([e515140](https://github.com/andrewkomkov/cycplus-m2-sync/commit/e5151402d65b1546959603206b04d8eb544327c8))
+
 ## [0.7.1](https://github.com/andrewkomkov/cycplus-m2-sync/compare/v0.7.0...v0.7.1) (2026-07-28)
 
 

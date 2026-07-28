@@ -5,7 +5,7 @@ plugins {
 }
 
 // Версию двигает release-please по conventional commits, руками не трогаем.
-val appVersion = "0.7.1" // x-release-please-version
+val appVersion = "0.7.2" // x-release-please-version
 
 /** 1.4.2 -> 10402: монотонный код версии, выводимый из имени. */
 fun versionCodeOf(name: String): Int {
