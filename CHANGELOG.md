@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.1](https://github.com/andrewkomkov/cycplus-m2-sync/compare/v0.7.0...v0.7.1) (2026-07-28)
+
+
+### Build
+
+* bump org.json:json from 20250517 to 20260719 in /android ([#37](https://github.com/andrewkomkov/cycplus-m2-sync/issues/37)) ([5c79036](https://github.com/andrewkomkov/cycplus-m2-sync/commit/5c79036b05ea65c4aff560ca33769ad8b4405eee))
+* bump org.robolectric:robolectric in /android ([#38](https://github.com/andrewkomkov/cycplus-m2-sync/issues/38)) ([98d364f](https://github.com/andrewkomkov/cycplus-m2-sync/commit/98d364fb9e401ca5b8957bf82edc57060de6e361))
+
 ## [0.7.0](https://github.com/andrewkomkov/cycplus-m2-sync/compare/v0.6.1...v0.7.0) (2026-07-27)
 
 
