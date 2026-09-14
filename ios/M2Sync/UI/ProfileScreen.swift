@@ -60,6 +60,8 @@ struct ProfileScreen: View {
                 } header: {
                     Text("Manual")
                 } footer: {
+                    // Одна строка перевода: разбить литерал — значит поменять ключ в Localizable.xcstrings.
+                    // swiftlint:disable:next line_length
                     Text("The M2 records no calories. They are estimated from heart rate, or from speed where there is none, and saved to Apple Health as active energy. The heart-rate formula needs weight, year of birth and sex.")
                 }
             }
