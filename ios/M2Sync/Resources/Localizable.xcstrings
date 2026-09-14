@@ -1,0 +1,386 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "%@ km": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ км"
+          }
+        }
+      }
+    },
+    "%@ of %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ из %@"
+          }
+        }
+      }
+    },
+    "%lld bpm": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld уд/мин"
+          }
+        }
+      }
+    },
+    "%lld m": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld м"
+          }
+        }
+      }
+    },
+    "%lld of %lld": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld из %lld"
+          }
+        }
+      }
+    },
+    "%lld rpm": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld об/мин"
+          }
+        }
+      }
+    },
+    "Battery": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Заряд"
+          }
+        }
+      }
+    },
+    "Bike Computer": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Велокомпьютер"
+          }
+        }
+      }
+    },
+    "Bluetooth is unavailable": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bluetooth недоступен"
+          }
+        }
+      }
+    },
+    "Connecting to the bike computer…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подключаюсь к велокомпьютеру…"
+          }
+        }
+      }
+    },
+    "Empty": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пусто"
+          }
+        }
+      }
+    },
+    "File is shorter than declared: %lld of %lld bytes": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Файл короче заявленного: %lld из %lld байт"
+          }
+        }
+      }
+    },
+    "Firmware": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прошивка"
+          }
+        }
+      }
+    },
+    "Last Seen": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На связи"
+          }
+        }
+      }
+    },
+    "Log": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Журнал"
+          }
+        }
+      }
+    },
+    "Memory": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Память"
+          }
+        }
+      }
+    },
+    "No Rides Yet": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Заездов пока нет"
+          }
+        }
+      }
+    },
+    "No bike computer named %@… nearby": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Рядом нет велокомпьютера %@…"
+          }
+        }
+      }
+    },
+    "No rides on this iPhone yet.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На этом iPhone заездов пока нет."
+          }
+        }
+      }
+    },
+    "No track points in %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "В %@ нет точек трека"
+          }
+        }
+      }
+    },
+    "Reading rides…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Читаю заезды…"
+          }
+        }
+      }
+    },
+    "Refusing an unsafe file name: %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Небезопасное имя файла: %@"
+          }
+        }
+      }
+    },
+    "Rides": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Заезды"
+          }
+        }
+      }
+    },
+    "Switch on the bike computer and sync to download your rides.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Включи велокомпьютер и синхронизируй — заезды скачаются на iPhone."
+          }
+        }
+      }
+    },
+    "Sync": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Синхронизировать"
+          }
+        }
+      }
+    },
+    "The bike computer disconnected": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Велокомпьютер отключился"
+          }
+        }
+      }
+    },
+    "The bike computer refused the request: %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Велокомпьютер отклонил запрос: %@"
+          }
+        }
+      }
+    },
+    "Timed out: %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Таймаут: %@"
+          }
+        }
+      }
+    },
+    "Unreadable file header": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не читается заголовок файла"
+          }
+        }
+      }
+    },
+    "downloading %@ (%lld bytes)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "качаю %@ (%lld байт)"
+          }
+        }
+      }
+    },
+    "hours": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "часов"
+          }
+        }
+      }
+    },
+    "km": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "км"
+          }
+        }
+      }
+    },
+    "looking for the device…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ищу устройство…"
+          }
+        }
+      }
+    },
+    "new files downloaded: %lld": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "скачано новых файлов: %lld"
+          }
+        }
+      }
+    },
+    "nothing found — is the bike computer switched on?": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ничего не найдено — включён ли велокомпьютер?"
+          }
+        }
+      }
+    },
+    "rides": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "заездов"
+          }
+        }
+      }
+    },
+    "rides on the device: %lld": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "на устройстве заездов: %lld"
+          }
+        }
+      }
+    },
+    "saved %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "сохранён %@"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}
