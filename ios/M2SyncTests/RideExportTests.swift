@@ -37,6 +37,42 @@ struct RideExportTests {
         #expect(try Data(contentsOf: export.staged(in: share)) == Data([1, 2, 3, 4]))
     }
 
+    /// То же, что делает окно «Поделиться»: берёт представление через NSItemProvider.
+    @Test func shareSheetReceivesTheFitFileUnderItsReadableName() async throws {
+        let root = temporaryDirectory()
+        let files = try RideFiles(directory: root.appendingPathComponent("fit", isDirectory: true))
+        try files.save(Data([1, 2, 3]), as: "20260724103005.fit")
+        let start = try #require(ISO8601DateFormatter().date(from: "2026-07-24T08:30:05Z"))
+        let export = try RideExport(summary: summary("20260724103005.fit", start: start), files: files, timeZone: belgrade)
+
+        let provider = NSItemProvider()
+        provider.register(export)
+        let types = provider.registeredContentTypes.map(\.identifier)
+        #expect(types == ["com.garmin.fit"], "offered types: \(types)")
+
+        let received: URL = try await withCheckedThrowingContinuation { continuation in
+            _ = provider.loadFileRepresentation(for: .fit, openInPlace: false) { url, _, error in
+                guard let url else {
+                    continuation.resume(throwing: error ?? CocoaError(.fileNoSuchFile))
+                    return
+                }
+                // Файл провайдера живёт только внутри обработчика — забираем копию.
+                let copy = root.appendingPathComponent("received", isDirectory: true)
+                do {
+                    try FileManager.default.createDirectory(at: copy, withIntermediateDirectories: true)
+                    let target = copy.appendingPathComponent(url.lastPathComponent)
+                    try FileManager.default.copyItem(at: url, to: target)
+                    continuation.resume(returning: target)
+                } catch {
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+
+        #expect(received.lastPathComponent == "2026-07-24_10-30_40.99km_cycplus-m2.fit")
+        #expect(try Data(contentsOf: received) == Data([1, 2, 3]))
+    }
+
     @Test func unsafeRideNameIsRefused() throws {
         let files = try RideFiles(directory: temporaryDirectory())
         #expect(throws: RideFiles.FileError.self) {
