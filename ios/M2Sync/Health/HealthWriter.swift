@@ -190,26 +190,25 @@ final class HealthWriter {
             }
         }
 
-        func wholeRide(_ identifier: HKQuantityTypeIdentifier, _ unit: HKUnit, _ value: Double) -> HKSample {
-            HKQuantitySample(
-                type: HKQuantityType(identifier),
-                quantity: HKQuantity(unit: unit, doubleValue: value),
-                start: plan.start,
-                end: plan.end,
-                device: device,
-                metadata: tag
-            )
+        // Итог поездки частями по отрезкам записи: так «Здоровье» относит его к тем дням, когда ехали.
+        func portions(_ identifier: HKQuantityTypeIdentifier, _ unit: HKUnit, _ items: [WorkoutPlan.Portion]) -> [HKSample] {
+            items.map {
+                HKQuantitySample(
+                    type: HKQuantityType(identifier),
+                    quantity: HKQuantity(unit: unit, doubleValue: $0.value),
+                    start: $0.interval.start,
+                    end: $0.interval.end,
+                    device: device,
+                    metadata: tag
+                )
+            }
         }
 
         var samples = instant(.heartRate, perMinute, plan.heartRate)
         samples += instant(.cyclingCadence, perMinute, plan.cadence)
         samples += instant(.cyclingSpeed, metersPerSecond, plan.speed)
-        if let distance = plan.distanceMeters {
-            samples.append(wholeRide(.distanceCycling, .meter(), distance))
-        }
-        if let energy = plan.activeEnergyKilocalories {
-            samples.append(wholeRide(.activeEnergyBurned, .kilocalorie(), energy))
-        }
+        samples += portions(.distanceCycling, .meter(), plan.distance)
+        samples += portions(.activeEnergyBurned, .kilocalorie(), plan.activeEnergy)
         return samples
     }
 
