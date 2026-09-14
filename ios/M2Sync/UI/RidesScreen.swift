@@ -4,6 +4,8 @@ import SwiftUI
 /// действия в тулбаре, «потянуть вниз» — синхронизировать.
 struct RidesScreen: View {
     @StateObject private var sync = SyncController()
+    @State private var showingLog = false
+    @State private var showingProfile = false
 
     var body: some View {
         NavigationStack {
@@ -11,10 +13,19 @@ struct RidesScreen: View {
                 .navigationTitle("Rides")
                 .toolbar {
                     ToolbarItem(placement: .topBarLeading) {
-                        NavigationLink {
-                            LogScreen(lines: sync.log)
+                        Menu {
+                            Button {
+                                showingProfile = true
+                            } label: {
+                                Label("Profile for Calories", systemImage: "person.crop.circle")
+                            }
+                            Button {
+                                showingLog = true
+                            } label: {
+                                Label("Log", systemImage: "list.bullet.rectangle")
+                            }
                         } label: {
-                            Label("Log", systemImage: "list.bullet.rectangle")
+                            Label("More", systemImage: "ellipsis.circle")
                         }
                     }
                     ToolbarItem(placement: .topBarTrailing) {
@@ -28,6 +39,12 @@ struct RidesScreen: View {
                             }
                         }
                     }
+                }
+                .navigationDestination(isPresented: $showingLog) {
+                    LogScreen(lines: sync.log)
+                }
+                .sheet(isPresented: $showingProfile) {
+                    ProfileScreen(sync: sync)
                 }
                 .task { await sync.reload() }
         }
@@ -245,6 +262,9 @@ struct RideRow: View {
                     }
                     if let ascent = ride.ascent, ascent > 0 {
                         Metric(icon: "arrow.up.right", text: Text("\(ascent) m"))
+                    }
+                    if let kilocalories = ride.activeKilocalories {
+                        Metric(icon: "flame", text: Text("\(kilocalories) kcal"))
                     }
                 }
                 .font(.subheadline)

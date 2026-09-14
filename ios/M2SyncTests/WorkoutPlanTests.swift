@@ -110,6 +110,19 @@ struct WorkoutPlanTests {
         #expect(first.speed == 5)
     }
 
+    @Test func activeEnergyNeedsWeightAndCarriesTheProfile() {
+        let withoutWeight = WorkoutPlan(ride: ride(seconds: Array(0...60)))
+        #expect(withoutWeight.activeEnergyKilocalories == nil)
+        #expect(withoutWeight.caloriesProfileKey == "-/-/-")
+
+        let profile = Calories.Profile(weightKg: 70, birthYear: 1991, sex: .male)
+        let plan = WorkoutPlan(ride: ride(seconds: Array(0...60)), profile: profile)
+        // Минута на пульсе 120: Keytel минус 1 MET покоя.
+        let expected = (-55.0969 + 0.6309 * 120 + 0.1988 * 70 + 0.2017 * 35) / 4.184 - 3.5 * 70 / 200
+        #expect(abs((plan.activeEnergyKilocalories ?? 0) - expected) < 1e-6)
+        #expect(plan.caloriesProfileKey == "70.0/1991/male")
+    }
+
     private func point(
         at second: Int,
         heartRate: Int? = 120,

@@ -38,8 +38,8 @@ targets:
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         NSBluetoothAlwaysUsageDescription: Downloads rides from the bike computer over Bluetooth.
-        NSHealthUpdateUsageDescription: Saves rides as cycling workouts with route, heart rate, cadence and speed.
-        NSHealthShareUsageDescription: Checks which rides are already in Apple Health, so none is saved twice.
+        NSHealthUpdateUsageDescription: Saves rides as cycling workouts with route, heart rate, cadence, speed and active energy.
+        NSHealthShareUsageDescription: Reads weight, date of birth and sex for the calorie estimate, and checks which rides are already in Apple Health.
         # Передача не рвётся, если iPhone заблокировали посреди синка.
         UIBackgroundModes: [bluetooth-central]
     settings:

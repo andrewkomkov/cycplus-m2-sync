@@ -18,8 +18,8 @@ final class HealthWriter {
         }
     }
 
-    /// Что уже лежит в Health по поездке: есть ли тренировка текущей версии записи
-    /// и какие записаны по старым правилам.
+    /// Что уже лежит в Health по поездке: есть ли тренировка по текущим правилам и профилю
+    /// и какие записаны по старым.
     struct Previous {
         let current: Bool
         let outdated: [HKWorkout]
@@ -48,20 +48,50 @@ final class HealthWriter {
         HKQuantityType(.distanceCycling),
         HKQuantityType(.cyclingCadence),
         HKQuantityType(.cyclingSpeed),
+        HKQuantityType(.activeEnergyBurned),
     ]
 
-    /// Читаем только тренировки — проверить, не записана ли поездка раньше.
-    private static let readTypes: Set<HKObjectType> = [HKObjectType.workoutType()]
+    /// Тренировки — проверить, не записана ли поездка раньше; вес, дата рождения и пол — для калорий.
+    private static let readTypes: Set<HKObjectType> = [
+        HKObjectType.workoutType(),
+        HKQuantityType(.bodyMass),
+        HKCharacteristicType(.dateOfBirth),
+        HKCharacteristicType(.biologicalSex),
+    ]
 
     private let store = HKHealthStore()
 
-    /// Системный экран разрешений показывается один раз, дальше вызов возвращается сразу.
+    /// Системный экран разрешений показывается, пока есть не спрошенные типы; дальше вызов
+    /// возвращается сразу.
     func authorize() async throws {
         guard HKHealthStore.isHealthDataAvailable() else { throw HealthError.unavailable }
         try await store.requestAuthorization(toShare: Self.shareTypes, read: Self.readTypes)
         guard store.authorizationStatus(for: HKObjectType.workoutType()) == .sharingAuthorized else {
             throw HealthError.notAuthorized
         }
+    }
+
+    /// Вес, год рождения и пол — что из этого есть в «Здоровье». Без разрешения на чтение
+    /// HealthKit просто ничего не отдаёт.
+    func readProfile() async -> Calories.Profile {
+        var profile = Calories.Profile.empty
+        if let year = (try? store.dateOfBirthComponents())?.year {
+            profile.birthYear = year
+        }
+        switch (try? store.biologicalSex())?.biologicalSex {
+        case .some(.male): profile.sex = .male
+        case .some(.female): profile.sex = .female
+        default: break
+        }
+        let latestWeight = HKSampleQueryDescriptor(
+            predicates: [.quantitySample(type: HKQuantityType(.bodyMass))],
+            sortDescriptors: [SortDescriptor(\.endDate, order: .reverse)],
+            limit: 1
+        )
+        if let sample = try? await latestWeight.result(for: store).first {
+            profile.weightKg = sample.quantity.doubleValue(for: .gramUnit(with: .kilo))
+        }
+        return profile
     }
 
     /// Тренировки с меткой этой поездки. Без разрешения на чтение HealthKit вернёт пусто —
@@ -73,16 +103,18 @@ final class HealthWriter {
         )
         let workouts = try await HKSampleQueryDescriptor(predicates: [.workout(predicate)], sortDescriptors: [])
             .result(for: store)
-        let version: (HKWorkout) -> Int = {
-            ($0.metadata?[HKMetadataKeySyncVersion] as? NSNumber)?.intValue ?? 0
+        let isCurrent: (HKWorkout) -> Bool = { workout in
+            let version = (workout.metadata?[HKMetadataKeySyncVersion] as? NSNumber)?.intValue ?? 0
+            let profile = workout.metadata?[WorkoutPlan.caloriesProfileMetadataKey] as? String
+            return version >= WorkoutPlan.syncVersion && profile == plan.caloriesProfileKey
         }
         return Previous(
-            current: workouts.contains { version($0) >= WorkoutPlan.syncVersion },
-            outdated: workouts.filter { version($0) < WorkoutPlan.syncVersion }
+            current: workouts.contains(where: isCurrent),
+            outdated: workouts.filter { !isCurrent($0) }
         )
     }
 
-    /// Удаляет тренировку вместе с её пульсом, каденсом, скоростью, дистанцией и маршрутом:
+    /// Удаляет тренировку вместе с её пульсом, каденсом, скоростью, дистанцией, энергией и маршрутом:
     /// сами по себе они в Health остаются.
     func delete(_ workout: HKWorkout) async throws {
         let related = HKQuery.predicateForObjects(from: workout)
@@ -158,18 +190,25 @@ final class HealthWriter {
             }
         }
 
-        var samples = instant(.heartRate, perMinute, plan.heartRate)
-        samples += instant(.cyclingCadence, perMinute, plan.cadence)
-        samples += instant(.cyclingSpeed, metersPerSecond, plan.speed)
-        if let distance = plan.distanceMeters {
-            samples.append(HKQuantitySample(
-                type: HKQuantityType(.distanceCycling),
-                quantity: HKQuantity(unit: .meter(), doubleValue: distance),
+        func wholeRide(_ identifier: HKQuantityTypeIdentifier, _ unit: HKUnit, _ value: Double) -> HKSample {
+            HKQuantitySample(
+                type: HKQuantityType(identifier),
+                quantity: HKQuantity(unit: unit, doubleValue: value),
                 start: plan.start,
                 end: plan.end,
                 device: device,
                 metadata: tag
-            ))
+            )
+        }
+
+        var samples = instant(.heartRate, perMinute, plan.heartRate)
+        samples += instant(.cyclingCadence, perMinute, plan.cadence)
+        samples += instant(.cyclingSpeed, metersPerSecond, plan.speed)
+        if let distance = plan.distanceMeters {
+            samples.append(wholeRide(.distanceCycling, .meter(), distance))
+        }
+        if let energy = plan.activeEnergyKilocalories {
+            samples.append(wholeRide(.activeEnergyBurned, .kilocalorie(), energy))
         }
         return samples
     }
@@ -188,6 +227,7 @@ final class HealthWriter {
             HKMetadataKeySyncIdentifier: plan.syncIdentifier,
             HKMetadataKeySyncVersion: WorkoutPlan.syncVersion,
             HKMetadataKeyIndoorWorkout: false,
+            WorkoutPlan.caloriesProfileMetadataKey: plan.caloriesProfileKey,
         ]
         if let ascent = plan.ascentMeters {
             metadata[HKMetadataKeyElevationAscended] = HKQuantity(unit: .meter(), doubleValue: ascent)
