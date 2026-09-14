@@ -21,6 +21,16 @@
         }
       }
     },
+    "%@ km/h": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ км/ч"
+          }
+        }
+      }
+    },
     "%@ of %@": {
       "localizations": {
         "ru": {
@@ -81,6 +91,36 @@
         }
       }
     },
+    "%lld–%lld m": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld–%lld м"
+          }
+        }
+      }
+    },
+    "Active Energy": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Активная энергия"
+          }
+        }
+      }
+    },
+    "Altitude": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Высота"
+          }
+        }
+      }
+    },
     "Apple Health did not save the workout": {
       "localizations": {
         "ru": {
@@ -97,6 +137,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "«Здоровье» недоступно на этом устройстве"
+          }
+        }
+      }
+    },
+    "Avg Heart Rate": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Средний пульс"
+          }
+        }
+      }
+    },
+    "Avg Speed": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Средняя скорость"
+          }
+        }
+      }
+    },
+    "Base": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "База"
           }
         }
       }
@@ -131,6 +201,16 @@
         }
       }
     },
+    "Cadence": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Каденс"
+          }
+        }
+      }
+    },
     "Cancel": {
       "localizations": {
         "ru": {
@@ -141,12 +221,42 @@
         }
       }
     },
+    "Chart": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "График"
+          }
+        }
+      }
+    },
     "Connecting to the bike computer…": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Подключаюсь к велокомпьютеру…"
+          }
+        }
+      }
+    },
+    "Could not read this ride": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось прочитать заезд"
+          }
+        }
+      }
+    },
+    "Distance": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Дистанция"
           }
         }
       }
@@ -167,6 +277,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Скачивание"
+          }
+        }
+      }
+    },
+    "Elevation": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Высота"
+          }
+        }
+      }
+    },
+    "Elevation Gain": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Набор высоты"
           }
         }
       }
@@ -201,6 +331,16 @@
         }
       }
     },
+    "Finish": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Финиш"
+          }
+        }
+      }
+    },
     "Firmware": {
       "localizations": {
         "ru": {
@@ -217,6 +357,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Из «Здоровья»"
+          }
+        }
+      }
+    },
+    "Heart Rate": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пульс"
           }
         }
       }
@@ -271,6 +421,36 @@
         }
       }
     },
+    "Map": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Схема"
+          }
+        }
+      }
+    },
+    "Max Heart Rate": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пиковый пульс"
+          }
+        }
+      }
+    },
+    "Max Speed": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Максимальная"
+          }
+        }
+      }
+    },
     "Memory": {
       "localizations": {
         "ru": {
@@ -287,6 +467,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ещё"
+          }
+        }
+      }
+    },
+    "Moving Time": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "В движении"
           }
         }
       }
@@ -391,6 +581,16 @@
         }
       }
     },
+    "Reading ride…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Читаю заезд…"
+          }
+        }
+      }
+    },
     "Refusing an unsafe file name: %@": {
       "localizations": {
         "ru": {
@@ -411,6 +611,26 @@
         }
       }
     },
+    "Satellite": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Спутник"
+          }
+        }
+      }
+    },
+    "Saved in Apple Health": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сохранено в «Здоровье»"
+          }
+        }
+      }
+    },
     "Saving to Health": {
       "localizations": {
         "ru": {
@@ -421,12 +641,42 @@
         }
       }
     },
+    "Selected": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выбрано"
+          }
+        }
+      }
+    },
     "Sex": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Пол"
+          }
+        }
+      }
+    },
+    "Speed": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скорость"
+          }
+        }
+      }
+    },
+    "Start": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Старт"
           }
         }
       }
@@ -491,12 +741,32 @@
         }
       }
     },
+    "Total Time": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Общее время"
+          }
+        }
+      }
+    },
     "Unreadable file header": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Не читается заголовок файла"
+          }
+        }
+      }
+    },
+    "Value": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Значение"
           }
         }
       }
@@ -527,6 +797,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "уже в «Здоровье»: %@"
+          }
+        }
+      }
+    },
+    "at %@ km": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "на %@ км"
+          }
+        }
+      }
+    },
+    "average for the ride": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "в среднем за заезд"
+          }
+        }
+      }
+    },
+    "bpm": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "уд/мин"
           }
         }
       }
@@ -581,12 +881,32 @@
         }
       }
     },
+    "km/h": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "км/ч"
+          }
+        }
+      }
+    },
     "looking for the device…": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "ищу устройство…"
+          }
+        }
+      }
+    },
+    "m": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "м"
           }
         }
       }
@@ -647,6 +967,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "на устройстве заездов: %lld"
+          }
+        }
+      }
+    },
+    "rpm": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "об/мин"
           }
         }
       }
