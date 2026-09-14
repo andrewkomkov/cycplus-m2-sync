@@ -30,3 +30,10 @@ android/.idea/
 # macOS
 .DS_Store
 /screenshot*.png
+
+# iOS / Xcode: проект генерируется xcodegen из ios/project.yml
+ios/*.xcodeproj/
+ios/build/
+ios/M2Sync/Info.plist
+xcuserdata/
+*.xcuserstate

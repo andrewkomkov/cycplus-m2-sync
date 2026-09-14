@@ -1,0 +1,16 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "NSBluetoothAlwaysUsageDescription": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скачивает заезды с велокомпьютера по Bluetooth."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

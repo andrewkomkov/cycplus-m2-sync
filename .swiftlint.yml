@@ -1,0 +1,39 @@
+# SwiftLint для ios/. MegaLinter запускает его в строгом режиме, где любое предупреждение — ошибка.
+# Ниже только то, в чём этот код осознанно расходится с правилами по умолчанию.
+
+identifier_name:
+  excluded:
+    # Координаты раскладки и байт 'C' протокола YMODEM.
+    - x
+    - y
+    - c
+    # Характеристики Nordic UART называются RX и TX.
+    - rx
+    - tx
+    # Требование протокола Identifiable.
+    - id
+    # Устоявшиеся единицы в предметной области.
+    - km
+    - hr
+
+line_length:
+  warning: 130
+  # Ключи локализованных строк журнала длинные, а разбить литерал — значит сменить ключ перевода.
+  ignores_interpolated_strings: true
+
+function_body_length:
+  warning: 60
+
+file_length:
+  warning: 450
+
+disabled_rules:
+  # Многострочные литералы держат запятую после последнего элемента: новый элемент меняет одну строку.
+  - trailing_comma
+  # Байты с велокомпа декодируются с заменой битых символов намеренно: один битый байт
+  # не должен стирать весь filelist.txt, как было бы с failable String(bytes:encoding:).
+  - optional_data_string_conversion
+
+excluded:
+  - ios/build
+  - ios/M2Sync.xcodeproj

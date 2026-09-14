@@ -7,9 +7,7 @@
       "changelog-path": "CHANGELOG.md",
       "include-component-in-tag": false,
       "bump-minor-pre-major": true,
-      "extra-files": [
-        "android/app/build.gradle.kts"
-      ]
+      "extra-files": ["android/app/build.gradle.kts", "ios/project.yml"]
     }
   },
   "changelog-sections": [

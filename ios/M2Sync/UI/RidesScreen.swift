@@ -1,0 +1,267 @@
+import SwiftUI
+
+/// Главный экран по Human Interface Guidelines: системный список с большим заголовком,
+/// действия в тулбаре, «потянуть вниз» — синхронизировать.
+struct RidesScreen: View {
+    @StateObject private var sync = SyncController()
+
+    var body: some View {
+        NavigationStack {
+            content
+                .navigationTitle("Rides")
+                .toolbar {
+                    ToolbarItem(placement: .topBarLeading) {
+                        NavigationLink {
+                            LogScreen(lines: sync.log)
+                        } label: {
+                            Label("Log", systemImage: "list.bullet.rectangle")
+                        }
+                    }
+                    ToolbarItem(placement: .topBarTrailing) {
+                        if sync.busy {
+                            ProgressView()
+                        } else {
+                            Button {
+                                Task { await sync.sync() }
+                            } label: {
+                                Label("Sync", systemImage: "arrow.triangle.2.circlepath")
+                            }
+                        }
+                    }
+                }
+                .task { await sync.reload() }
+        }
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        if sync.rides.isEmpty, sync.device == nil, !sync.busy, !sync.loading {
+            ContentUnavailableView {
+                Label("No Rides Yet", systemImage: "bicycle")
+            } description: {
+                Text("Switch on the bike computer and sync to download your rides.")
+            } actions: {
+                Button("Sync") {
+                    Task { await sync.sync() }
+                }
+                .buttonStyle(.borderedProminent)
+            }
+        } else {
+            List {
+                if sync.device != nil || sync.busy {
+                    DeviceSection(device: sync.device, busy: sync.busy, progress: sync.progress)
+                }
+
+                if !sync.rides.isEmpty {
+                    Section {
+                        TotalsRow(rides: sync.rides)
+                    }
+                }
+
+                Section("Rides") {
+                    if sync.rides.isEmpty {
+                        if sync.loading {
+                            HStack(spacing: 10) {
+                                ProgressView()
+                                Text("Reading rides…")
+                                    .foregroundStyle(.secondary)
+                            }
+                        } else {
+                            Text("No rides on this iPhone yet.")
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    ForEach(sync.rides) { ride in
+                        RideRow(ride: ride)
+                    }
+                }
+            }
+            .listStyle(.insetGrouped)
+            .refreshable { await sync.sync() }
+        }
+    }
+}
+
+struct DeviceSection: View {
+    let device: DeviceSnapshot?
+    let busy: Bool
+    let progress: SyncProgress?
+
+    var body: some View {
+        Section("Bike Computer") {
+            if let device {
+                HStack(spacing: 14) {
+                    if let battery = device.battery {
+                        Gauge(value: Double(battery), in: 0...100) {
+                            Text("Battery")
+                        } currentValueLabel: {
+                            Text("\(battery)")
+                        }
+                        .gaugeStyle(.accessoryCircularCapacity)
+                        .tint(battery > 20 ? Color.green : Color.red)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(verbatim: "Cycplus M2")
+                            .font(.headline)
+                        Text(verbatim: device.name)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .padding(.vertical, 4)
+
+                if let firmware = device.firmware {
+                    LabeledContent("Firmware", value: firmware)
+                }
+                if let free = device.freeKB, let total = device.totalKB, total > 0 {
+                    LabeledContent("Memory") {
+                        Text("\(kilobytes(total - free)) of \(kilobytes(total))")
+                    }
+                }
+                LabeledContent("Last Seen") {
+                    Text(verbatim: device.seenAt.formatted(.relative(presentation: .named)))
+                }
+            }
+
+            if busy {
+                if let progress {
+                    VStack(alignment: .leading, spacing: 8) {
+                        LabeledContent {
+                            Text("\(progress.index) of \(progress.count)")
+                                .monospacedDigit()
+                        } label: {
+                            Text(verbatim: progress.fileName)
+                                .font(.subheadline.monospaced())
+                        }
+                        ProgressView(value: progress.fraction)
+                    }
+                    .padding(.vertical, 4)
+                } else {
+                    HStack(spacing: 10) {
+                        ProgressView()
+                        Text("Connecting to the bike computer…")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+        }
+    }
+
+    private func kilobytes(_ value: Int) -> String {
+        Int64(value * 1024).formatted(.byteCount(style: .memory))
+    }
+}
+
+struct TotalsRow: View {
+    let rides: [RideSummary]
+
+    var body: some View {
+        let kilometres = rides.reduce(0) { $0 + $1.distanceMeters } / 1000
+        let hours = Double(rides.reduce(0) { $0 + $1.movingMinutes }) / 60
+        HStack {
+            Stat(value: rides.count.formatted(), label: "rides")
+            Divider()
+            Stat(value: kilometres.formatted(.number.precision(.fractionLength(0))), label: "km")
+            Divider()
+            Stat(value: hours.formatted(.number.precision(.fractionLength(1))), label: "hours")
+        }
+        .padding(.vertical, 6)
+    }
+
+    private struct Stat: View {
+        let value: String
+        let label: LocalizedStringKey
+
+        var body: some View {
+            VStack(spacing: 2) {
+                Text(verbatim: value)
+                    .font(.title2.weight(.semibold))
+                    .monospacedDigit()
+                Text(label)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity)
+        }
+    }
+}
+
+struct RideRow: View {
+    let ride: RideSummary
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: "figure.outdoor.cycle")
+                .font(.title3)
+                .foregroundStyle(.green)
+                .frame(width: 40, height: 40)
+                .background(Color.green.opacity(0.15), in: Circle())
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(alignment: .firstTextBaseline) {
+                    Text("\(ride.distanceMeters.kilometres) km")
+                        .font(.title3.weight(.semibold))
+                        .monospacedDigit()
+                    Spacer(minLength: 8)
+                    Text(verbatim: ride.start.formatted(.dateTime.day().month(.abbreviated).hour().minute()))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                FlowLayout {
+                    Metric(icon: "stopwatch", text: Text(verbatim: movingTime))
+                    if let heartRate = ride.avgHeartRate {
+                        Metric(icon: "heart.fill", text: Text("\(heartRate) bpm"))
+                    }
+                    if let cadence = ride.avgCadence {
+                        Metric(icon: "arrow.clockwise", text: Text("\(cadence) rpm"))
+                    }
+                    if let ascent = ride.ascent, ascent > 0 {
+                        Metric(icon: "arrow.up.right", text: Text("\(ascent) m"))
+                    }
+                }
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 4)
+        .accessibilityElement(children: .combine)
+    }
+
+    private var movingTime: String {
+        Duration.seconds(ride.movingMinutes * 60)
+            .formatted(.units(allowed: [.hours, .minutes], width: .abbreviated))
+    }
+
+    private struct Metric: View {
+        let icon: String
+        let text: Text
+
+        var body: some View {
+            HStack(spacing: 4) {
+                Image(systemName: icon)
+                    .imageScale(.small)
+                text
+            }
+        }
+    }
+}
+
+struct LogScreen: View {
+    let lines: [String]
+
+    var body: some View {
+        List {
+            if lines.isEmpty {
+                Text("Empty")
+                    .foregroundStyle(.secondary)
+            }
+            ForEach(Array(lines.enumerated()), id: \.offset) { entry in
+                Text(verbatim: entry.element)
+                    .font(.footnote.monospaced())
+            }
+        }
+        .textSelection(.enabled)
+        .navigationTitle("Log")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
