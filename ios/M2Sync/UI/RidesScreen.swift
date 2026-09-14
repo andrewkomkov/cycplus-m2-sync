@@ -4,11 +4,12 @@ import SwiftUI
 /// действия в тулбаре, «потянуть вниз» — синхронизировать.
 struct RidesScreen: View {
     @StateObject private var sync = SyncController()
+    @State private var path: [RideSummary] = []
     @State private var showingLog = false
     @State private var showingProfile = false
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             content
                 .navigationTitle("Rides")
                 .toolbar {
@@ -46,7 +47,19 @@ struct RidesScreen: View {
                 .sheet(isPresented: $showingProfile) {
                     ProfileScreen(sync: sync)
                 }
-                .task { await sync.reload() }
+                .navigationDestination(for: RideSummary.self) { ride in
+                    RideDetailScreen(summary: ride, inHealth: sync.imported.contains(ride.fileName))
+                }
+                .task {
+                    await sync.reload()
+                    #if DEBUG
+                    // Для скриншотов из симулятора: SIMCTL_CHILD_M2SYNC_OPEN_RIDE=<файл> сразу открывает поездку.
+                    if let name = ProcessInfo.processInfo.environment["M2SYNC_OPEN_RIDE"],
+                       let ride = sync.rides.first(where: { $0.fileName == name }) {
+                        path = [ride]
+                    }
+                    #endif
+                }
         }
     }
 
@@ -93,7 +106,9 @@ struct RidesScreen: View {
                         }
                     }
                     ForEach(sync.rides) { ride in
-                        RideRow(ride: ride, inHealth: sync.imported.contains(ride.fileName))
+                        NavigationLink(value: ride) {
+                            RideRow(ride: ride, inHealth: sync.imported.contains(ride.fileName))
+                        }
                     }
                 }
             }

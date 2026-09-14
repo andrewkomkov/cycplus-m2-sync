@@ -2,7 +2,7 @@ import Foundation
 import UIKit
 
 /// Сводка поездки для списка — то же, что RideSummary в Android-версии.
-struct RideSummary: Identifiable, Equatable, Codable {
+struct RideSummary: Identifiable, Hashable, Codable {
     var id: String { fileName }
     let fileName: String
     let start: Date

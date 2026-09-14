@@ -97,8 +97,9 @@ speed, distance and elevation gain, with pauses marked so the moving time matche
 second. The workouts show up in the Fitness app too, and running a sync again never duplicates
 one. Calories, which the M2 does not record, are estimated from heart rate, or from speed where
 there is none, and saved as active energy; weight, year of birth and sex come from Apple Health or
-from the in-app profile. `.fit` export, the map and the charts land in follow-up changes. It needs
-iOS 17 or newer and is built from source:
+from the in-app profile. Tap a ride for its route on an Apple Maps basemap, its totals, and
+elevation, speed, heart-rate and cadence charts you can scrub with a finger. `.fit` export lands in a
+follow-up change. It needs iOS 17 or newer and is built from source:
 
 ```bash
 brew install xcodegen
