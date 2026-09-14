@@ -25,6 +25,11 @@ final class HealthWriter {
         let outdated: [HKWorkout]
     }
 
+    /// Метка поездки на каждом сэмпле. HKWorkoutBuilder сохраняет сэмплы сразу, а тренировку —
+    /// только в конце: если приложение закрыли посреди записи, сэмплы остаются без тренировки
+    /// и продолжают считаться в итогах «Здоровья». По этой метке их находим и убираем.
+    static let rideMetadataKey = "M2SyncRide"
+
     static let device = HKDevice(
         name: "Cycplus M2",
         manufacturer: "CYCPLUS",
@@ -87,23 +92,43 @@ final class HealthWriter {
         try await store.delete(workout)
     }
 
+    /// Сэмплы этой поездки, оставшиеся от прерванной записи. Вызывать, когда тренировок поездки
+    /// в Health уже нет, — иначе вместе с сиротами уйдут и данные живой тренировки.
+    func deleteLeftovers(of plan: WorkoutPlan) async throws {
+        let leftovers = HKQuery.predicateForObjects(
+            withMetadataKey: Self.rideMetadataKey,
+            allowedValues: [plan.syncIdentifier]
+        )
+        for type in Self.shareTypes where type != HKObjectType.workoutType() && type != HKSeriesType.workoutRoute() {
+            _ = try await store.deleteObjects(of: type, predicate: leftovers)
+        }
+    }
+
     func write(_ plan: WorkoutPlan) async throws -> HKWorkout {
         let configuration = HKWorkoutConfiguration()
         configuration.activityType = .cycling
         configuration.locationType = .outdoor
 
         let builder = HKWorkoutBuilder(healthStore: store, configuration: configuration, device: Self.device)
-        try await builder.beginCollection(at: plan.start)
-        for batch in Self.samples(for: plan).chunks(of: 1000) {
-            try await builder.addSamples(batch)
+        let workout: HKWorkout
+        do {
+            try await builder.beginCollection(at: plan.start)
+            for batch in Self.samples(for: plan).chunks(of: 1000) {
+                try await builder.addSamples(batch)
+            }
+            // Паузы размечаем событиями — тогда длительность тренировки равна времени в движении.
+            if !plan.pauses.isEmpty {
+                try await builder.addWorkoutEvents(Self.events(for: plan))
+            }
+            try await builder.addMetadata(Self.metadata(for: plan))
+            try await builder.endCollection(at: plan.end)
+            guard let finished = try await builder.finishWorkout() else { throw HealthError.notSaved }
+            workout = finished
+        } catch {
+            // Уже сохранённые сэмплы без тренировки не оставляем.
+            builder.discardWorkout()
+            throw error
         }
-        // Паузы размечаем событиями — тогда длительность тренировки равна времени в движении.
-        if !plan.pauses.isEmpty {
-            try await builder.addWorkoutEvents(Self.events(for: plan))
-        }
-        try await builder.addMetadata(Self.metadata(for: plan))
-        try await builder.endCollection(at: plan.end)
-        guard let workout = try await builder.finishWorkout() else { throw HealthError.notSaved }
 
         if !plan.route.isEmpty {
             let route = HKWorkoutRouteBuilder(healthStore: store, device: Self.device)
@@ -118,6 +143,7 @@ final class HealthWriter {
     private static func samples(for plan: WorkoutPlan) -> [HKSample] {
         let perMinute = HKUnit.count().unitDivided(by: .minute())
         let metersPerSecond = HKUnit.meter().unitDivided(by: .second())
+        let tag = [rideMetadataKey: plan.syncIdentifier]
 
         func instant(_ identifier: HKQuantityTypeIdentifier, _ unit: HKUnit, _ items: [WorkoutPlan.Sample]) -> [HKSample] {
             items.map {
@@ -127,7 +153,7 @@ final class HealthWriter {
                     start: $0.time,
                     end: $0.time,
                     device: device,
-                    metadata: nil
+                    metadata: tag
                 )
             }
         }
@@ -142,7 +168,7 @@ final class HealthWriter {
                 start: plan.start,
                 end: plan.end,
                 device: device,
-                metadata: nil
+                metadata: tag
             ))
         }
         return samples

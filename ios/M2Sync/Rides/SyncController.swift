@@ -181,6 +181,8 @@ final class SyncController: ObservableObject {
                 if previous.current {
                     append(String(localized: "already in Apple Health: \(name)"))
                 } else {
+                    // Тренировок поездки в Health больше нет — убираем сэмплы прерванной записи, если были.
+                    try await health.deleteLeftovers(of: plan)
                     let workout = try await health.write(plan)
                     let kilometres = (plan.distanceMeters ?? 0).kilometres
                     let moving = Int(workout.duration)
