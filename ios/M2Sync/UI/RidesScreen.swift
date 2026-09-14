@@ -7,48 +7,22 @@ struct RidesScreen: View {
     @State private var path: [RideSummary] = []
     @State private var showingLog = false
     @State private var showingProfile = false
+    @State private var editMode: EditMode = .inactive
+    @State private var selection = Set<String>()
 
     var body: some View {
         NavigationStack(path: $path) {
             content
                 .navigationTitle("Rides")
-                .toolbar {
-                    ToolbarItem(placement: .topBarLeading) {
-                        Menu {
-                            Button {
-                                showingProfile = true
-                            } label: {
-                                Label("Profile for Calories", systemImage: "person.crop.circle")
-                            }
-                            Button {
-                                showingLog = true
-                            } label: {
-                                Label("Log", systemImage: "list.bullet.rectangle")
-                            }
-                        } label: {
-                            Label("More", systemImage: "ellipsis.circle")
-                        }
-                    }
-                    ToolbarItem(placement: .topBarTrailing) {
-                        if sync.busy {
-                            ProgressView()
-                        } else {
-                            Button {
-                                Task { await sync.sync() }
-                            } label: {
-                                Label("Sync", systemImage: "arrow.triangle.2.circlepath")
-                            }
-                        }
-                    }
-                }
+                .toolbar { toolbar }
                 .navigationDestination(isPresented: $showingLog) {
                     LogScreen(lines: sync.log)
                 }
-                .sheet(isPresented: $showingProfile) {
-                    ProfileScreen(sync: sync)
-                }
                 .navigationDestination(for: RideSummary.self) { ride in
                     RideDetailScreen(summary: ride, inHealth: sync.imported.contains(ride.fileName))
+                }
+                .sheet(isPresented: $showingProfile) {
+                    ProfileScreen(sync: sync)
                 }
                 .task {
                     await sync.reload()
@@ -60,6 +34,65 @@ struct RidesScreen: View {
                     }
                     #endif
                 }
+        }
+    }
+
+    @ToolbarContentBuilder
+    private var toolbar: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            Menu {
+                Button {
+                    editMode = .active
+                } label: {
+                    Label("Select Rides", systemImage: "checkmark.circle")
+                }
+                .disabled(sync.rides.isEmpty)
+                Button {
+                    showingProfile = true
+                } label: {
+                    Label("Profile for Calories", systemImage: "person.crop.circle")
+                }
+                Button {
+                    showingLog = true
+                } label: {
+                    Label("Log", systemImage: "list.bullet.rectangle")
+                }
+            } label: {
+                Label("More", systemImage: "ellipsis.circle")
+            }
+        }
+
+        ToolbarItem(placement: .topBarTrailing) {
+            if editMode.isEditing {
+                Button("Done") { finishSelecting() }
+            } else if sync.busy {
+                ProgressView()
+            } else {
+                Button {
+                    Task { await sync.sync() }
+                } label: {
+                    Label("Sync", systemImage: "arrow.triangle.2.circlepath")
+                }
+            }
+        }
+
+        if editMode.isEditing {
+            ToolbarItemGroup(placement: .bottomBar) {
+                Button {
+                    selection = allSelected ? [] : Set(sync.rides.map(\.fileName))
+                } label: {
+                    allSelected ? Text("Deselect All") : Text("Select All")
+                }
+                Spacer()
+                Text("\(selection.count) selected")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                ShareLink(items: selectedExports, preview: { SharePreview($0.fileName) }) {
+                    Label("Share", systemImage: "square.and.arrow.up")
+                }
+                .disabled(selectedExports.isEmpty)
+            }
         }
     }
 
@@ -77,7 +110,7 @@ struct RidesScreen: View {
                 .buttonStyle(.borderedProminent)
             }
         } else {
-            List {
+            List(selection: $selection) {
                 if sync.busy {
                     SyncStatusSection(progress: sync.progress)
                 }
@@ -109,12 +142,38 @@ struct RidesScreen: View {
                         NavigationLink(value: ride) {
                             RideRow(ride: ride, inHealth: sync.imported.contains(ride.fileName))
                         }
+                        .contextMenu {
+                            if let export = export(ride) {
+                                ShareLink(item: export, preview: SharePreview(export.fileName))
+                            }
+                        }
                     }
                 }
             }
             .listStyle(.insetGrouped)
+            .environment(\.editMode, $editMode)
             .refreshable { await sync.sync() }
         }
+    }
+
+    private var allSelected: Bool {
+        !sync.rides.isEmpty && selection.count == sync.rides.count
+    }
+
+    private var selectedExports: [RideExport] {
+        guard let files = try? RideFiles.standard() else { return [] }
+        return sync.rides
+            .filter { selection.contains($0.fileName) }
+            .compactMap { try? RideExport(summary: $0, files: files) }
+    }
+
+    private func export(_ ride: RideSummary) -> RideExport? {
+        try? RideExport(summary: ride, files: RideFiles.standard())
+    }
+
+    private func finishSelecting() {
+        editMode = .inactive
+        selection = []
     }
 }
 
