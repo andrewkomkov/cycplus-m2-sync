@@ -9,6 +9,7 @@ struct RidesScreen: View {
     @State private var showingProfile = false
     @State private var editMode: EditMode = .inactive
     @State private var selection = Set<String>()
+    @AppStorage("sync-on-launch") private var syncOnLaunch = true
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -33,6 +34,10 @@ struct RidesScreen: View {
                         path = [ride]
                     }
                     #endif
+                    // Как на Android: открыл приложение — оно само забрало новые поездки.
+                    if path.isEmpty, SyncController.syncsOnLaunch(enabled: syncOnLaunch, device: sync.device) {
+                        await sync.sync()
+                    }
                 }
         }
     }
@@ -47,6 +52,9 @@ struct RidesScreen: View {
                     Label("Select Rides", systemImage: "checkmark.circle")
                 }
                 .disabled(sync.rides.isEmpty)
+                Toggle(isOn: $syncOnLaunch) {
+                    Label("Sync on Launch", systemImage: "bolt.horizontal.circle")
+                }
                 Button {
                     showingProfile = true
                 } label: {

@@ -62,6 +62,12 @@ final class SyncController: ObservableObject {
         healthProfile.filled(from: manualProfile)
     }
 
+    /// Синк при запуске — только когда велокомп уже знаком. При самом первом запуске Bluetooth
+    /// и «Здоровье» спрашивают разрешения по кнопке, в понятный момент, а не сразу при открытии.
+    nonisolated static func syncsOnLaunch(enabled: Bool, device: DeviceSnapshot?) -> Bool {
+        enabled && device != nil
+    }
+
     private let defaults: UserDefaults
     private let health = HealthWriter()
 

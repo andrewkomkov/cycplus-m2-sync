@@ -751,6 +751,16 @@
         }
       }
     },
+    "Sync on Launch": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Синк при запуске"
+          }
+        }
+      }
+    },
     "The M2 records no calories. They are estimated from heart rate, or from speed where there is none, and saved to Apple Health as active energy. The heart-rate formula needs weight, year of birth and sex.": {
       "localizations": {
         "ru": {
