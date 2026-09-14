@@ -86,7 +86,62 @@ struct WorkoutPlanTests {
 
         let flat = WorkoutPlan(ride: ride(seconds: [0, 1], distance: 0, ascent: 0))
         #expect(flat.distanceMeters == nil)
+        #expect(flat.distance.isEmpty)
         #expect(flat.ascentMeters == nil)
+    }
+
+    @Test func distanceIsSplitByRecordingSpansAndKeepsTheSessionTotal() {
+        // 0…9 с — 0…45 м, пауза, 20…29 с — 100…145 м: второму отрезку достаётся прирост с 45 до 145 м.
+        let plan = WorkoutPlan(ride: ride(seconds: Array(0...9) + Array(20...29), distance: 290))
+
+        #expect(plan.distance.map(\.interval) == [
+            DateInterval(start: start, end: start.addingTimeInterval(10)),
+            DateInterval(start: start.addingTimeInterval(20), end: start.addingTimeInterval(30)),
+        ])
+        #expect(abs(plan.distance[0].value - 90) < 1e-9)
+        #expect(abs(plan.distance[1].value - 200) < 1e-9)
+    }
+
+    @Test func rideSpreadOverDaysKeepsItsKilometresOnTheDaysItWasRidden() {
+        // Как поездка 26 августа: велокомп дописал в ту же сессию езду через двое суток.
+        let later = 2 * 24 * 3600
+        let plan = WorkoutPlan(ride: ride(seconds: Array(0...9) + Array(later...(later + 9)), distance: 100))
+
+        #expect(plan.distance.count == 2)
+        #expect(plan.distance.allSatisfy { $0.interval.duration == 10 })
+        #expect(abs(plan.distance.map(\.value).reduce(0, +) - 100) < 1e-9)
+    }
+
+    @Test func withoutPointDistancesTheTotalIsSplitByTime() {
+        let points = (Array(0...9) + Array(20...39)).map { second in
+            let base = point(at: second)
+            return FitParser.Point(
+                time: base.time,
+                latitude: base.latitude,
+                longitude: base.longitude,
+                altitude: base.altitude,
+                speed: base.speed,
+                heartRate: base.heartRate,
+                cadence: base.cadence,
+                distance: nil
+            )
+        }
+
+        let plan = WorkoutPlan(ride: ride(points: points, distance: 300))
+
+        #expect(plan.distance.map(\.value) == [100, 200])
+    }
+
+    @Test func activeEnergyFollowsWhereItWasBurned() throws {
+        let profile = Calories.Profile(weightKg: 70, birthYear: 1991, sex: .male)
+        let points = (0...60).map { point(at: $0, heartRate: 150) } + (100...160).map { point(at: $0, heartRate: 100) }
+
+        let plan = WorkoutPlan(ride: ride(points: points), profile: profile)
+
+        let total = try #require(plan.activeEnergyKilocalories)
+        #expect(plan.activeEnergy.count == 2)
+        #expect(abs(plan.activeEnergy.map(\.value).reduce(0, +) - total) < 1e-9)
+        #expect(plan.activeEnergy[0].value > plan.activeEnergy[1].value)
     }
 
     @Test func readingsOutsideTheWorkoutAreDropped() {
@@ -113,6 +168,7 @@ struct WorkoutPlanTests {
     @Test func activeEnergyNeedsWeightAndCarriesTheProfile() {
         let withoutWeight = WorkoutPlan(ride: ride(seconds: Array(0...60)))
         #expect(withoutWeight.activeEnergyKilocalories == nil)
+        #expect(withoutWeight.activeEnergy.isEmpty)
         #expect(withoutWeight.caloriesProfileKey == "-/-/-")
 
         let profile = Calories.Profile(weightKg: 70, birthYear: 1991, sex: .male)

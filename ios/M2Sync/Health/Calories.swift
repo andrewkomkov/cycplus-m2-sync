@@ -44,6 +44,12 @@ enum Calories {
         let active: Double
     }
 
+    /// Активная энергия, набежавшая к моменту точки, — чтобы разложить итог по отрезкам записи.
+    struct Accrual: Equatable {
+        let time: Date
+        let kilocalories: Double
+    }
+
     /// Разрыв между точками больше этого считаем остановкой и не оплачиваем.
     static let maxGapSeconds: TimeInterval = 30
 
@@ -73,18 +79,25 @@ enum Calories {
         var active = 0.0
         let resting = restingPerMinute(weightKg: weightKg)
         forEachCountedInterval(points) { previous, current, minutes in
-            let heartRate = current.heartRate ?? previous.heartRate
-            let perMinute: Double
-            if let heartRate, heartRate > 0, let age, let sex {
-                perMinute = keytelPerMinute(heartRate: heartRate, weightKg: weightKg, age: age, sex: sex)
-            } else {
-                perMinute = metPerMinute(speed: current.speed ?? previous.speed ?? 0, weightKg: weightKg)
-            }
-            total += perMinute * minutes
+            let rate = perMinute(previous: previous, current: current, weightKg: weightKg, age: age, sex: sex)
+            total += rate * minutes
             // На низком пульсе полный расход бывает ниже покоя — такие секунды активными не считаем.
-            active += max(0, perMinute - resting) * minutes
+            active += max(0, rate - resting) * minutes
         }
         return total > 0 ? Estimate(total: total, active: active) : nil
+    }
+
+    /// Активная энергия по интервалам между точками: пустой список, если без веса считать нечего.
+    static func activeAccruals(_ ride: FitParser.Ride, profile: Profile) -> [Accrual] {
+        guard let weight = profile.weightKg, weight > 0 else { return [] }
+        let age = age(birthYear: profile.birthYear, at: ride.start)
+        let resting = restingPerMinute(weightKg: weight)
+        var accruals: [Accrual] = []
+        forEachCountedInterval(ride.points) { previous, current, minutes in
+            let rate = perMinute(previous: previous, current: current, weightKg: weight, age: age, sex: profile.sex)
+            accruals.append(Accrual(time: current.time, kilocalories: max(0, rate - resting) * minutes))
+        }
+        return accruals
     }
 
     /// Keytel et al., «Prediction of energy expenditure from heart rate monitoring during
@@ -123,6 +136,21 @@ enum Calories {
         guard let birthYear else { return nil }
         let age = Calendar(identifier: .gregorian).component(.year, from: date) - birthYear
         return (1...120).contains(age) ? age : nil
+    }
+
+    /// Полный расход за минуту на интервале: по пульсу, если есть он, возраст и пол, иначе по скорости.
+    private static func perMinute(
+        previous: FitParser.Point,
+        current: FitParser.Point,
+        weightKg: Double,
+        age: Int?,
+        sex: Sex?
+    ) -> Double {
+        let heartRate = current.heartRate ?? previous.heartRate
+        if let heartRate, heartRate > 0, let age, let sex {
+            return keytelPerMinute(heartRate: heartRate, weightKg: weightKg, age: age, sex: sex)
+        }
+        return metPerMinute(speed: current.speed ?? previous.speed ?? 0, weightKg: weightKg)
     }
 
     private static func restingKilocalories(points: [FitParser.Point], weightKg: Double) -> Double {

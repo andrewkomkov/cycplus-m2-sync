@@ -91,10 +91,23 @@ struct FitParserTests {
                 "\(ride.fileName): Health \(plan.movingSeconds) s, .fit \(ride.movingSeconds) s"
             )
             #expect(plan.route.count == gps)
+
+            // Дистанция и энергия по отрезкам записи складываются в итоги и не выходят за тренировку.
+            let parted = WorkoutPlan(ride: ride, profile: Self.profile)
+            let workout = DateInterval(start: parted.start, end: parted.end)
+            let distanceSum = parted.distance.map(\.value).reduce(0, +)
+            #expect(abs(distanceSum - (parted.distanceMeters ?? 0)) < 1e-6, "\(ride.fileName): distance parts")
+            let energySum = parted.activeEnergy.map(\.value).reduce(0, +)
+            #expect(abs(energySum - (parted.activeEnergyKilocalories ?? 0)) < 1e-6, "\(ride.fileName): energy parts")
+            #expect((parted.distance + parted.activeEnergy).allSatisfy {
+                workout.contains($0.interval.start) && workout.contains($0.interval.end)
+            })
+
             return "\(ride.fileName) points=\(ride.points.count) gps=\(gps) dist=\(ride.totalDistance ?? -1) "
                 + "timer=\(ride.totalTimerTime ?? -1) span=\(Int(ride.end.timeIntervalSince(ride.start))) "
                 + "moving_s=\(ride.movingSeconds) pauses=\(ride.activeSpans.count - 1) "
                 + "health_moving_s=\(plan.movingSeconds) health_pauses=\(plan.pauses.count) "
+                + "distance_parts=\(parted.distance.count) energy_parts=\(parted.activeEnergy.count) "
                 + calories(ride)
         }
         if let report = environment["M2SYNC_REPORT"] {
@@ -102,9 +115,11 @@ struct FitParserTests {
         }
     }
 
-    /// Калории для условного профиля — сверяются с тем же расчётом на Python по .fit.
+    /// Условный профиль для калорий — тот же, что у расчёта на Python по .fit.
+    private static let profile = Calories.Profile(weightKg: 72.8, birthYear: 1990, sex: .male)
+
     private func calories(_ ride: FitParser.Ride) -> String {
-        let profile = Calories.Profile(weightKg: 72.8, birthYear: 1990, sex: .male)
+        let profile = Self.profile
         guard let estimate = Calories.forRide(ride, profile: profile) else { return "kcal_total=- kcal_active=-" }
         return String(format: "kcal_total=%.1f kcal_active=%.1f", estimate.total, estimate.active)
     }
