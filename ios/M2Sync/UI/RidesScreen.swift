@@ -88,9 +88,11 @@ struct RidesScreen: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                 Spacer()
-                ShareLink(items: selectedExports, preview: { SharePreview($0.fileName) }) {
-                    Label("Share", systemImage: "square.and.arrow.up")
-                }
+                ShareLink(
+                    items: selectedExports,
+                    preview: { SharePreview($0.fileName) },
+                    label: { Label("Share", systemImage: "square.and.arrow.up") }
+                )
                 .disabled(selectedExports.isEmpty)
             }
         }
