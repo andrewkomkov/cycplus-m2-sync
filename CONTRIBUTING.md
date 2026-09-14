@@ -27,6 +27,26 @@ Compose UI tests on Robolectric — no emulator, no connected phone, and CI runs
 task. A change to the screen belongs with a test in
 `android/app/src/test/java/dev/komkov/m2sync/UiTest.kt`.
 
+The iOS project is generated from `ios/project.yml`, so the `.xcodeproj` is not committed:
+
+```bash
+brew install xcodegen
+cd ios
+xcodegen generate
+xcodebuild -project M2Sync.xcodeproj -scheme M2Sync \
+  -destination 'platform=iOS Simulator,name=iPhone 17' test
+```
+
+The FIT tests encode their own files, because real rides are GPS tracks and never go into the
+repository. To check the parser against your own rides, point the opt-in test at a folder of
+them; it writes one summary line per file to the report:
+
+```bash
+TEST_RUNNER_M2SYNC_FIT_DIR=$PWD/../fit TEST_RUNNER_M2SYNC_REPORT=/tmp/fit-report.txt \
+  xcodebuild -project M2Sync.xcodeproj -scheme M2Sync \
+  -destination 'platform=iOS Simulator,name=iPhone 17' test
+```
+
 Anything that touches the protocol or the import has to be checked against a real
 device — please say which model and firmware in the pull request, and paste the
 relevant part of `adb logcat -s M2SYNC`. After an import, `VERIFY` reads the data

@@ -83,6 +83,23 @@ done
 `$S.PERMS` печатает точный список, который ждёт текущая сборка, — он не устареет вместе с этим
 куском.
 
+### iPhone (в работе)
+
+Версия для iOS лежит в [`ios/`](ios). Пока она находит велокомпьютер, качает новые заезды по
+Bluetooth и показывает их списком; запись в Apple Health, калории, экспорт `.fit`, карта и графики
+появятся следующими изменениями. Нужен iOS 17 и новее, собирается из исходников:
+
+```bash
+brew install xcodegen
+cd cycplus-m2-sync/ios
+xcodegen generate
+open M2Sync.xcodeproj
+```
+
+Выбери свою команду в **Signing & Capabilities** и запусти на телефоне. Хватает бесплатного
+Apple ID, в том числе для Apple Health, но такая сборка живёт 7 дней, потом её надо поставить
+заново. Apple Health есть только на iPhone и часах, поэтому эту часть Mac сделать не может.
+
 ## Управление из терминала
 
 ```bash
@@ -182,7 +199,8 @@ Health Connect.
   с которой всё началось
 - [Kaiserdragon2/CycSync](https://github.com/Kaiserdragon2/CycSync) — ранняя заготовка Android-аппа
   под Cycplus M2
-- [Garmin FIT SDK](https://github.com/garmin/fit-java-sdk) — разбор FIT
+- [Garmin FIT SDK](https://github.com/garmin/fit-java-sdk) — разбор FIT, и его
+  [версия для Swift](https://github.com/garmin/fit-swift-sdk) на iOS
 
 Проект не связан с Cycplus, XOSS, Garmin или Google.
 
