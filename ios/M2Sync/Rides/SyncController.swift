@@ -34,23 +34,30 @@ extension RideSummary {
     }
 }
 
-/// Синк: найти велокомп, запомнить его состояние, скачать новые файлы, перечитать список.
+/// Синк: найти велокомп, запомнить его состояние, скачать новые файлы, записать их в Apple Health.
 @MainActor
 final class SyncController: ObservableObject {
     private static let logLimit = 500
     private static let deviceKey = "device"
+    /// Отметки о записи — на версию правил: после её смены все поездки проверяются заново,
+    /// и записанные по старым правилам тренировки перезаписываются.
+    private static var importedKey: String { "imported-v\(WorkoutPlan.syncVersion)" }
 
     @Published private(set) var busy = false
     @Published private(set) var loading = false
     @Published private(set) var device: DeviceSnapshot?
     @Published private(set) var progress: SyncProgress?
     @Published private(set) var rides: [RideSummary] = []
+    /// Имена файлов, уже записанных в Apple Health по текущим правилам.
+    @Published private(set) var imported: Set<String>
     @Published private(set) var log: [String] = []
 
     private let defaults: UserDefaults
+    private let health = HealthWriter()
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
+        imported = Set(defaults.stringArray(forKey: Self.importedKey) ?? [])
         if let data = defaults.data(forKey: Self.deviceKey) {
             device = try? JSONDecoder().decode(DeviceSnapshot.self, from: data)
         }
@@ -64,13 +71,46 @@ final class SyncController: ObservableObject {
         UIApplication.shared.isIdleTimerDisabled = true
         defer {
             busy = false
+            progress = nil
             UIApplication.shared.isIdleTimerDisabled = false
         }
 
+        let files: RideFiles
+        do {
+            files = try RideFiles.standard()
+        } catch {
+            append(error.localizedDescription)
+            return
+        }
+
+        await download(into: files)
+        await reload()
+        // Уже скачанные поездки уходят в Health, даже если велокомп сейчас выключен.
+        await importToHealth(files)
+    }
+
+    /// Перечитывает список поездок. Разбираются только новые файлы, остальное — из кэша,
+    /// и всё это вне главного потока.
+    func reload() async {
+        guard let files = try? RideFiles.standard() else { return }
+        loading = true
+        defer { loading = false }
+
+        let cache = RideSummaryCache(
+            url: files.directory.deletingLastPathComponent().appendingPathComponent("ride-summaries.json")
+        )
+        let (summaries, failures) = await Task.detached(priority: .userInitiated) {
+            cache.refresh(urls: (try? files.rideURLs()) ?? [])
+        }.value
+        rides = summaries
+        failures.forEach(append)
+    }
+
+    private func download(into files: RideFiles) async {
         let client = M2Client()
         client.log = { [weak self] in self?.append($0) }
+        defer { client.disconnect() }
         do {
-            let files = try RideFiles.standard()
             append(String(localized: "looking for the device…"))
             let name = try await client.connect()
             append(name)
@@ -102,25 +142,67 @@ final class SyncController: ObservableObject {
             append(error.localizedDescription)
         }
         progress = nil
-        client.disconnect()
-        await reload()
     }
 
-    /// Перечитывает список поездок. Разбираются только новые файлы, остальное — из кэша,
-    /// и всё это вне главного потока.
-    func reload() async {
-        guard let files = try? RideFiles.standard() else { return }
-        loading = true
-        defer { loading = false }
+    /// Новые поездки — в Apple Health. Отметка «записано» ставится по имени файла, как на Android;
+    /// метка в самой тренировке страхует от дублей, если отметки потерялись, и находит тренировки,
+    /// записанные по старым правилам, чтобы их заменить.
+    private func importToHealth(_ files: RideFiles) async {
+        let urls = ((try? files.rideURLs()) ?? []).filter { !imported.contains($0.lastPathComponent) }
+        guard !urls.isEmpty else { return }
 
-        let cache = RideSummaryCache(
-            url: files.directory.deletingLastPathComponent().appendingPathComponent("ride-summaries.json")
-        )
-        let (summaries, failures) = await Task.detached(priority: .userInitiated) {
-            cache.refresh(urls: (try? files.rideURLs()) ?? [])
-        }.value
-        rides = summaries
-        failures.forEach(append)
+        do {
+            try await health.authorize()
+        } catch {
+            append(error.localizedDescription)
+            return
+        }
+
+        for (offset, url) in urls.enumerated() {
+            let name = url.lastPathComponent
+            progress = SyncProgress(
+                fileName: name,
+                index: offset + 1,
+                count: urls.count,
+                received: offset,
+                size: urls.count,
+                phase: .health
+            )
+            do {
+                let ride = try await Task.detached(priority: .userInitiated) {
+                    try FitParser.parse(url: url)
+                }.value
+                let plan = WorkoutPlan(ride: ride)
+
+                let previous = try await health.previous(plan)
+                for workout in previous.outdated {
+                    try await health.delete(workout)
+                }
+                if previous.current {
+                    append(String(localized: "already in Apple Health: \(name)"))
+                } else {
+                    // Тренировок поездки в Health больше нет — убираем сэмплы прерванной записи, если были.
+                    try await health.deleteLeftovers(of: plan)
+                    let workout = try await health.write(plan)
+                    let kilometres = (plan.distanceMeters ?? 0).kilometres
+                    let moving = Int(workout.duration)
+                    if previous.outdated.isEmpty {
+                        append(String(localized: "saved to Apple Health: \(name) — \(kilometres) km, \(moving) s moving, heart rate: \(plan.heartRate.count), route points: \(plan.route.count)"))
+                    } else {
+                        append(String(localized: "rewritten in Apple Health: \(name) — \(kilometres) km, \(moving) s moving, heart rate: \(plan.heartRate.count), route points: \(plan.route.count)"))
+                    }
+                }
+                markImported(name)
+            } catch {
+                append("\(name): \(error.localizedDescription)")
+            }
+        }
+        progress = nil
+    }
+
+    private func markImported(_ name: String) {
+        imported.insert(name)
+        defaults.set(imported.sorted(), forKey: Self.importedKey)
     }
 
     private func snapshot(of client: M2Client, name: String) async {

@@ -84,9 +84,17 @@ struct FitParserTests {
         let lines = try urls.map { url in
             let ride = try FitParser.parse(url: url)
             let gps = ride.points.filter { $0.latitude != nil }.count
+            let plan = WorkoutPlan(ride: ride)
+            // Health должен получить то же время в движении, что и в .fit.
+            #expect(
+                plan.movingSeconds == ride.movingSeconds,
+                "\(ride.fileName): Health \(plan.movingSeconds) s, .fit \(ride.movingSeconds) s"
+            )
+            #expect(plan.route.count == gps)
             return "\(ride.fileName) points=\(ride.points.count) gps=\(gps) dist=\(ride.totalDistance ?? -1) "
                 + "timer=\(ride.totalTimerTime ?? -1) span=\(Int(ride.end.timeIntervalSince(ride.start))) "
-                + "moving_s=\(ride.movingSeconds) pauses=\(ride.activeSpans.count - 1)"
+                + "moving_s=\(ride.movingSeconds) pauses=\(ride.activeSpans.count - 1) "
+                + "health_moving_s=\(plan.movingSeconds) health_pauses=\(plan.pauses.count)"
         }
         if let report = environment["M2SYNC_REPORT"] {
             try lines.joined(separator: "\n").write(toFile: report, atomically: true, encoding: .utf8)

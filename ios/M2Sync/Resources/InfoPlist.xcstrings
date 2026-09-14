@@ -10,6 +10,26 @@
           }
         }
       }
+    },
+    "NSHealthShareUsageDescription": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверяет, какие заезды уже есть в «Здоровье», чтобы не записать их дважды."
+          }
+        }
+      }
+    },
+    "NSHealthUpdateUsageDescription": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сохраняет заезды как велотренировки с маршрутом, пульсом, каденсом и скоростью."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

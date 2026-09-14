@@ -37,3 +37,4 @@ ios/build/
 ios/M2Sync/Info.plist
 xcuserdata/
 *.xcuserstate
+ios/M2Sync/M2Sync.entitlements

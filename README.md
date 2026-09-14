@@ -91,9 +91,12 @@ done
 
 ### iPhone (work in progress)
 
-An iOS version lives in [`ios/`](ios). Right now it finds the bike computer, downloads new rides
-over Bluetooth and lists them; writing them into Apple Health, calories, `.fit` export, the map and
-the charts land in follow-up changes. It needs iOS 17 or newer and is built from source:
+An iOS version lives in [`ios/`](ios). It finds the bike computer, downloads new rides over
+Bluetooth and saves them to Apple Health as outdoor cycling workouts: route, heart rate, cadence,
+speed, distance and elevation gain, with pauses marked so the moving time matches the `.fit` to the
+second. The workouts show up in the Fitness app too, and running a sync again never duplicates
+one. Calories, `.fit` export, the map and the charts land in follow-up changes. It needs iOS 17 or
+newer and is built from source:
 
 ```bash
 brew install xcodegen

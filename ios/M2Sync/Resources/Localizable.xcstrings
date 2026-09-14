@@ -61,6 +61,26 @@
         }
       }
     },
+    "Apple Health did not save the workout": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "«Здоровье» не сохранило тренировку"
+          }
+        }
+      }
+    },
+    "Apple Health is not available on this device": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "«Здоровье» недоступно на этом устройстве"
+          }
+        }
+      }
+    },
     "Battery": {
       "localizations": {
         "ru": {
@@ -101,6 +121,16 @@
         }
       }
     },
+    "Downloading": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скачивание"
+          }
+        }
+      }
+    },
     "Empty": {
       "localizations": {
         "ru": {
@@ -127,6 +157,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Прошивка"
+          }
+        }
+      }
+    },
+    "In Health": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "В «Здоровье»"
           }
         }
       }
@@ -181,6 +221,16 @@
         }
       }
     },
+    "No permission to write workouts to Apple Health": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нет разрешения записывать тренировки в «Здоровье»"
+          }
+        }
+      }
+    },
     "No rides on this iPhone yet.": {
       "localizations": {
         "ru": {
@@ -227,6 +277,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Заезды"
+          }
+        }
+      }
+    },
+    "Saving to Health": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запись в «Здоровье»"
           }
         }
       }
@@ -291,6 +351,16 @@
         }
       }
     },
+    "already in Apple Health: %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "уже в «Здоровье»: %@"
+          }
+        }
+      }
+    },
     "downloading %@ (%lld bytes)": {
       "localizations": {
         "ru": {
@@ -307,6 +377,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "часов"
+          }
+        }
+      }
+    },
+    "in Health": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "в Здоровье"
           }
         }
       }
@@ -351,6 +431,16 @@
         }
       }
     },
+    "rewritten in Apple Health: %@ — %@ km, %lld s moving, heart rate: %lld, route points: %lld": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "перезаписан в «Здоровье»: %@ — %@ км, в движении %lld с, пульс: %lld, точек маршрута: %lld"
+          }
+        }
+      }
+    },
     "rides": {
       "localizations": {
         "ru": {
@@ -377,6 +467,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "сохранён %@"
+          }
+        }
+      }
+    },
+    "saved to Apple Health: %@ — %@ km, %lld s moving, heart rate: %lld, route points: %lld": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "записан в «Здоровье»: %@ — %@ км, в движении %lld с, пульс: %lld, точек маршрута: %lld"
           }
         }
       }
