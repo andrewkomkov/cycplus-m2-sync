@@ -23,6 +23,11 @@ targets:
     sources: [M2Sync]
     dependencies:
       - package: FITSwiftSDK
+    entitlements:
+      path: M2Sync/M2Sync.entitlements
+      properties:
+        com.apple.developer.healthkit: true
+        com.apple.developer.healthkit.access: []
     info:
       path: M2Sync/Info.plist
       properties:
@@ -33,6 +38,8 @@ targets:
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         NSBluetoothAlwaysUsageDescription: Downloads rides from the bike computer over Bluetooth.
+        NSHealthUpdateUsageDescription: Saves rides as cycling workouts with route, heart rate, cadence and speed.
+        NSHealthShareUsageDescription: Checks which rides are already in Apple Health, so none is saved twice.
         # Передача не рвётся, если iPhone заблокировали посреди синка.
         UIBackgroundModes: [bluetooth-central]
     settings:

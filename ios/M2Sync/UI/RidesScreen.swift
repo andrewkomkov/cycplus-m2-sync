@@ -48,13 +48,17 @@ struct RidesScreen: View {
             }
         } else {
             List {
-                if sync.device != nil || sync.busy {
-                    DeviceSection(device: sync.device, busy: sync.busy, progress: sync.progress)
+                if sync.busy {
+                    SyncStatusSection(progress: sync.progress)
+                }
+
+                if let device = sync.device {
+                    DeviceSection(device: device)
                 }
 
                 if !sync.rides.isEmpty {
                     Section {
-                        TotalsRow(rides: sync.rides)
+                        TotalsRow(rides: sync.rides, imported: sync.imported)
                     }
                 }
 
@@ -72,7 +76,7 @@ struct RidesScreen: View {
                         }
                     }
                     ForEach(sync.rides) { ride in
-                        RideRow(ride: ride)
+                        RideRow(ride: ride, inHealth: sync.imported.contains(ride.fileName))
                     }
                 }
             }
@@ -82,67 +86,76 @@ struct RidesScreen: View {
     }
 }
 
-struct DeviceSection: View {
-    let device: DeviceSnapshot?
-    let busy: Bool
+struct SyncStatusSection: View {
     let progress: SyncProgress?
 
     var body: some View {
-        Section("Bike Computer") {
-            if let device {
-                HStack(spacing: 14) {
-                    if let battery = device.battery {
-                        Gauge(value: Double(battery), in: 0...100) {
-                            Text("Battery")
-                        } currentValueLabel: {
-                            Text("\(battery)")
+        Section {
+            if let progress {
+                VStack(alignment: .leading, spacing: 8) {
+                    LabeledContent {
+                        Text("\(progress.index) of \(progress.count)")
+                            .monospacedDigit()
+                    } label: {
+                        switch progress.phase {
+                        case .download:
+                            Label("Downloading", systemImage: "arrow.down.circle")
+                        case .health:
+                            Label("Saving to Health", systemImage: "heart.text.square")
                         }
-                        .gaugeStyle(.accessoryCircularCapacity)
-                        .tint(battery > 20 ? Color.green : Color.red)
                     }
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(verbatim: "Cycplus M2")
-                            .font(.headline)
-                        Text(verbatim: device.name)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
+                    ProgressView(value: progress.fraction)
+                    Text(verbatim: progress.fileName)
+                        .font(.caption.monospaced())
+                        .foregroundStyle(.secondary)
                 }
                 .padding(.vertical, 4)
-
-                if let firmware = device.firmware {
-                    LabeledContent("Firmware", value: firmware)
-                }
-                if let free = device.freeKB, let total = device.totalKB, total > 0 {
-                    LabeledContent("Memory") {
-                        Text("\(kilobytes(total - free)) of \(kilobytes(total))")
-                    }
-                }
-                LabeledContent("Last Seen") {
-                    Text(verbatim: device.seenAt.formatted(.relative(presentation: .named)))
+            } else {
+                HStack(spacing: 10) {
+                    ProgressView()
+                    Text("Connecting to the bike computer…")
+                        .foregroundStyle(.secondary)
                 }
             }
+        }
+    }
+}
 
-            if busy {
-                if let progress {
-                    VStack(alignment: .leading, spacing: 8) {
-                        LabeledContent {
-                            Text("\(progress.index) of \(progress.count)")
-                                .monospacedDigit()
-                        } label: {
-                            Text(verbatim: progress.fileName)
-                                .font(.subheadline.monospaced())
-                        }
-                        ProgressView(value: progress.fraction)
+struct DeviceSection: View {
+    let device: DeviceSnapshot
+
+    var body: some View {
+        Section("Bike Computer") {
+            HStack(spacing: 14) {
+                if let battery = device.battery {
+                    Gauge(value: Double(battery), in: 0...100) {
+                        Text("Battery")
+                    } currentValueLabel: {
+                        Text("\(battery)")
                     }
-                    .padding(.vertical, 4)
-                } else {
-                    HStack(spacing: 10) {
-                        ProgressView()
-                        Text("Connecting to the bike computer…")
-                            .foregroundStyle(.secondary)
-                    }
+                    .gaugeStyle(.accessoryCircularCapacity)
+                    .tint(battery > 20 ? Color.green : Color.red)
                 }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(verbatim: "Cycplus M2")
+                        .font(.headline)
+                    Text(verbatim: device.name)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .padding(.vertical, 4)
+
+            if let firmware = device.firmware {
+                LabeledContent("Firmware", value: firmware)
+            }
+            if let free = device.freeKB, let total = device.totalKB, total > 0 {
+                LabeledContent("Memory") {
+                    Text("\(kilobytes(total - free)) of \(kilobytes(total))")
+                }
+            }
+            LabeledContent("Last Seen") {
+                Text(verbatim: device.seenAt.formatted(.relative(presentation: .named)))
             }
         }
     }
@@ -154,16 +167,20 @@ struct DeviceSection: View {
 
 struct TotalsRow: View {
     let rides: [RideSummary]
+    let imported: Set<String>
 
     var body: some View {
         let kilometres = rides.reduce(0) { $0 + $1.distanceMeters } / 1000
         let hours = Double(rides.reduce(0) { $0 + $1.movingMinutes }) / 60
+        let inHealth = rides.filter { imported.contains($0.fileName) }.count
         HStack {
             Stat(value: rides.count.formatted(), label: "rides")
             Divider()
             Stat(value: kilometres.formatted(.number.precision(.fractionLength(0))), label: "km")
             Divider()
             Stat(value: hours.formatted(.number.precision(.fractionLength(1))), label: "hours")
+            Divider()
+            Stat(value: inHealth.formatted(), label: "in Health")
         }
         .padding(.vertical, 6)
     }
@@ -177,9 +194,13 @@ struct TotalsRow: View {
                 Text(verbatim: value)
                     .font(.title2.weight(.semibold))
                     .monospacedDigit()
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
                 Text(label)
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
             .frame(maxWidth: .infinity)
         }
@@ -188,6 +209,7 @@ struct TotalsRow: View {
 
 struct RideRow: View {
     let ride: RideSummary
+    let inHealth: Bool
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -198,10 +220,16 @@ struct RideRow: View {
                 .background(Color.green.opacity(0.15), in: Circle())
 
             VStack(alignment: .leading, spacing: 4) {
-                HStack(alignment: .firstTextBaseline) {
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Text("\(ride.distanceMeters.kilometres) km")
                         .font(.title3.weight(.semibold))
                         .monospacedDigit()
+                    if inHealth {
+                        Image(systemName: "heart.fill")
+                            .font(.caption)
+                            .foregroundStyle(.pink)
+                            .accessibilityLabel(Text("In Health"))
+                    }
                     Spacer(minLength: 8)
                     Text(verbatim: ride.start.formatted(.dateTime.day().month(.abbreviated).hour().minute()))
                         .font(.subheadline)
@@ -210,7 +238,7 @@ struct RideRow: View {
                 FlowLayout {
                     Metric(icon: "stopwatch", text: Text(verbatim: movingTime))
                     if let heartRate = ride.avgHeartRate {
-                        Metric(icon: "heart.fill", text: Text("\(heartRate) bpm"))
+                        Metric(icon: "heart", text: Text("\(heartRate) bpm"))
                     }
                     if let cadence = ride.avgCadence {
                         Metric(icon: "arrow.clockwise", text: Text("\(cadence) rpm"))

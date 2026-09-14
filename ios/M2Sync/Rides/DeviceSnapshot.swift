@@ -19,13 +19,19 @@ struct DeviceSnapshot: Codable, Equatable {
     }
 }
 
-/// Прогресс скачивания текущего файла.
+/// Прогресс синка: скачивание текущего файла или запись поездок в Apple Health.
 struct SyncProgress: Equatable {
+    enum Phase: Equatable {
+        case download
+        case health
+    }
+
     let fileName: String
     let index: Int
     let count: Int
     var received: Int
     let size: Int
+    var phase: Phase = .download
 
     var fraction: Double {
         size > 0 ? min(1, Double(received) / Double(size)) : 0
