@@ -1,6 +1,16 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "%@ kg": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ кг"
+          }
+        }
+      }
+    },
     "%@ km": {
       "localizations": {
         "ru": {
@@ -27,6 +37,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld уд/мин"
+          }
+        }
+      }
+    },
+    "%lld kcal": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld ккал"
           }
         }
       }
@@ -111,12 +131,32 @@
         }
       }
     },
+    "Cancel": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отмена"
+          }
+        }
+      }
+    },
     "Connecting to the bike computer…": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Подключаюсь к велокомпьютеру…"
+          }
+        }
+      }
+    },
+    "Done": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Готово"
           }
         }
       }
@@ -141,6 +181,16 @@
         }
       }
     },
+    "Female": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Женский"
+          }
+        }
+      }
+    },
     "File is shorter than declared: %lld of %lld bytes": {
       "localizations": {
         "ru": {
@@ -157,6 +207,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Прошивка"
+          }
+        }
+      }
+    },
+    "From Apple Health": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Из «Здоровья»"
           }
         }
       }
@@ -191,12 +251,42 @@
         }
       }
     },
+    "Male": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Мужской"
+          }
+        }
+      }
+    },
+    "Manual": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вручную"
+          }
+        }
+      }
+    },
     "Memory": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Память"
+          }
+        }
+      }
+    },
+    "More": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ещё"
           }
         }
       }
@@ -251,6 +341,46 @@
         }
       }
     },
+    "Not Set": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не указан"
+          }
+        }
+      }
+    },
+    "Not in Apple Health": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нет в «Здоровье»"
+          }
+        }
+      }
+    },
+    "Profile for Calories": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Профиль для калорий"
+          }
+        }
+      }
+    },
+    "Read during sync. Values from Apple Health take priority.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Читается при синхронизации. Значения из «Здоровья» главнее ручных."
+          }
+        }
+      }
+    },
     "Reading rides…": {
       "localizations": {
         "ru": {
@@ -291,6 +421,16 @@
         }
       }
     },
+    "Sex": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пол"
+          }
+        }
+      }
+    },
     "Switch on the bike computer and sync to download your rides.": {
       "localizations": {
         "ru": {
@@ -307,6 +447,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Синхронизировать"
+          }
+        }
+      }
+    },
+    "The M2 records no calories. They are estimated from heart rate, or from speed where there is none, and saved to Apple Health as active energy. The heart-rate formula needs weight, year of birth and sex.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "M2 не записывает калории. Они считаются по пульсу, а где его нет — по скорости, и сохраняются в «Здоровье» как активная энергия. Пульсовой формуле нужны вес, год рождения и пол."
           }
         }
       }
@@ -351,6 +501,26 @@
         }
       }
     },
+    "Weight": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вес"
+          }
+        }
+      }
+    },
+    "Year of Birth": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Год рождения"
+          }
+        }
+      }
+    },
     "already in Apple Health: %@": {
       "localizations": {
         "ru": {
@@ -391,6 +561,16 @@
         }
       }
     },
+    "kg": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "кг"
+          }
+        }
+      }
+    },
     "km": {
       "localizations": {
         "ru": {
@@ -417,6 +597,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "скачано новых файлов: %lld"
+          }
+        }
+      }
+    },
+    "no weight for calories — add it in Apple Health or in the profile": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "для калорий нет веса — добавь его в «Здоровье» или в профиле"
           }
         }
       }

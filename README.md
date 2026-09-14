@@ -95,8 +95,10 @@ An iOS version lives in [`ios/`](ios). It finds the bike computer, downloads new
 Bluetooth and saves them to Apple Health as outdoor cycling workouts: route, heart rate, cadence,
 speed, distance and elevation gain, with pauses marked so the moving time matches the `.fit` to the
 second. The workouts show up in the Fitness app too, and running a sync again never duplicates
-one. Calories, `.fit` export, the map and the charts land in follow-up changes. It needs iOS 17 or
-newer and is built from source:
+one. Calories, which the M2 does not record, are estimated from heart rate, or from speed where
+there is none, and saved as active energy; weight, year of birth and sex come from Apple Health or
+from the in-app profile. `.fit` export, the map and the charts land in follow-up changes. It needs
+iOS 17 or newer and is built from source:
 
 ```bash
 brew install xcodegen

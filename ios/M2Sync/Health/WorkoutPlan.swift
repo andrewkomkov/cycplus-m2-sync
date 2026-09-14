@@ -6,8 +6,12 @@ import Foundation
 struct WorkoutPlan: Equatable {
     /// Поднять, когда меняется то, как поездка ложится в Health: записанные раньше тренировки
     /// при следующем синке удалятся и запишутся заново.
-    /// 2 — паузы до первой и после последней точки.
-    static let syncVersion = 2
+    /// 2 — паузы до первой и после последней точки; 3 — активная энергия.
+    static let syncVersion = 3
+
+    /// Ключ метаданных с отпечатком профиля, по которому считались калории: поменялся профиль —
+    /// тренировка считается устаревшей и перезаписывается.
+    static let caloriesProfileMetadataKey = "M2SyncCaloriesProfile"
 
     struct Sample: Equatable {
         let time: Date
@@ -29,6 +33,8 @@ struct WorkoutPlan: Equatable {
     let pauses: [DateInterval]
     let distanceMeters: Double?
     let ascentMeters: Double?
+    let activeEnergyKilocalories: Double?
+    let caloriesProfileKey: String
     let heartRate: [Sample] // уд/мин
     let cadence: [Sample] // об/мин
     let speed: [Sample] // м/с
@@ -44,7 +50,7 @@ struct WorkoutPlan: Equatable {
         Int(end.timeIntervalSince(start) - pauses.reduce(0) { $0 + $1.duration })
     }
 
-    init(ride: FitParser.Ride) {
+    init(ride: FitParser.Ride, profile: Calories.Profile = .empty) {
         syncIdentifier = Self.syncIdentifier(for: ride.fileName)
         start = ride.start
         // Отрезок записи кончается через секунду после своей последней точки. Если конец поездки
@@ -55,6 +61,8 @@ struct WorkoutPlan: Equatable {
         pauses = Self.pauses(spans: ride.activeSpans, start: start, end: end)
         distanceMeters = ride.totalDistance.flatMap { $0 > 0 ? $0 : nil }
         ascentMeters = ride.totalAscent.flatMap { $0 > 0 ? Double($0) : nil }
+        activeEnergyKilocalories = Calories.forRide(ride, profile: profile).flatMap { $0.active > 0 ? $0.active : nil }
+        caloriesProfileKey = profile.key
 
         // HealthKit не принимает данные вне интервала тренировки.
         let (start, end) = (start, end)

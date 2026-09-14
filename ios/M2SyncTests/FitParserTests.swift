@@ -94,11 +94,19 @@ struct FitParserTests {
             return "\(ride.fileName) points=\(ride.points.count) gps=\(gps) dist=\(ride.totalDistance ?? -1) "
                 + "timer=\(ride.totalTimerTime ?? -1) span=\(Int(ride.end.timeIntervalSince(ride.start))) "
                 + "moving_s=\(ride.movingSeconds) pauses=\(ride.activeSpans.count - 1) "
-                + "health_moving_s=\(plan.movingSeconds) health_pauses=\(plan.pauses.count)"
+                + "health_moving_s=\(plan.movingSeconds) health_pauses=\(plan.pauses.count) "
+                + calories(ride)
         }
         if let report = environment["M2SYNC_REPORT"] {
             try lines.joined(separator: "\n").write(toFile: report, atomically: true, encoding: .utf8)
         }
+    }
+
+    /// Калории для условного профиля — сверяются с тем же расчётом на Python по .fit.
+    private func calories(_ ride: FitParser.Ride) -> String {
+        let profile = Calories.Profile(weightKg: 72.8, birthYear: 1990, sex: .male)
+        guard let estimate = Calories.forRide(ride, profile: profile) else { return "kcal_total=- kcal_active=-" }
+        return String(format: "kcal_total=%.1f kcal_active=%.1f", estimate.total, estimate.active)
     }
 
     private struct SessionValues {

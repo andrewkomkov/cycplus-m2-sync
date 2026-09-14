@@ -14,18 +14,34 @@ struct RideSummaryCacheTests {
             return Fixture.summary(url.lastPathComponent)
         }
 
-        #expect(fixture.cache.refresh(urls: try fixture.urls(), parse: parse).summaries.count == 2)
+        #expect(fixture.cache.refresh(urls: try fixture.urls(), profileKey: "p", parse: parse).summaries.count == 2)
         #expect(parsed.count == 2)
 
         parsed.removeAll()
-        #expect(fixture.cache.refresh(urls: try fixture.urls(), parse: parse).summaries.count == 2)
+        #expect(fixture.cache.refresh(urls: try fixture.urls(), profileKey: "p", parse: parse).summaries.count == 2)
         #expect(parsed.isEmpty)
 
         // Велокомп дописал поездку: имя то же, размер другой.
         try Data(count: 11).write(to: first)
         parsed.removeAll()
-        _ = fixture.cache.refresh(urls: try fixture.urls(), parse: parse)
+        _ = fixture.cache.refresh(urls: try fixture.urls(), profileKey: "p", parse: parse)
         #expect(parsed == ["20260913085741.fit"])
+    }
+
+    @Test func profileChangeParsesEverythingAgain() throws {
+        let fixture = try Fixture()
+        try fixture.write("20260913085741.fit", bytes: 10)
+        try fixture.write("20260909192825.fit", bytes: 20)
+        var parsed = 0
+        let parse: (URL) throws -> RideSummary = { url in
+            parsed += 1
+            return Fixture.summary(url.lastPathComponent)
+        }
+
+        _ = fixture.cache.refresh(urls: try fixture.urls(), profileKey: "72.8/1990/male", parse: parse)
+        _ = fixture.cache.refresh(urls: try fixture.urls(), profileKey: "73.0/1990/male", parse: parse)
+
+        #expect(parsed == 4)
     }
 
     @Test func dropsDeletedFilesAndSortsNewestFirst() throws {
@@ -35,9 +51,9 @@ struct RideSummaryCacheTests {
         try fixture.write("20260909192825.fit", bytes: 1)
         let parse: (URL) throws -> RideSummary = { Fixture.summary($0.lastPathComponent) }
 
-        _ = fixture.cache.refresh(urls: try fixture.urls(), parse: parse)
+        _ = fixture.cache.refresh(urls: try fixture.urls(), profileKey: "p", parse: parse)
         try FileManager.default.removeItem(at: gone)
-        let result = fixture.cache.refresh(urls: try fixture.urls(), parse: parse)
+        let result = fixture.cache.refresh(urls: try fixture.urls(), profileKey: "p", parse: parse)
 
         #expect(result.summaries.map(\.fileName) == ["20260909192825.fit", "20260723122156.fit"])
         #expect(fixture.cache.load().keys.sorted() == ["20260723122156.fit", "20260909192825.fit"])
@@ -52,17 +68,17 @@ struct RideSummaryCacheTests {
             throw FitParser.ParseError.noTrackPoints("broken.fit")
         }
 
-        let first = fixture.cache.refresh(urls: try fixture.urls(), parse: parse)
+        let first = fixture.cache.refresh(urls: try fixture.urls(), profileKey: "p", parse: parse)
         #expect(first.summaries.isEmpty)
         #expect(first.failures.count == 1)
 
-        _ = fixture.cache.refresh(urls: try fixture.urls(), parse: parse)
+        _ = fixture.cache.refresh(urls: try fixture.urls(), profileKey: "p", parse: parse)
         #expect(attempts == 2)
     }
 
     @Test func cacheFromAnotherVersionIsIgnored() throws {
         let fixture = try Fixture()
-        try Data(#"{"version":0,"entries":{}}"#.utf8).write(to: fixture.cache.url)
+        try Data(#"{"version":1,"entries":{}}"#.utf8).write(to: fixture.cache.url)
         #expect(fixture.cache.load().isEmpty)
     }
 
@@ -104,6 +120,7 @@ struct RideSummaryCacheTests {
                 avgHeartRate: nil,
                 avgCadence: nil,
                 ascent: nil,
+                activeKilocalories: nil,
                 pointCount: 600,
                 hasRoute: true
             )
