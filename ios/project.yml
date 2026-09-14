@@ -42,6 +42,14 @@ targets:
         NSHealthShareUsageDescription: Reads weight, date of birth and sex for the calorie estimate, and checks which rides are already in Apple Health.
         # Передача не рвётся, если iPhone заблокировали посреди синка.
         UIBackgroundModes: [bluetooth-central]
+        # Тип .fit для «Поделиться»: получатели узнают файл Garmin по расширению и MIME.
+        UTImportedTypeDeclarations:
+          - UTTypeIdentifier: com.garmin.fit
+            UTTypeDescription: Garmin FIT activity
+            UTTypeConformsTo: [public.data]
+            UTTypeTagSpecification:
+              public.filename-extension: [fit]
+              public.mime-type: [application/vnd.ant.fit]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: dev.komkov.m2sync

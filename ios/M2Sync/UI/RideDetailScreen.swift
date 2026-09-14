@@ -68,6 +68,11 @@ struct RideDetailScreen: View {
                         .foregroundStyle(.secondary)
                 }
             }
+            ToolbarItem(placement: .topBarTrailing) {
+                if let export = try? RideExport(summary: summary, files: RideFiles.standard()) {
+                    ShareLink(item: export, preview: SharePreview(export.fileName))
+                }
+            }
         }
         .task { await load() }
     }

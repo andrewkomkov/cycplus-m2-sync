@@ -91,6 +91,16 @@
         }
       }
     },
+    "%lld selected": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "выбрано: %lld"
+          }
+        }
+      }
+    },
     "%lld–%lld m": {
       "localizations": {
         "ru": {
@@ -247,6 +257,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Не удалось прочитать заезд"
+          }
+        }
+      }
+    },
+    "Deselect All": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Снять выделение"
           }
         }
       }
@@ -641,6 +661,26 @@
         }
       }
     },
+    "Select All": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выбрать все"
+          }
+        }
+      }
+    },
+    "Select Rides": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выбрать заезды"
+          }
+        }
+      }
+    },
     "Selected": {
       "localizations": {
         "ru": {
@@ -657,6 +697,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Пол"
+          }
+        }
+      }
+    },
+    "Share": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Поделиться"
           }
         }
       }
