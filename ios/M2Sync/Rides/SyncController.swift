@@ -81,7 +81,13 @@ final class SyncController: ObservableObject {
 
             let pending = try onDevice.filter { try files.needsDownload($0) }
             for (offset, file) in pending.enumerated() {
-                progress = SyncProgress(fileName: file.name, index: offset + 1, count: pending.count, received: 0, size: file.size)
+                progress = SyncProgress(
+                    fileName: file.name,
+                    index: offset + 1,
+                    count: pending.count,
+                    received: 0,
+                    size: file.size
+                )
                 append(String(localized: "downloading \(file.name) (\(file.size) bytes)"))
                 let data = try await client.fetch(file.name) { [weak self] received in
                     self?.progress?.received = received
