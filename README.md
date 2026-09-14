@@ -100,7 +100,8 @@ there is none, and saved as active energy; weight, year of birth and sex come fr
 from the in-app profile. Tap a ride for its route on an Apple Maps basemap, its totals, and
 elevation, speed, heart-rate and cadence charts you can scrub with a finger. The raw `.fit` goes out
 through the share sheet, one ride or a selection, named like `2026-07-24_10-30_40.99km_cycplus-m2.fit`.
-It needs iOS 17 or newer and is built from source:
+Once you have synced by hand, opening the app syncs on its own; the More menu turns that off. It needs
+iOS 17 or newer and is built from source:
 
 ```bash
 brew install xcodegen
